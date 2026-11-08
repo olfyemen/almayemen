@@ -24,6 +24,7 @@
   --bg:#0F151C; --surface:#162029; --ink:#E7EBEE; --muted:#9AA7B2; --line:#2A3743;
   --lapis:#8DB6E2; --lapis-soft:#1B2E42; --saffron:#E0AE5C; --saffron-soft:#33281A; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{direction:rtl}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.7;margin:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -76,7 +77,29 @@ ol.index a:hover{color:var(--lapis);text-decoration:underline}
 .filter{font:inherit;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 12px}
 .note{font-size:13px;color:var(--muted);margin:0}
 footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
-@media (prefers-reduced-motion:no-preference){.card{transition:border-color .2s}}
+.dua,.quote{font-size:var(--read-size,22px)}
+.tools{display:inline-flex;gap:4px;align-items:center;font-size:13px}
+.tools button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:0 8px;cursor:pointer;min-width:28px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.counter{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:8px}
+.tap{font:inherit;width:min(260px,70vw);aspect-ratio:1;max-width:100%;border-radius:50%;border:2px solid var(--lapis);background:var(--lapis-soft);color:var(--lapis);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;touch-action:manipulation;user-select:none}
+.tap:active{background:var(--surface)}
+.tap .big{font-family:var(--f-display);font-size:64px;line-height:1;font-variant-numeric:tabular-nums}
+.tap .of{font-size:14px;color:var(--muted)}
+.dhikr{font-family:var(--f-text);font-size:26px;text-align:center;margin:0;line-height:1.7}
+.mini{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mini .tapsm{font:inherit;border:1px solid var(--lapis);background:var(--lapis-soft);color:var(--lapis);border-radius:10px;padding:6px 16px;cursor:pointer;font-variant-numeric:tabular-nums;font-size:18px}
+.check{display:flex;flex-direction:column;gap:6px}
+.check label{display:flex;gap:10px;align-items:center;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--lapis)}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--saffron);width:0}
+.month button .done{font-size:12px;color:var(--saffron);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:3px 12px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--lapis);background:var(--lapis-soft);color:var(--lapis);font-weight:600}
+ul.plain{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px;max-width:65ch}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .2s}.progress span{transition:width .3s}}
 </style>
 
 <div class="wrap">
@@ -91,6 +114,10 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
         <span id="adjVal">0</span>
         <button id="adjPlus" type="button" aria-label="زيادة يوم">+</button>
       </span>
+      <span class="tools">حجم الخط:
+        <button id="fontMinus" type="button" aria-label="تصغير الخط">أ−</button>
+        <button id="fontPlus" type="button" aria-label="تكبير الخط">أ+</button>
+      </span>
     </div>
   </header>
 
@@ -99,15 +126,73 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
     <button role="tab" id="t-week" data-view="week" aria-selected="false">أدعية الأسبوع</button>
     <button role="tab" id="t-month" data-view="month" aria-selected="false">أيام الشهر الهجري</button>
     <button role="tab" id="t-sahifa" data-view="sahifa" aria-selected="false">فهرس الصحيفة</button>
+    <button role="tab" id="t-munajat" data-view="munajat" aria-selected="false">المناجاة الخمس عشرة</button>
+    <button role="tab" id="t-huquq" data-view="huquq" aria-selected="false">رسالة الحقوق</button>
+    <button role="tab" id="t-tasbih" data-view="tasbih" aria-selected="false">المسبحة</button>
     <button role="tab" id="t-other" data-view="other" aria-selected="false">أدعية أخرى</button>
   </nav>
 
   <!-- ورد اليوم -->
   <section class="view" id="v-today" role="tabpanel" aria-labelledby="t-today">
     <div id="occasion"></div>
+    <article class="card" id="tracker"></article>
     <article class="card feature" id="todayWeek"></article>
+    <div class="grid2">
+      <article class="card" id="todayDhikr"></article>
+      <article class="card" id="todayZiyara"></article>
+    </div>
     <div id="todayDay"></div>
+    <div class="grid2">
+      <article class="card" id="todayHaqq"></article>
+      <article class="card" id="todayMunajat"></article>
+    </div>
+    <article class="card" id="monthWorks"></article>
     <div id="todayExtra"></div>
+  </section>
+
+  <!-- المناجاة -->
+  <section class="view" id="v-munajat" role="tabpanel" aria-labelledby="t-munajat" hidden>
+    <div>
+      <h2>المناجاة الخمس عشرة</h2>
+      <p class="lede">خمس عشرة مناجاة تُروى عن الإمام زين العابدين، تُضاف إلى ملحقات الصحيفة. يقرأ بعض المؤمنين واحدة منها كل يوم، فتتمّ في نصف شهر وتُعاد في النصف الثاني. مناجاة اليوم مُعلَّمة.</p>
+    </div>
+    <ol class="index" id="munajatList"></ol>
+  </section>
+
+  <!-- رسالة الحقوق -->
+  <section class="view" id="v-huquq" role="tabpanel" aria-labelledby="t-huquq" hidden>
+    <div>
+      <h2>رسالة الحقوق</h2>
+      <p class="lede">رسالة كتبها الإمام زين العابدين يبيّن فيها حقوق الله والنفس والأعضاء والعبادات والناس من حولك. تعرض صفحة «ورد اليوم» حقّاً واحداً كل يوم حسب ترتيبها هنا.</p>
+    </div>
+    <div class="links">
+      <a id="huquqFull" target="_blank" rel="noopener">النص الكامل لرسالة الحقوق</a>
+      <a id="huquqAudio" target="_blank" rel="noopener">استماع</a>
+      <a id="huquqWiki" target="_blank" rel="noopener">ويكي شيعة</a>
+    </div>
+    <ol class="index" id="huquqList"></ol>
+  </section>
+
+  <!-- المسبحة -->
+  <section class="view" id="v-tasbih" role="tabpanel" aria-labelledby="t-tasbih" hidden>
+    <div>
+      <h2>المسبحة</h2>
+      <p class="lede">اختر الذكر ثم اضغط على الدائرة مع كل تسبيحة. يبقى العدد محفوظاً في جهازك حتى تعيده إلى الصفر.</p>
+    </div>
+    <div class="chips" id="tasbihPresets"></div>
+    <article class="card">
+      <div class="counter">
+        <p class="dhikr" id="tasbihText"></p>
+        <button class="tap" id="tasbihTap" type="button" aria-live="polite">
+          <span class="big" id="tasbihCount">٠</span>
+          <span class="of" id="tasbihOf"></span>
+        </button>
+        <div class="row">
+          <button class="btn" type="button" id="tasbihReset">إعادة إلى الصفر</button>
+          <span class="by" id="tasbihTotal"></span>
+        </div>
+      </div>
+    </article>
   </section>
 
   <!-- أدعية الأسبوع -->
@@ -392,7 +477,10 @@ function weekCard(i, short){
     <span class="label">دعاء يوم ${w.day}</span>
     <h2>دعاء الإمام زين العابدين في يوم ${w.day}</h2>
     <p class="dua${short ? " short" : ""}" id="duaText">${esc(w.text)}</p>
-    ${short ? `<button class="btn" type="button" id="expandDua">اقرأ الدعاء كاملاً</button>` : ""}
+    <div class="row">
+      ${short ? `<button class="btn" type="button" id="expandDua">اقرأ الدعاء كاملاً</button>` : ""}
+      <button class="btn" type="button" data-copy="duaText" data-src="دعاء يوم ${w.day} للإمام زين العابدين">نسخ الدعاء</button>
+    </div>
     <div class="links">${weekLinks(w.day)}</div>`;
 }
 
@@ -408,8 +496,9 @@ function dayBlock(n, isToday){
     </article>
     <article class="card">
       <span class="label">حكمة اليوم</span>
-      <p class="quote">«${esc(D.wisdom.t)}»</p>
+      <p class="quote" id="wisdom-${isToday ? "t" : "m"}">«${esc(D.wisdom.t)}»</p>
       <span class="by">${esc(D.wisdom.by)}</span>
+      <div class="row"><button class="btn" type="button" data-copy="wisdom-${isToday ? "t" : "m"}" data-src="${esc(D.wisdom.by)}">نسخ الحكمة</button></div>
       <div class="links">${link(G(D.wisdom.t), "المصدر والشرح")}</div>
     </article>
   </div>
@@ -463,7 +552,7 @@ function renderMonth(){
   $("monthGrid").innerHTML = DAYS.slice(1).map((D,k) => {
     const n = k + 1, occ = OCC[H.m + "-" + n];
     return `<button type="button" data-n="${n}" class="${n===H.d ? "today" : ""}" aria-pressed="${n===selectedDay}">
-      <span class="n">${AR(n)}</span><span class="t">${esc(D.topic)}</span>${occ ? `<span class="t" style="color:var(--saffron)">${esc(occ.t.split("،")[0].split("(")[0])}</span>` : ""}</button>`;
+      <span class="n">${AR(n)}</span><span class="t">${esc(D.topic)}</span>${typeof doneCount === "function" && doneCount(n) ? `<span class="done">✓ ${doneCount(n) === TASKS.length ? "أتممت الورد" : AR(doneCount(n)) + " من " + AR(TASKS.length)}</span>` : ""}${occ ? `<span class="t" style="color:var(--saffron)">${esc(occ.t.split("،")[0].split("(")[0])}</span>` : ""}</button>`;
   }).join("");
   $("monthDetail").innerHTML = `<div style="display:flex;flex-direction:column;gap:22px">
     <h2>اليوم ${AR(selectedDay)} من ${MONTHS[H.m-1]}${selectedDay===H.d ? " (اليوم)" : ""}</h2>${dayBlock(selectedDay, false)}</div>`;
@@ -486,8 +575,184 @@ $("fullSahifaLink").href = G("الصحيفة السجادية كاملة مكت�
 $("fullSahifaAudio").href = Y("الصحيفة السجادية كاملة صوت");
 $("otherList").innerHTML = OTHER.map(x => otherCard(x, false)).join("");
 
+/* ===== تخزين آمن ===== */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("sahifa-" + k); return v === null ? d : JSON.parse(v); } catch(e) { return d; } },
+  set(k, v){ try { localStorage.setItem("sahifa-" + k, JSON.stringify(v)); } catch(e) {} }
+};
+
+/* ===== نسخ النص ===== */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const el = document.getElementById(b.dataset.copy); if (!el) return;
+  const text = el.textContent.trim() + "\n— " + (b.dataset.src || "الصحيفة السجادية");
+  const done = () => { const o = b.textContent; b.textContent = "تم النسخ"; setTimeout(() => b.textContent = o, 1500); };
+  const fallback = () => { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "النص محدد، انسخه"; };
+  try { navigator.clipboard.writeText(text).then(done, fallback); } catch(err) { fallback(); }
+});
+
+/* ===== حجم الخط ===== */
+let readSize = store.get("font", 22);
+function applyFont(){ document.documentElement.style.setProperty("--read-size", readSize + "px"); }
+$("fontMinus").addEventListener("click", () => { readSize = Math.max(16, readSize - 2); store.set("font", readSize); applyFont(); });
+$("fontPlus").addEventListener("click", () => { readSize = Math.min(34, readSize + 2); store.set("font", readSize); applyFont(); });
+applyFont();
+
+/* ===== ذكر الأيام وزيارة أئمة الأيام (getDay: 0 = الأحد) ===== */
+const DHIKR = ["يا ذا الجلال والإكرام","يا قاضيَ الحاجات","يا أرحمَ الراحمين","يا حيُّ يا قيّوم","لا إله إلا الله الملكُ الحقُّ المبين","اللهمّ صلّ على محمد وآل محمد وعجّل فرجهم","يا ربَّ العالمين"];
+const ZIYARA = [
+ "أمير المؤمنين علي بن أبي طالب والسيدة فاطمة الزهراء",
+ "الإمام الحسن المجتبى والإمام الحسين",
+ "الإمام زين العابدين والإمام محمد الباقر والإمام جعفر الصادق",
+ "الإمام موسى الكاظم والإمام علي الرضا والإمام محمد الجواد والإمام علي الهادي",
+ "الإمام الحسن العسكري",
+ "الإمام صاحب العصر والزمان",
+ "رسول الله محمد صلى الله عليه وآله"
+];
+
+/* ===== المناجاة الخمس عشرة ===== */
+const MUNAJAT = ["مناجاة التائبين","مناجاة الشاكين","مناجاة الخائفين","مناجاة الراجين","مناجاة الراغبين","مناجاة الشاكرين","مناجاة المطيعين لله","مناجاة المريدين","مناجاة المحبّين","مناجاة المتوسّلين","مناجاة المفتقرين","مناجاة العارفين","مناجاة الذاكرين","مناجاة المعتصمين","مناجاة الزاهدين"];
+const munajatOf = d => (d - 1) % 15;
+function renderMunajat(){
+  const cur = munajatOf(H.d);
+  $("munajatList").innerHTML = MUNAJAT.map((m,i) => `<li><span class="num">${AR(i+1)}</span><span style="min-width:0;flex:1">${link(G(m + " الإمام السجاد مكتوبة"), m)}${i===cur ? ` <span class="tag">اليوم</span>` : ""}</span>${link(Y(m + " الإمام السجاد"), "صوت")}</li>`).join("");
+}
+
+/* ===== رسالة الحقوق ===== */
+const HUQUQ = ["حقّ الله الأكبر","حقّ النفس","حقّ اللسان","حقّ السمع","حقّ البصر","حقّ الرجلين","حقّ اليد","حقّ البطن","حقّ الفرج","حقّ الصلاة","حقّ الصوم","حقّ الصدقة","حقّ الهدي","حقّ السلطان","حقّ المعلّم","حقّ المالك","حقّ الرعية","حقّ المتعلّم","حقّ الزوجة","حقّ المملوك","حقّ الأمّ","حقّ الأب","حقّ الولد","حقّ الأخ","حقّ المُنعِم","حقّ المؤذّن","حقّ إمام الصلاة","حقّ الجليس","حقّ الجار","حقّ الصاحب","حقّ الشريك","حقّ المال","حقّ الغريم","حقّ الخليط","حقّ الخصم","حقّ المستشير","حقّ المشير","حقّ المستنصح","حقّ الناصح","حقّ الكبير","حقّ الصغير","حقّ السائل","حقّ المسؤول","حقّ من سرّك","حقّ من أساءك","حقّ أهل ملّتك","حقّ أهل الذمّة"];
+/* يُوزَّع على أيام السنة الهجرية حتى لا يتكرر نفس الحق كل شهر */
+const haqqOf = () => ((H.m - 1) * 30 + (H.d - 1)) % HUQUQ.length;
+function renderHuquq(){
+  const cur = haqqOf();
+  $("huquqList").innerHTML = HUQUQ.map((h,i) => `<li><span class="num">${AR(i+1)}</span><span style="min-width:0;flex:1">${link(G("رسالة الحقوق الإمام السجاد " + h), h)}${i===cur ? ` <span class="tag">اليوم</span>` : ""}</span></li>`).join("");
+}
+$("huquqFull").href = G("رسالة الحقوق للإمام زين العابدين كاملة");
+$("huquqAudio").href = Y("رسالة الحقوق الإمام السجاد");
+$("huquqWiki").href = W("رسالة الحقوق");
+
+/* ===== أعمال الشهر الهجري ===== */
+const MONTH_WORKS = [
+ ["شهر الحزن على الإمام الحسين، وأوله رأس السنة الهجرية.","قراءة زيارة عاشوراء، ومجالس العزاء، والإكثار من ذكر مصيبة أهل البيت في العشرة الأولى."],
+ ["شهر الأربعين ووفاة النبي صلى الله عليه وآله على المشهور.","زيارة الأربعين في العشرين منه، والصدقة في أوله، والإكثار من الصلاة على النبي."],
+ ["شهر المولد النبوي الشريف.","إحياء ذكرى المولد، وقراءة سيرة النبي، وصلة الأرحام، وأسبوع الوحدة بين 12 و17 منه."],
+ ["من الشهور العادية.","صيام ثلاثة أيام من الشهر (أول خميس وآخر خميس وأول أربعاء من العشر الأوسط)، وقراءة الصحيفة."],
+ ["من الشهور العادية.","صيام ثلاثة أيام من الشهر، والمواظبة على أدعية الأيام والمناجاة."],
+ ["فيه ذكرى مولد السيدة فاطمة الزهراء في العشرين منه.","التسبيح بتسبيحة الزهراء بعد كل صلاة، وصيام ثلاثة أيام من الشهر."],
+ ["شهر الله الأصبّ، أول الأشهر الثلاثة المباركة، ومن الأشهر الحرم.","الإكثار من الاستغفار، وعمل أمّ داود في النصف منه، وذكرى المبعث في السابع والعشرين."],
+ ["شهر رسول الله صلى الله عليه وآله.","الصلوات الشعبانية، والمناجاة الشعبانية، وإحياء ليلة النصف من شعبان."],
+ ["شهر الصيام ونزول القرآن.","الصيام، وتلاوة القرآن، ودعاء الافتتاح ليلاً، ودعاء أبي حمزة الثمالي في السحر، وإحياء ليالي القدر، وتوديع الشهر بالدعاء 45 من الصحيفة."],
+ ["شهر عيد الفطر.","صلاة العيد وزكاة الفطرة، وقراءة الدعاء 46 من الصحيفة في يوم الفطر."],
+ ["من الأشهر الحرم.","يوم دحو الأرض في الخامس والعشرين منه، وصيامه مستحب عند كثير من العلماء."],
+ ["شهر الحج، ومن الأشهر الحرم.","إحياء العشر الأوائل، ودعاء عرفة والدعاء 47 من الصحيفة يوم عرفة، والدعاء 48 يوم الأضحى، وعيد الغدير في الثامن عشر."]
+];
+function renderMonthWorks(){
+  const [about, works] = MONTH_WORKS[H.m - 1], name = MONTHS[H.m - 1];
+  $("monthWorks").innerHTML = `
+    <span class="label">أعمال شهر ${name}</span>
+    <h3>${esc(about)}</h3>
+    <p class="story">${esc(works)}</p>
+    <div class="links">${link(G("أعمال شهر " + name + " مفاتيح الجنان"), "أعمال الشهر كاملة")}${link(Y("أعمال شهر " + name), "فيديو")}</div>`;
+}
+
+/* ===== المسبحة ===== */
+const PRESETS = [
+ {id:"zahra", name:"تسبيحة الزهراء", steps:[["الله أكبر",34],["الحمد لله",33],["سبحان الله",33]]},
+ {id:"day", name:"ذكر اليوم", steps:null},
+ {id:"istighfar", name:"الاستغفار", steps:[["أستغفر الله ربي وأتوب إليه",100]]},
+ {id:"salawat", name:"الصلاة على محمد وآله", steps:[["اللهمّ صلّ على محمد وآل محمد",100]]},
+ {id:"tahlil", name:"التهليل", steps:[["لا إله إلا الله",100]]},
+ {id:"free", name:"عدّ حرّ", steps:[["سبحان الله",0]]}
+];
+let tz = store.get("tasbih", {p:"zahra", n:0, total:0});
+const stepsOf = p => p.id === "day" ? [[DHIKR[today.getDay()],100]] : p.steps;
+function tasbihState(){
+  const p = PRESETS.find(x => x.id === tz.p) || PRESETS[0], steps = stepsOf(p);
+  let n = tz.n, i = 0;
+  if (steps[0][1] === 0) return {p, text:steps[0][0], c:n, of:"بلا حدّ", done:false};
+  const sum = steps.reduce((a,s) => a + s[1], 0);
+  if (n >= sum) return {p, text:steps[steps.length-1][0], c:steps[steps.length-1][1], of:"أتممت الذكر، تقبّل الله", done:true};
+  while (n >= steps[i][1]) { n -= steps[i][1]; i++; }
+  return {p, text:steps[i][0], c:n, of:`من ${AR(steps[i][1])}` + (steps.length > 1 ? ` · المرحلة ${AR(i+1)} من ${AR(steps.length)}` : ""), done:false};
+}
+function renderTasbih(){
+  $("tasbihPresets").innerHTML = PRESETS.map(p => `<button type="button" data-p="${p.id}" aria-pressed="${p.id===tz.p}">${p.name}</button>`).join("");
+  const s = tasbihState();
+  $("tasbihText").textContent = s.text;
+  $("tasbihCount").textContent = AR(s.c);
+  $("tasbihOf").textContent = s.of;
+  $("tasbihTotal").textContent = "مجموع تسبيحك في هذا الجهاز: " + AR(tz.total);
+}
+$("tasbihPresets").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  tz.p = b.dataset.p; tz.n = 0; store.set("tasbih", tz); renderTasbih();
+});
+$("tasbihTap").addEventListener("click", () => {
+  if (tasbihState().done) return;
+  tz.n++; tz.total++; store.set("tasbih", tz);
+  try { if (navigator.vibrate) navigator.vibrate(tasbihState().done ? [60,60,60] : 15); } catch(e) {}
+  renderTasbih();
+});
+$("tasbihReset").addEventListener("click", () => { tz.n = 0; store.set("tasbih", tz); renderTasbih(); });
+
+/* ===== سجلّ الورد اليومي ===== */
+const TASKS = [["dua","قرأت دعاء اليوم"],["dhikr","أتممت ذكر اليوم مئة مرة"],["story","قرأت القصة والحكمة"],["sahifa","قرأت دعاء الصحيفة المقترح"]];
+const dayKey = (d) => `${H.y}-${H.m}-${d}`;
+let log = store.get("log", {});
+function doneCount(d){ const x = log[dayKey(d)] || {}; return TASKS.filter(t => x[t[0]]).length; }
+function renderTracker(){
+  const x = log[dayKey(H.d)] || {}, c = doneCount(H.d);
+  let full = 0; for (let d = 1; d <= 30; d++) if (doneCount(d) === TASKS.length) full++;
+  $("tracker").innerHTML = `
+    <div class="row" style="justify-content:space-between"><span class="label">وردي اليوم</span><span class="by">أيام أتممت فيها الورد هذا الشهر: ${AR(full)}</span></div>
+    <div class="progress" aria-hidden="true"><span style="width:${c / TASKS.length * 100}%"></span></div>
+    <div class="check">${TASKS.map(t => `<label><input type="checkbox" id="task-${t[0]}" data-t="${t[0]}" ${x[t[0]] ? "checked" : ""}>${t[1]}</label>`).join("")}</div>`;
+}
+$("tracker").addEventListener("change", e => {
+  const t = e.target.dataset.t; if (!t) return;
+  const k = dayKey(H.d); log[k] = log[k] || {}; log[k][t] = e.target.checked;
+  store.set("log", log); renderTracker(); renderMonth();
+});
+
+/* ===== بطاقات اليوم الإضافية ===== */
+let dayCount = store.get("daycount", {k:"", n:0});
+function renderTodayExtras(){
+  const wd = today.getDay(), dk = today.toDateString();
+  if (dayCount.k !== dk) dayCount = {k:dk, n:0};
+  $("todayDhikr").innerHTML = `
+    <span class="label">ذكر يوم ${WEEK[wd].day} (مئة مرة)</span>
+    <p class="quote" id="dhikrText">${esc(DHIKR[wd])}</p>
+    <div class="mini"><button class="tapsm" type="button" id="dhikrTap">${AR(dayCount.n)} / ${AR(100)}</button><span class="by">اضغط مع كل ذكر</span></div>`;
+  $("todayZiyara").innerHTML = `
+    <span class="label">زيارة أئمة يوم ${WEEK[wd].day}</span>
+    <h3>${esc(ZIYARA[wd])}</h3>
+    <div class="links">${link(G("زيارة أئمة يوم " + WEEK[wd].day + " مفاتيح الجنان"), "نص الزيارة")}${link(Y("زيارة يوم " + WEEK[wd].day), "استماع")}</div>`;
+  const h = HUQUQ[haqqOf()];
+  $("todayHaqq").innerHTML = `
+    <span class="label">من رسالة الحقوق</span>
+    <h3>${esc(h)}</h3>
+    <span class="by">الحق ${AR(haqqOf()+1)} من ${AR(HUQUQ.length)} في رسالة الإمام زين العابدين</span>
+    <div class="links">${link(G("رسالة الحقوق الإمام السجاد " + h), "اقرأ نصّ هذا الحق")}</div>`;
+  const m = MUNAJAT[munajatOf(H.d)];
+  $("todayMunajat").innerHTML = `
+    <span class="label">مناجاة اليوم</span>
+    <h3>${esc(m)}</h3>
+    <span class="by">من المناجاة الخمس عشرة للإمام زين العابدين</span>
+    <div class="links">${link(G(m + " الإمام السجاد مكتوبة"), "النص")}${link(Y(m + " الإمام السجاد"), "استماع")}</div>`;
+  $("dhikrTap").addEventListener("click", () => {
+    if (dayCount.n >= 100) return;
+    dayCount.n++; store.set("daycount", dayCount);
+    $("dhikrTap").textContent = `${AR(dayCount.n)} / ${AR(100)}`;
+    if (dayCount.n === 100) {
+      const k = dayKey(H.d); log[k] = log[k] || {}; log[k].dhikr = true; store.set("log", log);
+      renderTracker(); renderMonth();
+      try { if (navigator.vibrate) navigator.vibrate([60,60,60]); } catch(e) {}
+    }
+  });
+  renderMonthWorks();
+}
+
 /* ===== التبويب ===== */
-const VIEWS = ["today","week","month","sahifa","other"];
+const VIEWS = ["today","week","month","sahifa","munajat","huquq","tasbih","other"];
 function show(v){
   if (!VIEWS.includes(v)) v = "today";
   VIEWS.forEach(x => {
@@ -515,6 +780,7 @@ function renderAll(){
   selectedWeek = today.getDay();
   selectedDay = H.d;
   renderToday(); renderWeek(); renderMonth();
+  renderTracker(); renderTodayExtras(); renderMunajat(); renderHuquq(); renderTasbih();
 }
 renderAll();
 renderSahifa("");
