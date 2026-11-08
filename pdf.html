@@ -87,6 +87,23 @@ h2{font-size:17px;margin-bottom:4px}
 .foot b{color:#ce1126}
 .foot b.nm{color:#5b4dc9}
 .foot a{color:inherit;text-decoration:none;direction:ltr;unicode-bidi:embed}
+.drop.cam{margin-top:8px;border-style:solid;background:linear-gradient(135deg,var(--accent),#8e7dff);color:#fff;border-color:transparent}
+.drop.cam small{color:#e9e5ff}
+.allbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:12px}
+.pg{border:1.5px solid var(--line);border-radius:14px;padding:6px;background:#fff;text-align:center;position:relative}
+.pg .th{height:120px;display:grid;place-items:center;overflow:hidden;border-radius:8px;background:#f3f4f9}
+.pg .th img{max-width:100%;max-height:116px;box-shadow:0 1px 4px rgba(0,0,0,.15);transition:transform .2s}
+.pg .n{font-size:12px;font-weight:700;margin:4px 0}
+.pg .acts{display:flex;justify-content:center;gap:4px}
+.pg .acts .mini{width:28px;height:28px;border-radius:8px}
+.pg.del{opacity:.45;border-color:#ffd0d0;background:#fff7f7}
+.pg.del .th img{filter:grayscale(1)}
+.pg.del .n{text-decoration:line-through;color:var(--danger)}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.bar button{padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);font-size:13px;background:#fff}
+.pad{width:100%;height:170px;border:1.5px dashed #cfc7ff;border-radius:14px;background:#fff;touch-action:none;display:block}
+.top .home{font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;padding:8px 10px;border-radius:12px;background:var(--soft);white-space:nowrap}
 @media (max-width:420px){.tools{grid-template-columns:1fr 1fr}.tool{padding:12px 8px}}
 </style>
 </head>
@@ -99,6 +116,7 @@ h2{font-size:17px;margin-bottom:4px}
       <b>الما<span class="en">ALMA PDF</span></b>
       <small>أدوات PDF بدون إنترنت — ملفاتك لا تغادر جهازك</small>
     </div>
+    <a class="home" id="homeLink" href="index.html" title="برنامج نقل الملفات">الما · نقل</a>
     <button class="back hidden" id="back" aria-label="رجوع">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
     </button>
@@ -119,6 +137,11 @@ h2{font-size:17px;margin-bottom:4px}
         <span id="dropTxt">اختر الملفات</span>
         <small id="dropHint">أو اسحبها وأفلتها هنا</small>
         <input type="file" id="picker">
+      </label>
+      <label class="drop cam hidden" id="camBtn">
+        <span>التقاط بالكاميرا</span>
+        <small>صوّر الورقة مباشرة، وكرّر لكل صفحة</small>
+        <input type="file" id="camInput" accept="image/*" capture="environment">
       </label>
       <ul class="list" id="list"></ul>
       <div id="opts"></div>
@@ -225,6 +248,11 @@ const ICON = {
   rotate:'<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/>',
   images:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
   number:'<path d="M6 3h8l4 4v14H6z"/><path d="M11 16v-5l-1.5 1"/>',
+  organize:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="9" rx="1"/><rect x="3" y="15" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/>',
+  scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  sign:'<path d="M3 21c3-1 5-4 6-7 1 3 2 4 4 4 1 0 2-2 3-2s1 2 3 2"/><path d="M16 3l5 5-9 9H7v-5z"/>',
+  toimg:'<path d="M6 3h8l4 4v6"/><path d="M6 3v12"/><rect x="9" y="14" width="12" height="8" rx="1"/><path d="M21 20l-3-3-5 5"/>',
+  prev:'<path d="M9 6l6 6-6 6"/>', next:'<path d="M15 6l-6 6 6 6"/>', rot:'<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/>',
   compress:'<path d="M4 4l6 6M10 5v5H5M20 20l-6-6M14 19v-5h5M20 4l-6 6M19 10h-5V5M4 20l6-6M5 14h5v5"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
   up:'<path d="M12 19V5M6 11l6-6 6 6"/>', down:'<path d="M12 5v14M6 13l6 6 6-6"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>'
@@ -286,10 +314,87 @@ function toGray(ctx, w, h) {
   for (let i = 0; i < a.length; i += 4) { const y = a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114; a[i] = a[i + 1] = a[i + 2] = y; }
   ctx.putImageData(d, 0, 0);
 }
+// يحوّل نقطة من إحداثيات الصفحة كما تُعرض إلى إحداثيات PDF مع مراعاة تدوير الصفحة
+function placeAt(p, vx, vy) {
+  const { width: W, height: H } = p.getSize();
+  const rot = ((p.getRotation().angle % 360) + 360) % 360;
+  if (rot === 90) return { x: W - vy, y: vx, rotate: degrees(90) };
+  if (rot === 180) return { x: W - vx, y: H - vy, rotate: degrees(180) };
+  if (rot === 270) return { x: vy, y: H - vx, rotate: degrees(270) };
+  return { x: vx, y: vy, rotate: degrees(0) };
+}
+const viewSize = p => { const { width, height } = p.getSize(); return p.getRotation().angle % 180 ? { w: height, h: width } : { w: width, h: height }; };
+
+// ملف ZIP بسيط (بدون ضغط) لتنزيل عدة ملفات دفعة واحدة
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = d => { let c = 0xFFFFFFFF; for (let i = 0; i < d.length; i++) c = CRC[(c ^ d[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function makeZip(items) {
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  for (const it of items) {
+    const name = enc.encode(it.name), data = it.data, crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);
+    h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true);
+    parts.push(h, name, data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+    c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+    cen.push(c, name); off += 30 + name.length + data.length;
+  }
+  const size = cen.reduce((s, x) => s + x.byteLength, 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, items.length, true); e.setUint16(10, items.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...cen, e], { type: 'application/zip' });
+}
+
+// تحسين صورة الورقة الممسوحة: يزيل الظل ويبيّض الخلفية ويقوّي الكتابة
+function enhanceScan(ctx, w, h, mode) {
+  const sw = Math.max(8, Math.round(w / 24)), sh = Math.max(8, Math.round(h / 24));
+  const sc = document.createElement('canvas'); sc.width = sw; sc.height = sh;
+  const sg = sc.getContext('2d'); sg.drawImage(ctx.canvas, 0, 0, sw, sh);
+  const sd = sg.getImageData(0, 0, sw, sh), s = sd.data, L = new Float32Array(sw * sh);
+  for (let i = 0; i < sw * sh; i++) L[i] = s[i * 4] * .299 + s[i * 4 + 1] * .587 + s[i * 4 + 2] * .114;
+  // أكبر قيمة في الجوار تقدّر لون الورقة (تمحو الكتابة)، ثم تنعيم
+  const pass = (src, f) => { const o = new Float32Array(src.length);
+    for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) { let m = f === 'max' ? 0 : 0, n = 0;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= sw || yy >= sh) continue;
+        const v = src[yy * sw + xx]; if (f === 'max') m = Math.max(m, v); else { m += v; n++; } }
+      o[y * sw + x] = f === 'max' ? m : m / n; } return o; };
+  const B = pass(pass(L, 'max'), 'avg');
+  for (let i = 0; i < sw * sh; i++) { s[i * 4] = s[i * 4 + 1] = s[i * 4 + 2] = B[i]; s[i * 4 + 3] = 255; }
+  sg.putImageData(sd, 0, 0);
+  const bc = document.createElement('canvas'); bc.width = w; bc.height = h;
+  const bg = bc.getContext('2d'); bg.imageSmoothingEnabled = true; bg.drawImage(sc, 0, 0, w, h);
+  const bd = bg.getImageData(0, 0, w, h).data, im = ctx.getImageData(0, 0, w, h), a = im.data;
+  const cl = v => v < 0 ? 0 : v > 255 ? 255 : v;
+  for (let i = 0; i < a.length; i += 4) {
+    const k = 255 / Math.max(bd[i], 40);
+    if (mode === 'color') { for (let j = 0; j < 3; j++) a[i + j] = cl((a[i + j] * k - 25) * 1.12); }
+    else {
+      let y = (a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114) * k;
+      y = mode === 'bw' ? (y > 205 ? 255 : y < 125 ? 0 : (y - 125) * 255 / 80) : cl((y - 25) * 1.12);
+      a[i] = a[i + 1] = a[i + 2] = y;
+    }
+  }
+  ctx.putImageData(im, 0, 0);
+}
+
+// صفحات PDF كصور صغيرة (للمعاينة)
+async function thumbs(file, onPage, isLive) {
+  const src = await pdfjs().getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  for (let i = 1; i <= src.numPages && isLive(); i++) {
+    const pg = await src.getPage(i), v1 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 220 / Math.max(v1.width, v1.height) });
+    const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    await pg.render({ canvasContext: g, viewport: vp }).promise;
+    onPage(i - 1, c.toDataURL('image/jpeg', .7), src.numPages); pg.cleanup();
+  }
+  src.destroy();
+}
+
 const canvasJpeg = (c, q) => new Promise(r => c.toBlob(b => b.arrayBuffer().then(x => r(new Uint8Array(x))), 'image/jpeg', q / 100));
 
 // الطريقة 1: إعادة ضغط الصور داخل الملف (النص والرسوم تبقى كما هي)
-async function compressImages(file, { q, px, gray }) {
+async function compressImages(file, { q, px, gray }, tag = '') {
   const doc = await loadPdf(file), ctx = doc.context;
   const N = k => PDFName.of(k);
   const all = ctx.enumerateIndirectObjects();
@@ -299,7 +404,7 @@ async function compressImages(file, { q, px, gray }) {
   const imgs = all.filter(([ref, o]) => o instanceof PDFRawStream && o.dict.get(N('Subtype')) === N('Image') && !masks.has(ref.toString()));
   let done = 0, changed = 0;
   for (const [ref, s] of imgs) {
-    done++; if (done % 3 === 1) await progress(`جارٍ ضغط الصور… ${done} من ${imgs.length}`);
+    done++; if (done % 3 === 1) await progress(`${tag}جارٍ ضغط الصور… ${done} من ${imgs.length}`);
     try {
       const d = s.dict;
       if (d.get(N('ImageMask'))?.toString() === 'true') continue;
@@ -350,13 +455,13 @@ async function compressImages(file, { q, px, gray }) {
 }
 
 // الطريقة 2: تحويل كل صفحة إلى صورة JPEG بدقة محددة (أقوى ضغط)
-async function compressRaster(file, { q, px: dpi, gray }) {
+async function compressRaster(file, { q, px: dpi, gray }, tag = '') {
   const lib = pdfjs();
   const src = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise
     .catch(e => { throw new Error(e?.name === 'PasswordException' ? 'الملف محمي بكلمة مرور.' : 'تعذّر قراءة «' + file.name + '».'); });
   const doc = await PDFDocument.create();
   for (let i = 1; i <= src.numPages; i++) {
-    await progress(`جارٍ ضغط الصفحة ${i} من ${src.numPages}…`);
+    await progress(`${tag}جارٍ ضغط الصفحة ${i} من ${src.numPages}…`);
     const page = await src.getPage(i), v1 = page.getViewport({ scale: 1 });
     let scale = dpi / 72; const maxPx = 4500;   // حد آمن لذاكرة الجوال
     scale = Math.min(scale, maxPx / Math.max(v1.width, v1.height));
@@ -375,11 +480,18 @@ async function compressRaster(file, { q, px: dpi, gray }) {
 
 const TOOLS = {
   compress: {
-    title:'ضغط الحجم', short:'تصغير حجم PDF بدرجات حتى الفائق', icon:'compress', accept:'application/pdf,.pdf',
-    desc:'اختر درجة الضغط من 1 إلى 5، أو «مخصص» لتحدد الأرقام بنفسك.', go:'ضغط',
+    title:'ضغط الحجم', short:'بدرجات أو لحجم محدد، ولعدة ملفات', icon:'compress', multi:true, min:1, accept:'application/pdf,.pdf',
+    desc:'اختر ملفاً أو أكثر، ثم درجة الضغط من 1 إلى 5، أو «حجم محدد» لتختار الأداة أفضل جودة تحت الحجم الذي تكتبه، أو «مخصص».', go:'ضغط',
     opts:`<div class="field"><label>درجة الضغط</label><div class="seg" id="lv">
         ${Object.entries(LEVELS).map(([k, l]) => `<label><input type="radio" name="lv" value="${k}" ${k == 2 ? 'checked' : ''}>${k} · ${l.name}</label>`).join('')}
+        <label><input type="radio" name="lv" value="t">حجم محدد</label>
         <label><input type="radio" name="lv" value="c">مخصص</label></div><div class="hint" id="lvHint"></div></div>
+      <div id="target" class="hidden">
+        <div class="field"><label>الحجم الأقصى المطلوب</label>
+          <div style="display:flex;gap:8px"><input type="text" id="tv" inputmode="decimal" value="1" style="flex:1">
+          <select id="tu" style="width:110px"><option value="1048576">م.ب (MB)</option><option value="1024">ك.ب (KB)</option></select></div>
+          <div class="hint">مثال: 1 م.ب للإيميل، 500 ك.ب لمواقع التقديم.</div></div>
+      </div>
       <div id="custom" class="hidden">
         <div class="field"><label>الطريقة</label><div class="seg">
           <label><input type="radio" name="cm" value="img" checked>ضغط الصور فقط (النص يبقى)</label>
@@ -392,9 +504,9 @@ const TOOLS = {
       </div>`,
     bind() {
       const upd = () => {
-        const v = opt('lv'), c = v === 'c';
-        $('#custom').classList.toggle('hidden', !c);
-        $('#lvHint').textContent = c ? 'حدد الأرقام بنفسك.' : LEVELS[v].hint;
+        const v = opt('lv');
+        $('#custom').classList.toggle('hidden', v !== 'c'); $('#target').classList.toggle('hidden', v !== 't');
+        $('#lvHint').textContent = v === 'c' ? 'حدد الأرقام بنفسك.' : v === 't' ? 'تجرّب الأداة الدرجات من الأعلى جودة إلى الأصغر، وتتوقف عند أول نتيجة تحت الحجم المطلوب.' : LEVELS[v].hint;
         const r = opt('cm') === 'raster';
         $('#pxLbl').textContent = r ? 'الدقة (نقطة لكل بوصة DPI)' : 'أقصى بُعد للصورة (بكسل)';
         $('#pxHint').textContent = r ? 'مثال: 60 صغير جداً · 100 مقروء · 150 واضح · 200 للطباعة.' : 'مثال: 800 صغير جداً · 1200 جيد · 2000 واضح.';
@@ -406,30 +518,244 @@ const TOOLS = {
       $('#cq').oninput = () => $('#qv').textContent = $('#cq').value;
       upd();
     },
-    async run([f]) {
+    async run(list) {
       const v = opt('lv');
-      let s;
+      let plan, limit = 0, lvName;
       if (v === 'c') {
         const n = parseInt(toLatin($('#cpx').value), 10), mode = opt('cm');
         const [lo, hi] = mode === 'raster' ? [30, 300] : [200, 6000];
         if (!(n >= lo && n <= hi)) throw new Error(mode === 'raster' ? 'اكتب دقة بين 30 و300.' : 'اكتب بُعداً بين 200 و6000 بكسل.');
-        s = { mode, q: +$('#cq').value, px: n, gray: $('#cg').checked };
-      } else s = LEVELS[v];
-      let doc, note = '';
-      if (s.mode === 'raster') doc = await compressRaster(f, s);
-      else {
-        const r = await compressImages(f, s); doc = r.doc;
-        if (!r.total) note = 'لا توجد صور في هذا الملف. جرّب الدرجة 4 أو 5 لضغط أقوى.';
-        else if (!r.changed) note = 'الصور مضغوطة أصلاً. جرّب درجة أعلى.';
+        plan = [{ mode, q: +$('#cq').value, px: n, gray: $('#cg').checked }]; lvName = 'مخصص';
+      } else if (v === 't') {
+        limit = parseFloat(toLatin($('#tv').value).replace(',', '.')) * +$('#tu').value;
+        if (!(limit >= 10240)) throw new Error('اكتب حجماً صحيحاً لا يقل عن 10 ك.ب.');
+        plan = [LEVELS[1], LEVELS[2], LEVELS[3], { mode:'raster', q:60, px:150 }, LEVELS[4], { mode:'raster', q:40, px:90 },
+                { mode:'raster', q:35, px:72 }, LEVELS[5], { mode:'raster', q:30, px:60, gray:true }, { mode:'raster', q:25, px:45, gray:true }];
+        lvName = 'حجم محدد';
+      } else { plan = [LEVELS[v]]; lvName = LEVELS[v].name; }
+      const outs = [], notes = [];
+      for (let k = 0; k < list.length; k++) {
+        const f = list[k], tag = list.length > 1 ? `[${k + 1}/${list.length}] ` : '';
+        if (limit && f.size <= limit) { notes.push(`«${f.name}» حجمه ${sizeTxt(f.size)}، وهو أصلاً تحت الحد المطلوب.`); continue; }
+        let best = null;
+        for (let s = 0; s < plan.length; s++) {
+          const st = plan[s]; let doc, note = '';
+          await progress(`${tag}جارٍ ضغط «${esc(f.name)}»${limit ? ` — المحاولة ${s + 1}` : ''}…`);
+          if (st.mode === 'raster') doc = await compressRaster(f, st, tag);
+          else { const r = await compressImages(f, st, tag); doc = r.doc;
+            if (!r.total) note = 'لا توجد صور في هذا الملف. جرّب الدرجة 4 أو 5 لضغط أقوى.';
+            else if (!r.changed) note = 'الصور مضغوطة أصلاً. جرّب درجة أعلى.'; }
+          const bytes = await stamp(doc).save({ useObjectStreams: true });
+          const res = { bytes, pages: doc.getPageCount(), note };
+          // بلا حد: نتيجة واحدة. مع حد: أول نتيجة تحته هي الأعلى جودة، وإلا نحتفظ بالأصغر
+          if (!limit || bytes.length <= limit) { best = res; break; }
+          if (!best || bytes.length < best.bytes.length) best = res;
+        }
+        if (best.bytes.length >= f.size) { notes.push(`«${f.name}»: لم يصغر الحجم (${sizeTxt(f.size)}). ${best.note || 'جرّب درجة أعلى، مثل 4 أو 5.'}`); continue; }
+        const pct = Math.round((1 - best.bytes.length / f.size) * 100);
+        const under = limit && best.bytes.length > limit ? ` ⚠️ أصغر ما أمكن، لكنه أكبر من ${sizeTxt(limit)}.` : '';
+        outs.push({ name: `${baseName(f.name)} - مضغوط.pdf`, bytes: best.bytes, pages: best.pages,
+          msg: `«${f.name}» (${lvName}): من ${sizeTxt(f.size)} إلى ${sizeTxt(best.bytes.length)} — أصغر بنسبة ${pct}٪.${under} ${best.note}` });
       }
-      await progress('جارٍ حفظ الملف…');
-      const bytes = await stamp(doc).save({ useObjectStreams: true });
-      const pct = Math.round((1 - bytes.length / f.size) * 100);
-      const lvName = v === 'c' ? 'مخصص' : LEVELS[v].name;
-      if (bytes.length >= f.size)
-        return { html: `لم يصغر الحجم بهذه الدرجة (${sizeTxt(f.size)}). ${note || 'جرّب درجة أعلى، مثل 4 أو 5.'}`, err: true };
-      return [{ name: `${baseName(f.name)} - مضغوط.pdf`, bytes, pages: doc.getPageCount(),
-        msg: `تم الضغط (${lvName}): من ${sizeTxt(f.size)} إلى ${sizeTxt(bytes.length)} — أصغر بنسبة ${pct}٪. ${note}` }];
+      if (!outs.length) return { html: notes.map(esc).join('<br>'), err: true };
+      if (notes.length) outs[outs.length - 1].msg += '\n' + notes.join('\n');
+      return outs;
+    }
+  },
+  organize: {
+    title:'ترتيب الصفحات بالصور', short:'شاهد الصفحات ورتّبها ودوّرها واحذفها', icon:'organize', accept:'application/pdf,.pdf',
+    desc:'تظهر صفحات الملف كصور. استخدم الأزرار تحت كل صفحة لنقلها أو تدويرها أو حذفها، ثم احفظ.', go:'حفظ الملف',
+    opts:`<div class="bar hidden" id="orgBar">
+        <button type="button" data-o="rotall">تدوير الكل ↻</button>
+        <button type="button" data-o="rev">عكس الترتيب</button>
+        <button type="button" data-o="reset">استعادة الأصل</button></div>
+      <div class="hint" id="orgInfo"></div><div class="grid" id="grid"></div>`,
+    bind() {
+      this.st = [];
+      $('#orgBar').onclick = e => { const o = e.target.dataset.o; if (!o) return;
+        if (o === 'rotall') this.st.forEach(p => p.rot = (p.rot + 90) % 360);
+        if (o === 'rev') this.st.reverse();
+        if (o === 'reset') { this.st.sort((a, b) => a.i - b.i); this.st.forEach(p => { p.rot = 0; p.del = false; }); }
+        this.draw(); };
+      $('#grid').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return;
+        const k = +b.dataset.k, a = b.dataset.p, s = this.st;
+        if (a === 'rot') s[k].rot = (s[k].rot + 90) % 360;
+        else if (a === 'del') s[k].del = !s[k].del;
+        else { const j = a === 'up' ? k - 1 : k + 1; if (j >= 0 && j < s.length) [s[k], s[j]] = [s[j], s[k]]; }
+        this.draw(); };
+    },
+    draw() {
+      const s = this.st, kept = s.filter(p => !p.del).length;
+      $('#orgInfo').textContent = s.length ? `الصفحات: ${s.length} · المحذوفة: ${s.length - kept}` : '';
+      $('#grid').innerHTML = s.map((p, k) => `<div class="pg ${p.del ? 'del' : ''}">
+        <div class="th">${p.url ? `<img src="${p.url}" style="transform:rotate(${p.rot}deg)" alt="">` : '…'}</div>
+        <div class="n">ص ${p.i + 1}${p.rot ? ` · ${p.rot}°` : ''}</div>
+        <div class="acts">
+          <button class="mini" type="button" data-p="up" data-k="${k}" ${k ? '' : 'disabled'} aria-label="إلى الأمام">${svg('prev')}</button>
+          <button class="mini" type="button" data-p="rot" data-k="${k}" aria-label="تدوير">${svg('rot')}</button>
+          <button class="mini del" type="button" data-p="del" data-k="${k}" aria-label="حذف">${svg(p.del ? 'up' : 'x')}</button>
+          <button class="mini" type="button" data-p="down" data-k="${k}" ${k < s.length - 1 ? '' : 'disabled'} aria-label="إلى الخلف">${svg('next')}</button>
+        </div></div>`).join('');
+    },
+    async onFiles([f]) {
+      const tok = this.tok = {}; this.st = [];
+      $('#orgBar').classList.toggle('hidden', !f); this.draw();
+      if (!f) return;
+      try {
+        await thumbs(f, (i, url, n) => {
+          if (!this.st.length) this.st = [...Array(n).keys()].map(i => ({ i, rot: 0, del: false, url: '' }));
+          const p = this.st.find(p => p.i === i); if (p) p.url = url;
+          this.draw();
+        }, () => this.tok === tok && cur === this);
+      } catch (e) { msg('err', 'تعذّر عرض صفحات الملف. قد يكون تالفاً أو محمياً بكلمة مرور.'); }
+    },
+    async run([f]) {
+      const src = await loadPdf(f), n = src.getPageCount();
+      if (this.st.length !== n) throw new Error('انتظر حتى تظهر كل الصفحات.');
+      const keep = this.st.filter(p => !p.del);
+      if (!keep.length) throw new Error('لا يمكن حذف كل الصفحات.');
+      const doc = await copyPages(src, keep.map(p => p.i));
+      doc.getPages().forEach((pg, k) => { if (keep[k].rot) pg.setRotation(degrees((pg.getRotation().angle + keep[k].rot) % 360)); });
+      return [{ name: baseName(f.name) + ' - مرتّب.pdf', doc }];
+    }
+  },
+  scan: {
+    title:'مسح المستندات', short:'صوّر الأوراق بالكاميرا لتصبح PDF واضحاً', icon:'scan', multi:true, min:1, accept:'image/*', camera:true,
+    desc:'صوّر كل صفحة بالكاميرا (أو اختر صوراً من المعرض)، فتُبيَّض الخلفية ويُزال الظل وتصبح الكتابة أوضح، ثم تُجمع في ملف PDF.', go:'إنشاء PDF',
+    opts:`<div class="field"><label>نوع التحسين</label><div class="seg">
+        <label><input type="radio" name="enh" value="bw" checked>مستند (أبيض وأسود)</label>
+        <label><input type="radio" name="enh" value="gray">رمادي</label>
+        <label><input type="radio" name="enh" value="color">ألوان محسّنة</label>
+        <label><input type="radio" name="enh" value="">بدون تحسين</label></div>
+        <div class="hint">«مستند» الأوضح للأوراق المكتوبة، ويعطي أصغر حجم.</div></div>
+      <div class="field"><label>الوضوح</label><div class="seg">
+        <label><input type="radio" name="sq" value="1400">عادي</label>
+        <label><input type="radio" name="sq" value="2000" checked>واضح</label>
+        <label><input type="radio" name="sq" value="2600">عالٍ</label></div></div>
+      <div class="field"><div class="hint">نصيحة: صوّر الورقة من فوق مباشرة، في إضاءة جيدة، واملأ الصورة بالورقة.</div></div>`,
+    async run(files) {
+      const doc = await imagesToPdf(files, { fit: false, mg: 0, maxSide: +opt('sq'), enh: opt('enh') });
+      return [{ name: 'مستند ممسوح.pdf', doc }];
+    }
+  },
+  sign: {
+    title:'توقيع أو ختم', short:'ضع توقيعك أو ختمك على الصفحات', icon:'sign', accept:'application/pdf,.pdf',
+    desc:'اختر ملف PDF، ثم ارسم توقيعك بإصبعك أو اختر صورة التوقيع أو الختم، وحدد مكانه.', go:'وضع التوقيع',
+    opts:`<div class="field"><label>مصدر التوقيع</label><div class="seg">
+        <label><input type="radio" name="ss" value="draw" checked>أرسمه الآن</label>
+        <label><input type="radio" name="ss" value="img">صورة توقيع / ختم</label></div></div>
+      <div class="field" id="fDraw"><canvas class="pad" id="pad"></canvas>
+        <div class="bar"><button type="button" id="padClear">مسح</button>
+        <button type="button" data-c="#1a237e" class="pc">أزرق</button><button type="button" data-c="#111111" class="pc">أسود</button></div></div>
+      <div class="field hidden" id="fImg"><label class="drop" style="padding:14px"><span id="sigName">اختر صورة التوقيع أو الختم</span>
+        <input type="file" id="sigFile" accept="image/*"></label>
+        <div class="seg" style="margin-top:8px"><label><input type="checkbox" id="sigWhite" checked>إزالة الخلفية البيضاء</label></div>
+        <div class="hint">صوّر التوقيع على ورقة بيضاء، وستُزال الخلفية تلقائياً.</div></div>
+      <div class="field"><label>الصفحات</label><div class="seg">
+        <label><input type="radio" name="sp" value="last" checked>الأخيرة</label>
+        <label><input type="radio" name="sp" value="first">الأولى</label>
+        <label><input type="radio" name="sp" value="all">كل الصفحات</label>
+        <label><input type="radio" name="sp" value="pick">تحديد</label></div>
+        <input type="text" id="pages" class="hidden" placeholder="مثال: 2, 5" style="margin-top:8px"><div class="hint" id="pcount"></div></div>
+      <div class="field"><label>المكان</label><div class="seg">
+        <label><input type="radio" name="spos" value="bl" checked>أسفل يسار</label>
+        <label><input type="radio" name="spos" value="bc">أسفل وسط</label>
+        <label><input type="radio" name="spos" value="br">أسفل يمين</label>
+        <label><input type="radio" name="spos" value="tl">أعلى يسار</label>
+        <label><input type="radio" name="spos" value="tr">أعلى يمين</label></div></div>
+      <div class="field"><label>الحجم</label><div class="seg">
+        <label><input type="radio" name="ssz" value="0.16">صغير</label>
+        <label><input type="radio" name="ssz" value="0.24" checked>متوسط</label>
+        <label><input type="radio" name="ssz" value="0.34">كبير</label></div></div>`,
+    bind() {
+      const pad = $('#pad'), g = pad.getContext('2d'); let drawing = false, color = '#1a237e';
+      this.inked = false; this.sigFile = null;
+      const fit = () => { const r = pad.getBoundingClientRect(), d = devicePixelRatio || 1; pad.width = r.width * d; pad.height = r.height * d; g.scale(d, d); g.lineCap = g.lineJoin = 'round'; g.lineWidth = 2.6; this.inked = false; };
+      requestAnimationFrame(fit);
+      const pt = e => { const r = pad.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      pad.onpointerdown = e => { drawing = true; pad.setPointerCapture(e.pointerId); g.strokeStyle = color; g.beginPath(); g.moveTo(...pt(e)); g.lineTo(...pt(e)); g.stroke(); this.inked = true; };
+      pad.onpointermove = e => { if (!drawing) return; g.lineTo(...pt(e)); g.stroke(); };
+      pad.onpointerup = pad.onpointercancel = () => drawing = false;
+      $('#padClear').onclick = fit;
+      document.querySelectorAll('.pc').forEach(b => b.onclick = () => color = b.dataset.c);
+      document.querySelectorAll('[name=ss]').forEach(r => r.onchange = () => {
+        $('#fDraw').classList.toggle('hidden', opt('ss') !== 'draw'); $('#fImg').classList.toggle('hidden', opt('ss') !== 'img');
+        if (opt('ss') === 'draw') requestAnimationFrame(fit); });
+      document.querySelectorAll('[name=sp]').forEach(r => r.onchange = () => $('#pages').classList.toggle('hidden', opt('sp') !== 'pick'));
+      $('#sigFile').onchange = e => { this.sigFile = e.target.files[0] || null; $('#sigName').textContent = this.sigFile ? this.sigFile.name : 'اختر صورة التوقيع أو الختم'; };
+    },
+    async sigPng() {
+      let c;
+      if (opt('ss') === 'draw') {
+        if (!this.inked) throw new Error('ارسم توقيعك أولاً في المربع.');
+        const pad = $('#pad'), g = pad.getContext('2d'), d = g.getImageData(0, 0, pad.width, pad.height).data;
+        let x0 = pad.width, y0 = pad.height, x1 = 0, y1 = 0;   // قص الفراغ حول التوقيع
+        for (let y = 0; y < pad.height; y++) for (let x = 0; x < pad.width; x++) if (d[(y * pad.width + x) * 4 + 3]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (x1 < x0) throw new Error('ارسم توقيعك أولاً في المربع.');
+        const m = 6; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(pad.width - 1, x1 + m); y1 = Math.min(pad.height - 1, y1 + m);
+        c = document.createElement('canvas'); c.width = x1 - x0 + 1; c.height = y1 - y0 + 1;
+        c.getContext('2d').drawImage(pad, x0, y0, c.width, c.height, 0, 0, c.width, c.height);
+      } else {
+        if (!this.sigFile) throw new Error('اختر صورة التوقيع أو الختم.');
+        const url = URL.createObjectURL(this.sigFile);
+        const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; })
+          .catch(() => { throw new Error('تعذّر قراءة صورة التوقيع.'); }).finally(() => URL.revokeObjectURL(url));
+        const s = Math.min(1, 1000 / Math.max(img.naturalWidth, img.naturalHeight));
+        c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+        const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
+        if ($('#sigWhite').checked) {   // الأبيض يصبح شفافاً تدريجياً
+          const id = g.getImageData(0, 0, c.width, c.height), a = id.data;
+          for (let i = 0; i < a.length; i += 4) { const y = a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114; a[i + 3] = Math.min(a[i + 3], Math.max(0, Math.min(255, (225 - y) * 255 / 70))); }
+          g.putImageData(id, 0, 0);
+        }
+      }
+      return new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/png'))).arrayBuffer());
+    },
+    async run([f]) {
+      const doc = await loadPdf(f), n = doc.getPageCount(), sp = opt('sp');
+      const idx = sp === 'last' ? [n - 1] : sp === 'first' ? [0] : sp === 'all' ? doc.getPageIndices() : parseRanges($('#pages').value, n);
+      const img = await doc.embedPng(await this.sigPng()), pos = opt('spos'), frac = +opt('ssz'), m = 36;
+      for (const i of new Set(idx)) {
+        const p = doc.getPage(i), v = viewSize(p);
+        const w = Math.min(v.w * frac, v.w - 2 * m), h = w * img.height / img.width;
+        const vx = pos[1] === 'l' ? m : pos[1] === 'r' ? v.w - w - m : (v.w - w) / 2;
+        const vy = pos[0] === 'b' ? m : v.h - h - m;
+        p.drawImage(img, { ...placeAt(p, vx, vy), width: w, height: h });
+      }
+      return [{ name: baseName(f.name) + ' - موقّع.pdf', doc }];
+    }
+  },
+  toimg: {
+    title:'PDF إلى صور', short:'كل صفحة صورة JPG لإرسالها', icon:'toimg', accept:'application/pdf,.pdf',
+    desc:'يحوّل صفحات PDF إلى صور. يمكنك تنزيلها كلها في ملف ZIP أو مشاركتها مباشرة.', go:'تحويل',
+    opts:`<div class="field"><label>الوضوح</label><div class="seg">
+        <label><input type="radio" name="dpi" value="72">صغير</label>
+        <label><input type="radio" name="dpi" value="110" checked>متوسط</label>
+        <label><input type="radio" name="dpi" value="150">واضح</label>
+        <label><input type="radio" name="dpi" value="220">عالٍ</label></div></div>
+      <div class="field"><label>نوع الصورة</label><div class="seg">
+        <label><input type="radio" name="fmt2" value="jpg" checked>JPG (أصغر)</label>
+        <label><input type="radio" name="fmt2" value="png">PNG (أنقى للنصوص)</label></div></div>
+      <div class="field"><label>الصفحات (اختياري)</label><input type="text" id="pages" placeholder="فارغ = كل الصفحات"><div class="hint" id="pcount"></div></div>`,
+    async run([f]) {
+      const lib = pdfjs(), dpi = +opt('dpi'), png = opt('fmt2') === 'png';
+      const src = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise
+        .catch(e => { throw new Error(e?.name === 'PasswordException' ? 'الملف محمي بكلمة مرور.' : 'تعذّر قراءة «' + f.name + '».'); });
+      const idx = $('#pages').value.trim() ? parseRanges($('#pages').value, src.numPages) : [...Array(src.numPages).keys()];
+      const outs = [], bn = baseName(f.name);
+      for (let k = 0; k < idx.length; k++) {
+        await progress(`جارٍ تحويل الصفحة ${k + 1} من ${idx.length}…`);
+        const pg = await src.getPage(idx[k] + 1), v1 = pg.getViewport({ scale: 1 });
+        const vp = pg.getViewport({ scale: Math.min(dpi / 72, 5000 / Math.max(v1.width, v1.height)) });
+        const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+        const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+        await pg.render({ canvasContext: g, viewport: vp }).promise;
+        const blob = await new Promise(r => c.toBlob(r, png ? 'image/png' : 'image/jpeg', .85));
+        outs.push({ name: `${bn} - ص${idx[k] + 1}.${png ? 'png' : 'jpg'}`, blob, info: `${c.width}×${c.height} بكسل` });
+        c.width = c.height = 0; pg.cleanup();
+      }
+      src.destroy();
+      return outs;
     }
   },
   merge: {
@@ -537,20 +863,7 @@ const TOOLS = {
         <label><input type="radio" name="q" value="1400">صغير</label></div>
         <div class="hint">«متوسط» و«صغير» يصغّران الصور الكبيرة (مثل صور الكاميرا) فيصغر الملف كثيراً.</div></div>`,
     async run(files) {
-      const doc = await PDFDocument.create();
-      const fit = document.querySelector('[name=ps]:checked').value === 'fit';
-      const mg = +document.querySelector('[name=mg]:checked').value;
-      const maxSide = +document.querySelector('[name=q]:checked').value;
-      for (const f of files) {
-        const { bytes, type } = await imageBytes(f, maxSide);
-        const img = type === 'png' ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
-        let pw, ph;
-        if (fit) { pw = img.width + mg * 2; ph = img.height + mg * 2; }
-        else { const land = img.width > img.height; pw = land ? 841.89 : 595.28; ph = land ? 595.28 : 841.89; }
-        const s = Math.min((pw - mg * 2) / img.width, (ph - mg * 2) / img.height);
-        const w = img.width * s, h = img.height * s;
-        doc.addPage([pw, ph]).drawImage(img, { x: (pw - w) / 2, y: (ph - h) / 2, width: w, height: h });
-      }
+      const doc = await imagesToPdf(files, { fit: opt('ps') === 'fit', mg: +opt('mg'), maxSide: +opt('q') });
       return [{ name: (files.length === 1 ? baseName(files[0].name) : 'صور') + '.pdf', doc }];
     }
   },
@@ -609,21 +922,58 @@ const TOOLS = {
 };
 
 // يجهّز الصورة: JPG/PNG كما هي، وغيرها (webp, heic المدعوم…) يُحوّل عبر canvas. ويصغّرها إن طُلب.
-async function imageBytes(file, maxSide) {
+// اتجاه صورة الكاميرا من بيانات EXIF (1 = عادي). الصور المدوّرة بالـ EXIF لا تُضمَّن كما هي.
+function jpegOrientation(buf) {
+  const v = new DataView(buf); if (v.byteLength < 4 || v.getUint16(0) !== 0xFFD8) return 1;
+  let o = 2;
+  while (o + 4 < v.byteLength) {
+    const m = v.getUint16(o), len = v.getUint16(o + 2);
+    if (m === 0xFFE1 && v.getUint32(o + 4) === 0x45786966) {
+      const t0 = o + 10, le = v.getUint16(t0) === 0x4949, ifd = t0 + v.getUint32(t0 + 4, le), n = v.getUint16(ifd, le);
+      for (let i = 0; i < n; i++) { const e = ifd + 2 + i * 12; if (e + 10 > v.byteLength) break; if (v.getUint16(e, le) === 0x0112) return v.getUint16(e + 8, le); }
+      return 1;
+    }
+    if ((m & 0xFF00) !== 0xFF00 || m === 0xFFDA) break;
+    o += 2 + len;
+  }
+  return 1;
+}
+
+// يجهّز الصورة: JPG/PNG كما هي إن أمكن، وغيرها يُحوّل عبر canvas. ويصغّرها أو يحسّنها (مسح المستندات) إن طُلب.
+async function imageBytes(file, maxSide, enh) {
   const isJ = /jpe?g$/i.test(file.type), isP = /png$/i.test(file.type);
-  if ((isJ || isP) && !maxSide) return { bytes: await file.arrayBuffer(), type: isP ? 'png' : 'jpg' };
+  const raw = await file.arrayBuffer();
+  const asIs = (isJ && jpegOrientation(raw) === 1) || isP;
+  if (asIs && !maxSide && !enh) return { bytes: raw, type: isP ? 'png' : 'jpg' };
   const url = URL.createObjectURL(file);
   try {
     const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(); i.src = url; })
       .catch(() => { throw new Error('تعذّر قراءة الصورة «' + file.name + '». هذا النوع غير مدعوم في هذا المتصفح.'); });
     let w = img.naturalWidth, h = img.naturalHeight;
-    if ((isJ || isP) && Math.max(w, h) <= maxSide) return { bytes: await file.arrayBuffer(), type: isP ? 'png' : 'jpg' };
+    if (asIs && !enh && Math.max(w, h) <= maxSide) return { bytes: raw, type: isP ? 'png' : 'jpg' };
     if (maxSide && Math.max(w, h) > maxSide) { const s = maxSide / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
     const c = document.createElement('canvas'); c.width = w; c.height = h;
-    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h);
-    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+    const g = c.getContext('2d', { willReadFrequently: !!enh }); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h);
+    if (enh) enhanceScan(g, w, h, enh);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', enh ? 0.72 : 0.85));
     return { bytes: await blob.arrayBuffer(), type: 'jpg' };
   } finally { URL.revokeObjectURL(url); }
+}
+
+async function imagesToPdf(files, { fit, mg, maxSide, enh }) {
+  const doc = await PDFDocument.create();
+  for (let i = 0; i < files.length; i++) {
+    await progress(`جارٍ تجهيز الصورة ${i + 1} من ${files.length}…`);
+    const { bytes, type } = await imageBytes(files[i], maxSide, enh);
+    const img = type === 'png' ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+    let pw, ph;
+    if (fit) { pw = img.width + mg * 2; ph = img.height + mg * 2; }
+    else { const land = img.width > img.height; pw = land ? 841.89 : 595.28; ph = land ? 595.28 : 841.89; }
+    const s = Math.min((pw - mg * 2) / img.width, (ph - mg * 2) / img.height);
+    const w = img.width * s, h = img.height * s;
+    doc.addPage([pw, ph]).drawImage(img, { x: (pw - w) / 2, y: (ph - h) / 2, width: w, height: h });
+  }
+  return doc;
 }
 
 /* ===== الواجهة ===== */
@@ -638,12 +988,14 @@ window.onpopstate = () => close();
 function open(k) {
   cur = TOOLS[k]; files = []; clearOuts();
   $('#tTitle').textContent = cur.title; $('#tDesc').textContent = cur.desc;
-  $('#dropTxt').textContent = cur.multi ? (k === 'images' ? 'اختر الصور' : 'اختر ملفات PDF') : 'اختر ملف PDF';
+  const isImg = cur.accept.startsWith('image');
+  $('#dropTxt').textContent = isImg ? (cur.camera ? 'اختر صوراً من المعرض' : 'اختر الصور') : cur.multi ? 'اختر ملف PDF أو أكثر' : 'اختر ملف PDF';
+  $('#camBtn').classList.toggle('hidden', !cur.camera); $('#camInput').value = '';
   const pk = $('#picker'); pk.value = ''; pk.multiple = !!cur.multi; pk.accept = cur.accept;
   $('#opts').innerHTML = cur.opts || ''; cur.bind && cur.bind();
   $('#go').textContent = cur.go; $('#msg').innerHTML = '';
   $('#home').classList.add('hidden'); $('#tool').classList.remove('hidden'); $('#back').classList.remove('hidden');
-  render(); history.pushState({ t: k }, ''); scrollTo(0, 0);
+  render(); cur.onFiles && cur.onFiles(files); history.pushState({ t: k }, ''); scrollTo(0, 0);
 }
 function close() {
   cur = null; files = []; clearOuts();
@@ -657,10 +1009,10 @@ function addFiles(list) {
   if (ok.length < list.length) msg('err', 'تم تجاهل ملفات ليست من النوع المطلوب.'); else msg();
   if (!ok.length) return;
   files = cur.multi ? files.concat(ok) : [ok[0]];
-  clearOuts(); render();
+  clearOuts(); render(); cur.onFiles && cur.onFiles(files);
 }
 async function render() {
-  const thumbs = cur === TOOLS.images;
+  const thumbs = cur.accept.startsWith('image');
   $('#list').innerHTML = files.map((f, i) => `<li class="item">
       ${thumbs ? `<img data-i="${i}" alt="">` : ''}
       <span class="nm">${esc(f.name)}<small>${sizeTxt(f.size)}</small></span>
@@ -676,11 +1028,12 @@ async function render() {
 $('#list').onclick = e => {
   const b = e.target.closest('[data-a]'); if (!b) return;
   const i = +b.dataset.i, a = b.dataset.a;
-  if (a === 'x') files.splice(i, 1);
+  if (a === 'x') { files.splice(i, 1); cur.onFiles && cur.onFiles(files); }
   else { const j = a === 'up' ? i - 1 : i + 1; [files[i], files[j]] = [files[j], files[i]]; }
   clearOuts(); render();
 };
 $('#picker').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+$('#camInput').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
@@ -692,23 +1045,43 @@ $('#go').onclick = async () => {
   try {
     const res = await cur.run(files);
     if (res.html) { msg(res.err ? 'err' : 'ok', res.html); return; }
+    const made = [];
     for (const r of res) {
-      const bytes = r.bytes || await stamp(r.doc).save();
-      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const blob = r.blob || new Blob([r.bytes || await stamp(r.doc).save()], { type: 'application/pdf' });
+      const file = new File([blob], r.name, { type: blob.type });
+      made.push(file);
       const u = URL.createObjectURL(blob); urls.push(u);
-      const pages = r.pages || r.doc.getPageCount();
+      const info = r.info || `${r.pages || r.doc.getPageCount()} صفحة`;
       const el = document.createElement('div'); el.className = 'out';
-      el.innerHTML = `<span class="nm">${esc(r.name)}<small>${pages} صفحة · ${sizeTxt(blob.size)}</small></span>
+      el.innerHTML = `<span class="nm">${esc(r.name)}<small>${info} · ${sizeTxt(blob.size)}</small></span>
         <a class="btn alt" href="${u}" target="_blank" rel="noopener">فتح</a>
         <a class="btn" href="${u}" download="${esc(r.name)}">تنزيل</a>`;
-      if (navigator.canShare && navigator.canShare({ files: [new File([blob], r.name, { type: 'application/pdf' })] })) {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         const sh = document.createElement('button'); sh.className = 'btn alt'; sh.textContent = 'مشاركة';
-        sh.onclick = () => navigator.share({ files: [new File([blob], r.name, { type: 'application/pdf' })] }).catch(() => {});
+        sh.onclick = () => navigator.share({ files: [file] }).catch(() => {});
         el.insertBefore(sh, el.children[1]);
       }
       $('#outs').appendChild(el);
     }
-    msg('ok', res[0].msg ? esc(res[0].msg) : res.length > 1 ? `تم. ${res.length} ملفات جاهزة:` : 'تم. الملف جاهز:');
+    if (made.length > 1) {   // تنزيل الكل في ملف ZIP، ومشاركة الكل دفعة واحدة
+      const bar = document.createElement('div'); bar.className = 'allbar';
+      const zipName = baseName(files[0].name) + ' - الكل.zip';
+      const zb = document.createElement('button'); zb.className = 'btn'; zb.textContent = `تنزيل الكل (ZIP)`;
+      zb.onclick = async () => {
+        const items = await Promise.all(made.map(async f => ({ name: f.name, data: new Uint8Array(await f.arrayBuffer()) })));
+        const u = URL.createObjectURL(makeZip(items)); urls.push(u);
+        const a = document.createElement('a'); a.href = u; a.download = zipName; document.body.appendChild(a); a.click(); a.remove();
+      };
+      bar.appendChild(zb);
+      if (navigator.canShare && navigator.canShare({ files: made })) {
+        const sb = document.createElement('button'); sb.className = 'btn alt'; sb.textContent = 'مشاركة الكل';
+        sb.onclick = () => navigator.share({ files: made }).catch(() => {});
+        bar.appendChild(sb);
+      }
+      $('#outs').prepend(bar);
+    }
+    const msgs = res.map(r => r.msg).filter(Boolean);
+    msg('ok', msgs.length ? msgs.map(esc).join('<br>').replace(/\n/g, '<br>') : res.length > 1 ? `تم. ${res.length} ملفات جاهزة:` : 'تم. الملف جاهز:');
   } catch (e) {
     console.error(e); msg('err', esc(e.message || 'حدث خطأ غير متوقع.'));
   } finally { go.disabled = files.length < (cur.min || 1); }
@@ -734,4 +1107,4 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.se
 </script>
 </body>
 </html>
-<!-- ALMA-SEAL v9 | 5a419d64fa9307b49462e16d2b9299ad42dd9a192c2e68d871218a4c77b148e0 -->
+<!-- ALMA-SEAL v9 | 282bbfe38b9b32f1f632fb6ce0b1f90ec37139a163b2e3454ab480dfb551f47f -->
