@@ -85,6 +85,8 @@ h2{font-size:17px;margin-bottom:4px}
 .btn.alt{background:#fff;color:var(--accent);border:1.5px solid #ddd6ff}
 .foot{text-align:center;font-size:12px;color:var(--muted);padding:14px;line-height:1.9}
 .foot b{color:#ce1126}
+.foot b.nm{color:#5b4dc9}
+.foot a{color:inherit;text-decoration:none;direction:ltr;unicode-bidi:embed}
 @media (max-width:420px){.tools{grid-template-columns:1fr 1fr}.tool{padding:12px 8px}}
 </style>
 </head>
@@ -126,9 +128,9 @@ h2{font-size:17px;margin-bottom:4px}
     </section>
   </div>
 </div>
-<div class="foot">
-  تصميم م/ماهر العلفي · لوجه الله<br>
-  عاشت <b>اليمن</b> · «نبدأ من حيث انتهى الآخرون»
+<div class="foot" id="credit">
+  تصميم <b class="nm">م/ماهر العلفي</b> · <a href="tel:00967777408089">00967777408089</a> · لوجه الله<br>
+  عاشت <b>اليمن</b> 🇾🇪 · «نبدأ من حيث انتهى الآخرون»
 </div>
 </div>
 
@@ -265,7 +267,7 @@ async function copyPages(src, idx) {
   pages.forEach(p => doc.addPage(p));
   return doc;
 }
-const stamp = doc => { doc.setProducer('الما ALMA PDF — م/ماهر العلفي'); doc.setCreator('الما ALMA PDF'); return doc; };
+const stamp = doc => { doc.setProducer('الما ALMA PDF — تصميم م/ماهر العلفي — 00967777408089'); doc.setCreator('الما ALMA PDF — م/ماهر العلفي'); return doc; };
 
 /* ===== تعريف الأدوات ===== */
 // درجات الضغط: img = إعادة ضغط الصور مع بقاء النص، raster = تحويل كل صفحة إلى صورة مضغوطة
@@ -714,5 +716,22 @@ $('#go').onclick = async () => {
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
+<script>
+(function(){ // قفل الحقوق: يفرض سطر «تصميم م/ماهر العلفي» مهما عُدِّل أو حُذف
+  try{ var C="2KrYtdmF2YrZhSA8YiBjbGFzcz0ibm0iPtmFL9mF2KfZh9ixINin2YTYudmE2YHZijwvYj4gwrcgPGEgaHJlZj0idGVsOjAwOTY3Nzc3NDA4MDg5Ij4wMDk2Nzc3NzQwODA4OTwvYT4gwrcg2YTZiNis2Ycg2KfZhNmE2Yc8YnI+CiAg2LnYp9i02KogPGI+2KfZhNmK2YXZhjwvYj4g8J+HvvCfh6ogwrcgwqvZhtio2K/YoyDZhdmGINit2YrYqyDYp9mG2KrZh9mJINin2YTYotiu2LHZiNmGwrs=", t=decodeURIComponent(escape(atob(C)));
+    var n=document.createElement("div"); n.innerHTML=t; t=n.innerHTML;   // نفس صيغة المتصفح، حتى لا يتكرر الضبط
+    var set=function(){
+      var e=document.getElementById("credit");
+      if(!e){ e=document.createElement("div"); e.id="credit"; (document.querySelector(".wrap")||document.body).appendChild(e); }
+      if(e.className!=="foot") e.className="foot";
+      if(e.getAttribute("style")) e.removeAttribute("style");
+      if(e.innerHTML!==t) e.innerHTML=t;
+    };
+    set(); setTimeout(set,800); setTimeout(set,2500); setInterval(set,4000);
+    if(window.MutationObserver) new MutationObserver(function(){ set(); }).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["style","class"]});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
+<!-- ALMA-SEAL v9 | 5a419d64fa9307b49462e16d2b9299ad42dd9a192c2e68d871218a4c77b148e0 -->
