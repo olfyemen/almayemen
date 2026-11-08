@@ -28,6 +28,7 @@ header p{color:var(--muted);font-size:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
 .card h2{font-size:16px;margin-bottom:10px}
 label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+label.chk{display:flex;gap:8px;align-items:center;color:var(--text);font-size:14px;cursor:pointer;margin:0}
 input[type=text],input[type=password],select{
   font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);
   border-radius:10px;padding:8px 10px;width:100%}
@@ -37,7 +38,8 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 16px;
 button.primary{background:var(--accent);color:#fff;font-weight:600}
 button:disabled{opacity:.5;cursor:not-allowed}
 button.sm{padding:4px 10px;font-size:13px}
-.drop{border:2px dashed var(--line);border-radius:16px;padding:28px 16px;text-align:center;cursor:pointer;transition:.2s}
+button.on{background:var(--accent);color:#fff}
+.drop{border:2px dashed var(--line);border-radius:16px;padding:24px 16px;text-align:center;cursor:pointer;transition:.2s}
 .drop.over{border-color:var(--accent);background:var(--soft)}
 .drop b{display:block;font-size:17px;margin-bottom:4px}
 .drop span{color:var(--muted);font-size:14px}
@@ -55,9 +57,11 @@ th{color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
 td img{width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block}
 td input{font:inherit;color:var(--text);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 7px;width:100%;min-width:90px;font-variant-numeric:tabular-nums}
 td input:focus{border-color:var(--accent);background:var(--bg);outline:none}
-td input.num{color:var(--red);font-weight:700}
+input.num{color:var(--red)!important;font-weight:700}
 tr.low td{background:rgba(217,119,6,.08)}
 tr.dup td input.num{background:rgba(229,72,77,.12)}
+.extra{display:none}
+body.extras .extra{display:table-cell}
 .badge{font-size:12px;padding:2px 8px;border-radius:99px;white-space:nowrap;display:inline-block}
 .b-wait{background:var(--line);color:var(--muted)}
 .b-run{background:var(--soft);color:var(--accent)}
@@ -69,11 +73,31 @@ tr.dup td input.num{background:rgba(229,72,77,.12)}
 .alerts div{padding:8px 12px;border-radius:10px;background:rgba(217,119,6,.10)}
 .alerts div.bad{background:rgba(229,72,77,.10)}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-dialog{border:0;border-radius:16px;padding:0;max-width:96vw;max-height:94vh;background:#000}
-dialog img{max-width:96vw;max-height:94vh;display:block}
+dialog{border:0;border-radius:16px;padding:0;max-width:96vw;max-height:94vh}
 dialog::backdrop{background:rgba(0,0,0,.75)}
+#zoom{background:#000}
+#zoom img{max-width:96vw;max-height:94vh;display:block}
+#review{background:var(--panel);color:var(--text);width:min(1000px,96vw)}
+.rv{display:flex;flex-wrap:wrap;gap:14px;padding:14px}
+.rv-img{flex:2 1 320px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;min-height:260px;overflow:auto}
+.rv-img img{max-width:100%;max-height:70vh;display:block;cursor:zoom-in}
+.rv-img img.big{max-width:none;max-height:none;cursor:zoom-out}
+.rv-form{flex:1 1 240px;display:flex;flex-direction:column;gap:10px}
+.rv-form input{font-size:18px}
+.rv-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rv-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.rv-nav button{flex:1}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
 .hidden{display:none!important}
+.print-only{display:none}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .card{box-shadow:none;border:0;padding:0}
+  .no-print,header p,.alerts,td:nth-child(2),th:nth-child(2),td:last-child,th:last-child,.badge{display:none!important}
+  .print-only{display:block}
+  td input{border:0;color:#000!important;padding:0}
+  tr.low td,tr.dup td input.num{background:none}
+}
 </style>
 </head>
 <body>
@@ -82,9 +106,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
 <header>
   <h1>🧾 قارئ الفواتير اليدوية</h1>
   <p>ارفع صور الفواتير (حتى 50 صورة أو أكثر) فيستخرج رقم الفاتورة المكتوب بالأحمر ومبلغها المكتوب بخط اليد، ثم صدّرها إلى Excel.</p>
+  <p class="print-only" id="printDate"></p>
 </header>
 
-<section class="card">
+<section class="card no-print">
   <h2>١. الإعدادات</h2>
   <div class="row">
     <div>
@@ -104,17 +129,22 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
       <input id="cur" type="text" value="ريال">
     </div>
   </div>
-  <p class="hint">قراءة الخط اليدوي تحتاج ذكاءً اصطناعياً؛ تُرسل كل صورة (مصغّرة) إلى Claude مباشرة من متصفحك. احصل على مفتاح من console.anthropic.com.</p>
+  <div class="row" style="margin-top:10px">
+    <label class="chk"><input type="checkbox" id="extras"> استخراج التاريخ واسم العميل أيضاً</label>
+  </div>
+  <p class="hint">قراءة الخط اليدوي تحتاج ذكاءً اصطناعياً؛ تُرسل كل صورة (مصغّرة) إلى Claude مباشرة من متصفحك. احصل على مفتاح من console.anthropic.com. النتائج والصور تُحفظ تلقائياً في هذا المتصفح، فلا تضيع لو أُغلقت الصفحة.</p>
 </section>
 
-<section class="card">
+<section class="card no-print">
   <h2>٢. الصور</h2>
   <div id="drop" class="drop" tabindex="0">
-    <b>📷 اضغط لاختيار الصور أو اسحبها هنا</b>
+    <b>🖼 اضغط لاختيار الصور أو اسحبها هنا</b>
     <span>يمكن اختيار عدة صور مرة واحدة · JPG / PNG / HEIC (حسب المتصفح)</span>
   </div>
   <input id="file" type="file" accept="image/*" multiple class="hidden">
+  <input id="cam" type="file" accept="image/*" capture="environment" class="hidden">
   <div class="actions" style="margin-top:12px">
+    <button id="camBtn">📷 تصوير فاتورة بالكاميرا</button>
     <button id="start" class="primary" disabled>▶ ابدأ التعرّف</button>
     <button id="stop" class="hidden">⏸ إيقاف</button>
     <button id="retryErr" class="hidden">↻ إعادة الفاشلة</button>
@@ -127,25 +157,34 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
   <div class="stats">
     <div class="stat"><small>عدد الفواتير</small><b id="sCount">0</b></div>
     <div class="stat"><small>تمت قراءتها</small><b id="sDone">0</b></div>
-    <div class="stat"><small>تحتاج مراجعة</small><b id="sLow">0</b></div>
+    <div class="stat no-print"><small>تحتاج مراجعة</small><b id="sLow">0</b></div>
+    <div class="stat"><small>من رقم – إلى رقم</small><b id="sRange">—</b></div>
     <div class="stat"><small>الإجمالي</small><b id="sTotal">0</b></div>
   </div>
 </section>
 
 <section class="card">
-  <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+  <div class="row no-print" style="justify-content:space-between;align-items:center;margin-bottom:10px">
     <h2 style="margin:0">٣. النتائج <small style="color:var(--muted);font-weight:400;font-size:13px">(يمكنك تعديل أي خانة)</small></h2>
     <div class="actions">
+      <button id="fAll" class="sm on">الكل</button>
+      <button id="fLow" class="sm">تحتاج مراجعة</button>
+      <button id="reviewBtn" class="sm">🔍 مراجعة سريعة</button>
       <button id="sort" class="sm">ترتيب حسب الرقم</button>
-      <button id="copy" class="sm">📋 نسخ للصق في Excel</button>
-      <button id="csv" class="sm primary">⬇ تنزيل Excel (CSV)</button>
     </div>
+  </div>
+  <div class="actions no-print" style="margin-bottom:10px">
+    <button id="copy" class="sm">📋 نسخ للصق في Excel</button>
+    <button id="csv" class="sm primary">⬇ تنزيل Excel (CSV)</button>
+    <button id="print" class="sm">🖨 طباعة / PDF</button>
   </div>
   <div id="alerts" class="alerts" style="margin-bottom:10px"></div>
   <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th>#</th><th>الصورة</th><th>رقم الفاتورة</th><th>المبلغ</th><th>الحالة</th><th>ملاحظة</th><th></th>
+        <th>#</th><th>الصورة</th><th>رقم الفاتورة</th><th>المبلغ</th>
+        <th class="extra">التاريخ</th><th class="extra">العميل</th>
+        <th class="no-print">الحالة</th><th class="no-print">ملاحظة</th><th></th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
@@ -158,6 +197,29 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
 
 <dialog id="zoom"><img id="zoomImg" alt=""></dialog>
 
+<dialog id="review">
+  <div class="rv">
+    <div class="rv-img"><img id="rvImg" alt="" title="اضغط للتكبير"></div>
+    <div class="rv-form">
+      <div class="rv-head">
+        <b id="rvTitle"></b>
+        <button class="sm" id="rvClose">✕ إغلاق</button>
+      </div>
+      <div id="rvNote" class="hint"></div>
+      <div><label for="rvNum">رقم الفاتورة</label><input id="rvNum" class="num" type="text" inputmode="numeric"></div>
+      <div><label for="rvAmt">المبلغ</label><input id="rvAmt" type="text" inputmode="decimal"></div>
+      <div class="rv-extra"><label for="rvDate">التاريخ</label><input id="rvDate" type="text"></div>
+      <div class="rv-extra"><label for="rvCust">العميل</label><input id="rvCust" type="text"></div>
+      <p class="hint">Enter = تأكيد والانتقال للتالية</p>
+      <div class="rv-nav">
+        <button id="rvPrev">→ السابقة</button>
+        <button id="rvOk" class="primary">✓ تأكيد والتالية</button>
+        <button id="rvNext">التالية ←</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
 <script>
 (() => {
 'use strict';
@@ -169,16 +231,66 @@ const store = {
 
 const CONCURRENCY = 3;
 const MAX_SIDE = 1600;
-let items = [];          // {id, file, name, thumb, b64, status, num, amount, conf, note}
-let running = false, stopFlag = false, nextId = 1;
+const FIELDS = ['num', 'amount', 'date', 'customer'];
+let items = [];          // {id, name, b64, status, num, amount, date, customer, conf, note}
+let running = false, stopFlag = false, nextId = 1, filter = 'all';
+
+// ---------- persistence (IndexedDB) ----------
+const db = (() => {
+  let p;
+  const open = () => p || (p = new Promise((res, rej) => {
+    const r = indexedDB.open('invoice-reader', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('items', {keyPath: 'id'});
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+  const tx = async (mode, fn) => {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const t = d.transaction('items', mode);
+      const out = fn(t.objectStore('items'));
+      t.oncomplete = () => res(out && out.result);
+      t.onerror = () => rej(t.error);
+    });
+  };
+  return {
+    all: () => tx('readonly', s => s.getAll()),
+    put: it => tx('readwrite', s => s.put(it)),
+    del: id => tx('readwrite', s => s.delete(id)),
+    clear: () => tx('readwrite', s => s.clear())
+  };
+})();
+const dirty = new Set();
+let saveTimer = null;
+function save(it){
+  dirty.add(it);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    for (const x of dirty){
+      if (!items.includes(x) || !x.b64) continue;
+      const {id, name, b64, num, amount, date, customer, conf, note, order} = x;
+      const status = x.status === 'run' ? 'wait' : x.status;
+      db.put({id, name, b64, status, num, amount, date, customer, conf, note, order}).catch(() => {});
+    }
+    dirty.clear();
+  }, 400);
+}
+const saveOrder = () => items.forEach((it, i) => { it.order = i; save(it); });
 
 // ---------- settings ----------
 $('key').value = store.get('inv_key') || '';
 $('model').value = store.get('inv_model') || 'claude-sonnet-5-5';
 $('cur').value = store.get('inv_cur') || 'ريال';
+$('extras').checked = store.get('inv_extras') === '1';
+const applyExtras = () => {
+  document.body.classList.toggle('extras', $('extras').checked);
+  document.querySelectorAll('.rv-extra').forEach(e => e.classList.toggle('hidden', !$('extras').checked));
+};
+applyExtras();
 $('key').addEventListener('input', e => { store.set('inv_key', e.target.value.trim()); refresh(); });
 $('model').addEventListener('change', e => store.set('inv_model', e.target.value));
 $('cur').addEventListener('input', e => { store.set('inv_cur', e.target.value); refresh(); });
+$('extras').addEventListener('change', e => { store.set('inv_extras', e.target.checked ? '1' : '0'); applyExtras(); });
 
 // ---------- helpers ----------
 const AR_DIGITS = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9',
@@ -192,27 +304,28 @@ const parseAmount = s => {
 const fmt = n => n == null ? '' : n.toLocaleString('en-US', {maximumFractionDigits: 2});
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const src = it => it.b64 ? 'data:image/jpeg;base64,' + it.b64 : '';
+const needsReview = it => it.status === 'low' || it.status === 'err';
 
-function loadImage(file){
+function prepare(item, file){
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => res({img, url});
+    img.onload = () => {
+      const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * scale);
+      c.height = Math.round(img.naturalHeight * scale);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      item.b64 = c.toDataURL('image/jpeg', 0.85).split(',')[1];
+      URL.revokeObjectURL(url);
+      res();
+    };
     img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('تعذّر فتح الصورة')); };
     img.src = url;
   });
-}
-async function prepare(item){
-  const {img, url} = await loadImage(item.file);
-  item.thumb = url;
-  const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
-  const c = document.createElement('canvas');
-  c.width = Math.round(img.naturalWidth * scale);
-  c.height = Math.round(img.naturalHeight * scale);
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-  ctx.drawImage(img, 0, 0, c.width, c.height);
-  item.b64 = c.toDataURL('image/jpeg', 0.85).split(',')[1];
 }
 
 // ---------- adding files ----------
@@ -220,9 +333,9 @@ function addFiles(list){
   const files = [...list].filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name));
   files.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}));
   for (const f of files){
-    const it = {id: nextId++, file: f, name: f.name, status: 'wait', num: '', amount: '', conf: '', note: ''};
+    const it = {id: nextId++, name: f.name || 'صورة', status: 'wait', num: '', amount: '', date: '', customer: '', conf: '', note: '', order: items.length};
     items.push(it);
-    prepare(it).then(render).catch(e => { it.status = 'err'; it.note = e.message; render(); });
+    prepare(it, f).then(() => { save(it); render(); }).catch(e => { it.status = 'err'; it.note = e.message; render(); });
   }
   render();
 }
@@ -230,81 +343,97 @@ const drop = $('drop');
 drop.addEventListener('click', () => $('file').click());
 drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') $('file').click(); });
 $('file').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+$('camBtn').addEventListener('click', () => $('cam').click());
+$('cam').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) addFiles([new File([f], 'كاميرا-' + new Date().toTimeString().slice(0, 8).replace(/:/g, '') + '.jpg', {type: f.type || 'image/jpeg'})]);
+  e.target.value = '';
+});
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 
 // ---------- Claude call ----------
-const PROMPT = `هذه صورة فاتورة يدوية (مكتوبة بخط اليد غالباً).
+const prompt = extras => `هذه صورة فاتورة يدوية (مكتوبة بخط اليد غالباً).
 المطلوب استخراج:
 1) رقم الفاتورة: هو الرقم المطبوع أو المكتوب باللون الأحمر (عادةً في أعلى الفاتورة، رقم تسلسلي لدفتر الفواتير). تجاهل أي أرقام أخرى مثل التاريخ أو رقم الهاتف أو السجل التجاري.
 2) مبلغ الفاتورة: المبلغ الإجمالي المكتوب بخط اليد (خانة "المجموع" أو "الإجمالي" أو "المبلغ"). إذا وُجدت عدة بنود فخذ المجموع النهائي. إذا كان المبلغ مكتوباً كتابةً (بالحروف) وأرقاماً فاستخدمهما للتحقق من بعض.
-اكتب الأرقام بالأرقام الإنجليزية (0-9) بدون فواصل الآلاف ولا رمز العملة.
+${extras ? `3) تاريخ الفاتورة بصيغة YYYY-MM-DD إن أمكن (وإلا كما هو مكتوب).
+4) اسم العميل (المشتري / "المطلوب من" / "السيد").
+` : ''}اكتب الأرقام بالأرقام الإنجليزية (0-9) بدون فواصل الآلاف ولا رمز العملة.
 إن لم تستطع قراءة قيمة فاتركها فارغة. قيّم ثقتك: high أو medium أو low.`;
 
-const TOOL = {
-  name: 'record_invoice',
-  description: 'سجّل رقم الفاتورة ومبلغها المستخرجين من الصورة',
-  input_schema: {
-    type: 'object',
-    properties: {
-      invoice_number: {type: 'string', description: 'رقم الفاتورة الأحمر، أرقام إنجليزية فقط، أو فارغ'},
-      amount: {type: 'string', description: 'المبلغ الإجمالي كرقم، مثل 15000 أو 2500.50، أو فارغ'},
-      confidence: {type: 'string', enum: ['high', 'medium', 'low']},
-      note: {type: 'string', description: 'ملاحظة قصيرة بالعربية إن كان هناك شك أو غموض، وإلا فارغ'}
-    },
-    required: ['invoice_number', 'amount', 'confidence']
+const tool = extras => {
+  const properties = {
+    invoice_number: {type: 'string', description: 'رقم الفاتورة الأحمر، أرقام إنجليزية فقط، أو فارغ'},
+    amount: {type: 'string', description: 'المبلغ الإجمالي كرقم، مثل 15000 أو 2500.50، أو فارغ'},
+    confidence: {type: 'string', enum: ['high', 'medium', 'low']},
+    note: {type: 'string', description: 'ملاحظة قصيرة بالعربية إن كان هناك شك أو غموض، وإلا فارغ'}
+  };
+  if (extras){
+    properties.date = {type: 'string', description: 'تاريخ الفاتورة أو فارغ'};
+    properties.customer = {type: 'string', description: 'اسم العميل أو فارغ'};
   }
+  return {name: 'record_invoice', description: 'سجّل بيانات الفاتورة المستخرجة من الصورة',
+          input_schema: {type: 'object', properties, required: ['invoice_number', 'amount', 'confidence']}};
 };
 
 async function callClaude(item){
-  const key = $('key').value.trim();
+  const extras = $('extras').checked;
   const body = {
     model: $('model').value,
-    max_tokens: 400,
-    tools: [TOOL],
+    max_tokens: 500,
+    tools: [tool(extras)],
     tool_choice: {type: 'tool', name: 'record_invoice'},
     messages: [{role: 'user', content: [
       {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: item.b64}},
-      {type: 'text', text: PROMPT}
+      {type: 'text', text: prompt(extras)}
     ]}]
   };
   for (let attempt = 0; attempt < 5; attempt++){
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify(body)
-    });
+    let r;
+    try {
+      r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': $('key').value.trim(),
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(body)
+      });
+    } catch {
+      await sleep(2000 * 2 ** attempt);   // انقطاع الإنترنت مؤقتاً
+      continue;
+    }
     if (r.status === 429 || r.status === 529 || r.status >= 500){
       await sleep(2000 * 2 ** attempt);
       continue;
     }
     const data = await r.json().catch(() => ({}));
     if (!r.ok){
-      const msg = data?.error?.message || ('خطأ ' + r.status);
       if (r.status === 401) throw new Error('المفتاح غير صحيح');
-      throw new Error(msg);
+      throw new Error(data?.error?.message || ('خطأ ' + r.status));
     }
     const tu = (data.content || []).find(b => b.type === 'tool_use');
     if (!tu) throw new Error('لم يُرجع النموذج نتيجة');
     return tu.input;
   }
-  throw new Error('الخادم مشغول، حاول لاحقاً');
+  throw new Error('تعذّر الاتصال أو الخادم مشغول، حاول لاحقاً');
 }
 
 async function processItem(item){
   item.status = 'run'; render();
   try {
-    while (!item.b64 && item.status === 'run') await sleep(100);
+    for (let i = 0; !item.b64 && i < 300; i++) await sleep(100);
+    if (!item.b64) throw new Error('الصورة لم تُجهَّز');
     const out = await callClaude(item);
     item.num = toLatin(out.invoice_number || '').replace(/\s+/g, '');
     const a = parseAmount(out.amount);
     item.amount = a == null ? '' : String(a);
+    if (out.date != null) item.date = toLatin(out.date);
+    if (out.customer != null) item.customer = out.customer;
     item.conf = out.confidence || '';
     item.note = out.note || '';
     item.status = (item.conf === 'low' || !item.num || item.amount === '') ? 'low' : 'ok';
@@ -312,6 +441,7 @@ async function processItem(item){
     item.status = 'err';
     item.note = e.message;
   }
+  save(item);
   render();
 }
 
@@ -337,9 +467,8 @@ $('stop').addEventListener('click', () => { stopFlag = true; });
 $('retryErr').addEventListener('click', () => run(items.filter(i => i.status === 'err').map(i => i.id)));
 $('clear').addEventListener('click', () => {
   if (running) return;
-  if (items.length && !confirm('مسح كل الصور والنتائج؟')) return;
-  items.forEach(i => i.thumb && URL.revokeObjectURL(i.thumb));
-  items = []; render();
+  if (items.length && !confirm('مسح كل الصور والنتائج؟ (لا يمكن التراجع)')) return;
+  items = []; db.clear().catch(() => {}); render();
 });
 $('sort').addEventListener('click', () => {
   items.sort((a, b) => {
@@ -349,8 +478,16 @@ $('sort').addEventListener('click', () => {
     if (isNaN(y)) return -1;
     return x - y;
   });
-  render();
+  saveOrder(); render();
 });
+const setFilter = f => {
+  filter = f;
+  $('fAll').classList.toggle('on', f === 'all');
+  $('fLow').classList.toggle('on', f === 'low');
+  render();
+};
+$('fAll').addEventListener('click', () => setFilter('all'));
+$('fLow').addEventListener('click', () => setFilter('low'));
 
 // ---------- table ----------
 const STATUS = {
@@ -358,56 +495,65 @@ const STATUS = {
   ok: ['b-ok', '✓ تم'], low: ['b-low', '⚠ راجِع'], err: ['b-err', '✗ خطأ']
 };
 const tbody = $('rows');
+const dupMap = () => {
+  const m = {};
+  items.forEach(i => { if (i.num) m[i.num] = (m[i.num] || 0) + 1; });
+  return m;
+};
 
 function render(){
-  const dupCount = {};
-  items.forEach(i => { if (i.num) dupCount[i.num] = (dupCount[i.num] || 0) + 1; });
-
-  // keep focus while editing: only rebuild rows that changed structure
+  const dup = dupMap();
   const focused = document.activeElement;
-  const focusKey = focused && focused.dataset ? focused.dataset.k : null;
-  const focusId = focused && focused.dataset ? focused.dataset.id : null;
-  const selStart = focused && focused.selectionStart;
+  const fk = tbody.contains(focused) ? focused.dataset.k : null;
+  const fid = fk ? focused.dataset.id : null;
+  const sel = fk ? focused.selectionStart : 0;
 
   tbody.innerHTML = items.map((it, idx) => {
+    if (filter === 'low' && !needsReview(it) && !(it.num && dup[it.num] > 1)) return '';
     const [cls, label] = STATUS[it.status];
-    const rowCls = [it.status === 'low' ? 'low' : '', it.num && dupCount[it.num] > 1 ? 'dup' : ''].join(' ');
-    return `<tr class="${rowCls}">
+    const isDup = it.num && dup[it.num] > 1;
+    const inp = (k, extra = '') => `<input data-id="${it.id}" data-k="${k}" value="${esc(it[k])}" placeholder="—" ${extra}>`;
+    return `<tr class="${it.status === 'low' ? 'low' : ''} ${isDup ? 'dup' : ''}">
       <td>${idx + 1}</td>
-      <td>${it.thumb ? `<img src="${it.thumb}" data-zoom="${it.id}" alt="${esc(it.name)}" title="${esc(it.name)}">` : '…'}</td>
-      <td><input class="num" data-id="${it.id}" data-k="num" value="${esc(it.num)}" inputmode="numeric" placeholder="—"></td>
-      <td><input data-id="${it.id}" data-k="amount" value="${esc(it.amount)}" inputmode="decimal" placeholder="—"></td>
-      <td><span class="badge ${cls}">${label}</span></td>
-      <td class="note">${esc(it.note)}${it.num && dupCount[it.num] > 1 ? ' <b style="color:var(--danger)">رقم مكرر</b>' : ''}</td>
+      <td>${it.b64 ? `<img src="${src(it)}" data-zoom="${it.id}" alt="${esc(it.name)}" title="${esc(it.name)}" loading="lazy">` : '…'}</td>
+      <td>${inp('num', 'class="num" inputmode="numeric"')}</td>
+      <td>${inp('amount', 'inputmode="decimal"')}</td>
+      <td class="extra">${inp('date')}</td>
+      <td class="extra">${inp('customer')}</td>
+      <td class="no-print"><span class="badge ${cls}">${label}</span></td>
+      <td class="note no-print">${esc(it.note)}${isDup ? ' <b style="color:var(--danger)">رقم مكرر</b>' : ''}</td>
       <td style="white-space:nowrap">
+        <button class="sm" data-act="review" data-id="${it.id}" title="مراجعة">🔍</button>
         <button class="sm" data-act="redo" data-id="${it.id}" title="إعادة القراءة" ${running ? 'disabled' : ''}>↻</button>
         <button class="sm" data-act="del" data-id="${it.id}" title="حذف" ${running ? 'disabled' : ''}>✕</button>
       </td>
     </tr>`;
   }).join('');
 
-  if (focusKey && focusId){
-    const el = tbody.querySelector(`input[data-id="${focusId}"][data-k="${focusKey}"]`);
-    if (el){ el.focus(); try { el.setSelectionRange(selStart, selStart); } catch {} }
+  if (fk && fid){
+    const el = tbody.querySelector(`input[data-id="${fid}"][data-k="${fk}"]`);
+    if (el){ el.focus(); try { el.setSelectionRange(sel, sel); } catch {} }
   }
   refresh();
 }
 
 function refresh(){
   const done = items.filter(i => i.status === 'ok' || i.status === 'low').length;
-  const low = items.filter(i => i.status === 'low' || i.status === 'err').length;
+  const errs = items.filter(i => i.status === 'err').length;
   const total = items.reduce((s, i) => s + (parseAmount(i.amount) || 0), 0);
+  const ints = items.map(i => i.num).filter(n => /^\d+$/.test(n)).map(Number);
   $('sCount').textContent = items.length;
   $('sDone').textContent = done;
-  $('sLow').textContent = low;
+  $('sLow').textContent = items.filter(needsReview).length;
+  $('sRange').textContent = ints.length ? Math.min(...ints) + ' – ' + Math.max(...ints) : '—';
   $('sTotal').textContent = fmt(total) + ' ' + $('cur').value;
-  $('bar').style.width = items.length ? (done + items.filter(i => i.status === 'err').length) / items.length * 100 + '%' : '0';
+  $('bar').style.width = items.length ? (done + errs) / items.length * 100 + '%' : '0';
   $('empty').classList.toggle('hidden', items.length > 0);
   const pending = items.some(i => i.status === 'wait' || i.status === 'err');
   $('start').disabled = running || !pending;
   $('start').textContent = running ? '… جارٍ العمل' : '▶ ابدأ التعرّف';
   $('stop').classList.toggle('hidden', !running);
-  $('retryErr').classList.toggle('hidden', running || !items.some(i => i.status === 'err'));
+  $('retryErr').classList.toggle('hidden', running || !errs);
   $('clear').disabled = running;
   renderAlerts();
 }
@@ -419,12 +565,12 @@ function renderAlerts(){
   if (dups.length) out.push(`<div class="bad">أرقام مكررة: ${dups.map(esc).join('، ')}</div>`);
   const ints = [...new Set(nums.filter(n => /^\d+$/.test(n)).map(Number))].sort((a, b) => a - b);
   if (ints.length >= 2 && items.every(i => i.status !== 'wait' && i.status !== 'run')){
-    const span = ints[ints.length - 1] - ints[0];
-    if (span > 0 && span < 1000){
+    const lo = ints[0], hi = ints[ints.length - 1];
+    if (hi - lo < 1000){
       const set = new Set(ints), missing = [];
-      for (let n = ints[0]; n <= ints[ints.length - 1]; n++) if (!set.has(n)) missing.push(n);
+      for (let n = lo; n <= hi; n++) if (!set.has(n)) missing.push(n);
       if (missing.length && missing.length <= 60)
-        out.push(`<div>أرقام ناقصة في التسلسل (${ints[0]} – ${ints[ints.length - 1]}): ${missing.join('، ')}</div>`);
+        out.push(`<div>أرقام ناقصة في التسلسل (${lo} – ${hi}): ${missing.join('، ')}</div>`);
     }
   }
   const noAmt = items.filter(i => (i.status === 'ok' || i.status === 'low') && i.amount === '').length;
@@ -432,50 +578,106 @@ function renderAlerts(){
   $('alerts').innerHTML = out.join('');
 }
 
+const byId = id => items.find(i => i.id == id);
 tbody.addEventListener('input', e => {
-  const t = e.target;
-  if (!t.dataset.id) return;
-  const it = items.find(i => i.id == t.dataset.id);
+  const t = e.target, it = byId(t.dataset.id);
   if (!it) return;
-  it[t.dataset.k] = toLatin(t.value);
-  refresh();
+  it[t.dataset.k] = t.dataset.k === 'customer' ? t.value : toLatin(t.value);
+  save(it); refresh();
 });
 tbody.addEventListener('change', e => {
-  const t = e.target;
-  const it = items.find(i => i.id == t.dataset.id);
+  const it = byId(e.target.dataset.id);
   if (!it) return;
   if (it.status === 'low' && it.num && it.amount !== '') it.status = 'ok';
-  render();
+  save(it); render();
 });
 tbody.addEventListener('click', e => {
   const z = e.target.closest('[data-zoom]');
-  if (z){
-    const it = items.find(i => i.id == z.dataset.zoom);
-    $('zoomImg').src = it.thumb; $('zoom').showModal(); return;
-  }
+  if (z){ $('zoomImg').src = src(byId(z.dataset.zoom)); $('zoom').showModal(); return; }
   const b = e.target.closest('button[data-act]');
   if (!b) return;
-  const it = items.find(i => i.id == b.dataset.id);
+  const it = byId(b.dataset.id);
   if (!it) return;
   if (b.dataset.act === 'del'){
-    if (it.thumb) URL.revokeObjectURL(it.thumb);
-    items = items.filter(i => i !== it); render();
+    items = items.filter(i => i !== it); db.del(it.id).catch(() => {}); render();
   } else if (b.dataset.act === 'redo'){
     it.status = 'wait'; run([it.id]);
+  } else if (b.dataset.act === 'review'){
+    openReview(items.indexOf(it), false);
   }
 });
 $('zoom').addEventListener('click', () => $('zoom').close());
 
-// ---------- export ----------
-function rowsForExport(){
-  return items.map((it, i) => [i + 1, it.num, parseAmount(it.amount) ?? '', it.name, it.note]);
+// ---------- quick review ----------
+let rvIdx = -1, rvOnlyFlagged = true;
+const rvList = () => items.map((it, i) => i).filter(i => !rvOnlyFlagged || needsReview(items[i]) || (items[i].num && dupMap()[items[i].num] > 1));
+function openReview(idx, onlyFlagged){
+  rvOnlyFlagged = onlyFlagged;
+  if (idx == null){
+    const l = rvList();
+    if (!l.length){ alert(onlyFlagged ? 'لا توجد فواتير تحتاج مراجعة 👍' : 'لا توجد فواتير'); return; }
+    idx = l[0];
+  }
+  rvIdx = idx; showReview();
+  if (!$('review').open) $('review').showModal();
+  setTimeout(() => $('rvNum').focus(), 50);
 }
+function showReview(){
+  const it = items[rvIdx];
+  if (!it) { $('review').close(); return; }
+  const l = rvList(), pos = l.indexOf(rvIdx);
+  $('rvTitle').textContent = `فاتورة ${rvIdx + 1} من ${items.length}` + (rvOnlyFlagged && pos >= 0 ? ` · مراجعة ${pos + 1}/${l.length}` : '');
+  $('rvImg').src = src(it); $('rvImg').classList.remove('big');
+  $('rvNum').value = it.num; $('rvAmt').value = it.amount;
+  $('rvDate').value = it.date || ''; $('rvCust').value = it.customer || '';
+  const isDup = it.num && dupMap()[it.num] > 1;
+  $('rvNote').textContent = [STATUS[it.status][1], it.note, isDup ? 'رقم مكرر' : ''].filter(Boolean).join(' · ');
+}
+function rvSave(){
+  const it = items[rvIdx];
+  if (!it) return;
+  it.num = toLatin($('rvNum').value).trim();
+  it.amount = toLatin($('rvAmt').value).trim();
+  it.date = toLatin($('rvDate').value).trim();
+  it.customer = $('rvCust').value.trim();
+  save(it);
+}
+function rvMove(dir){
+  rvSave();
+  const l = rvOnlyFlagged ? rvList() : items.map((_, i) => i);
+  let next;
+  if (dir > 0) next = l.find(i => i > rvIdx);
+  else next = [...l].reverse().find(i => i < rvIdx);
+  if (next == null){ render(); if (dir > 0 && rvOnlyFlagged && !rvList().length) { $('review').close(); alert('انتهت المراجعة 👍'); } return; }
+  rvIdx = next; showReview(); render(); $('rvNum').focus();
+}
+$('reviewBtn').addEventListener('click', () => openReview(null, true));
+$('rvClose').addEventListener('click', () => $('review').close());
+$('review').addEventListener('close', () => { rvSave(); render(); });
+$('rvPrev').addEventListener('click', () => rvMove(-1));
+$('rvNext').addEventListener('click', () => rvMove(1));
+$('rvOk').addEventListener('click', () => {
+  rvSave();
+  const it = items[rvIdx];
+  if (it && it.num && it.amount !== '') it.status = 'ok';
+  save(it);
+  rvMove(1);
+});
+$('review').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); $('rvOk').click(); }
+});
+$('rvImg').addEventListener('click', e => e.target.classList.toggle('big'));
+
+// ---------- export ----------
+const extrasOn = () => $('extras').checked;
 $('csv').addEventListener('click', () => {
   if (!items.length) return;
-  const head = ['م', 'رقم الفاتورة', 'المبلغ', 'اسم الصورة', 'ملاحظة'];
+  const ex = extrasOn();
+  const head = ['م', 'رقم الفاتورة', 'المبلغ', ...(ex ? ['التاريخ', 'العميل'] : []), 'اسم الصورة', 'ملاحظة'];
+  const rows = items.map((it, i) => [i + 1, it.num, parseAmount(it.amount) ?? '', ...(ex ? [it.date, it.customer] : []), it.name, it.note]);
   const total = items.reduce((s, i) => s + (parseAmount(i.amount) || 0), 0);
-  const lines = [head, ...rowsForExport(), ['', 'الإجمالي', total, '', '']]
-    .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+  const totalRow = ['', 'الإجمالي', total, ...(ex ? ['', ''] : []), '', ''];
+  const lines = [head, ...rows, totalRow].map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
   const blob = new Blob(['﻿' + lines.join('\r\n')], {type: 'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -485,13 +687,28 @@ $('csv').addEventListener('click', () => {
 });
 $('copy').addEventListener('click', async () => {
   if (!items.length) return;
-  const text = ['رقم الفاتورة\tالمبلغ', ...items.map(i => `${i.num}\t${parseAmount(i.amount) ?? ''}`)].join('\n');
+  const ex = extrasOn();
+  const text = [['رقم الفاتورة', 'المبلغ', ...(ex ? ['التاريخ', 'العميل'] : [])].join('\t'),
+    ...items.map(i => [i.num, parseAmount(i.amount) ?? '', ...(ex ? [i.date, i.customer] : [])].join('\t'))].join('\n');
   try { await navigator.clipboard.writeText(text); $('copy').textContent = '✓ تم النسخ'; }
-  catch { prompt('انسخ النص:', text); }
+  catch { window.prompt('انسخ النص:', text); }
   setTimeout(() => $('copy').textContent = '📋 نسخ للصق في Excel', 1500);
 });
+$('print').addEventListener('click', () => {
+  $('printDate').textContent = 'تاريخ التقرير: ' + new Date().toLocaleDateString('ar') + ' · عدد الفواتير: ' + items.length;
+  if (filter !== 'all') setFilter('all');
+  window.print();
+});
 
-window.addEventListener('beforeunload', e => { if (items.length){ e.preventDefault(); e.returnValue = ''; } });
+// ---------- restore saved session ----------
+db.all().then(saved => {
+  if (!saved || !saved.length) return;
+  saved.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
+  items = saved.map(s => ({date: '', customer: '', ...s}));
+  nextId = Math.max(...items.map(i => i.id)) + 1;
+  render();
+}).catch(() => {});
+
 render();
 })();
 </script>
