@@ -1,0 +1,4 @@
+.cache/
+__pycache__/
+.deps_ok
+config.json

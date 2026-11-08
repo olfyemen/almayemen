@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الما — مدير الملفات</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📁</text></svg>">
+</head>
+<body>
+<div id="app">
+  <!-- الشريط العلوي -->
+  <header class="topbar">
+    <button class="icon-btn only-mobile" id="menuBtn" title="القائمة">☰</button>
+    <div class="brand">📁 <b>الما</b> <span>مدير الملفات</span></div>
+    <div class="search-wrap">
+      <input id="quickFilter" type="search" placeholder="تصفية المجلد الحالي... (Ctrl+F)">
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="jobsBtn" title="المهام">⏳<span class="badge" id="jobsBadge" hidden>0</span></button>
+      <button class="icon-btn" id="undoBtn" title="تراجع (Ctrl+Z)">↶</button>
+      <button class="icon-btn" id="themeBtn" title="الوضع الليلي">🌙</button>
+      <button class="icon-btn" id="infoBtn" title="روابط الدخول من الأجهزة">📶</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- القائمة الجانبية -->
+    <aside class="sidebar" id="sidebar">
+      <div class="side-section">
+        <div class="side-title">المواقع</div>
+        <div id="rootsList"></div>
+      </div>
+      <div class="side-section">
+        <div class="side-title">المفضلة</div>
+        <div id="favList"></div>
+      </div>
+      <div class="side-section">
+        <div class="side-title">الأدوات</div>
+        <nav class="tools-nav" id="toolsNav">
+          <button data-tool="batchRename">✏️ إعادة تسمية دفعة واحدة</button>
+          <button data-tool="organize">🗂️ تنظيم وفرز تلقائي</button>
+          <button data-tool="analyze">📊 تحليل المساحة / الأكبر حجماً</button>
+          <button data-tool="search">🔎 بحث متقدم</button>
+          <button data-tool="duplicates">👯 الملفات المكررة</button>
+          <button data-tool="images">🖼️ تصغير وتحويل الصور</button>
+          <button data-tool="videos">🎬 ضغط وتحويل الفيديو</button>
+          <button data-tool="meta">🏷️ البيانات الوصفية</button>
+          <button data-tool="dates">📅 تعديل تواريخ الملفات</button>
+          <button data-tool="text">📝 أدوات النصوص</button>
+          <button data-tool="pdf">📕 أدوات PDF</button>
+          <button data-tool="compare">⚖️ مقارنة ومزامنة مجلدين</button>
+          <button data-tool="emptyDirs">🧹 المجلدات الفارغة</button>
+          <button data-tool="exportList">📋 تصدير قائمة الملفات (Excel)</button>
+          <button data-tool="trash">🗑️ سلة المحذوفات</button>
+        </nav>
+      </div>
+      <div class="side-section disk" id="diskInfo"></div>
+      <div class="credit">الما · نسخة مدير الملفات</div>
+    </aside>
+
+    <!-- المحتوى -->
+    <main class="main" id="main">
+      <div class="toolbar">
+        <button class="icon-btn" id="backBtn" title="رجوع (Alt+←)">→</button>
+        <button class="icon-btn" id="upBtn" title="المجلد الأعلى (Backspace)">⬆</button>
+        <button class="icon-btn" id="refreshBtn" title="تحديث (F5)">⟳</button>
+        <div class="breadcrumbs" id="crumbs"></div>
+        <button class="icon-btn" id="favBtn" title="إضافة للمفضلة">☆</button>
+      </div>
+      <div class="toolbar second">
+        <button class="btn" id="uploadBtn">⬆ رفع ملفات</button>
+        <button class="btn" id="uploadDirBtn">⬆ رفع مجلد</button>
+        <button class="btn" id="mkdirBtn">＋ مجلد</button>
+        <button class="btn" id="newFileBtn">＋ ملف نصي</button>
+        <button class="btn" id="pasteBtn" hidden>📋 لصق</button>
+        <span class="spacer"></span>
+        <select id="typeFilter" title="عرض نوع معين">
+          <option value="">كل الأنواع</option>
+          <option>مجلد</option><option>صور</option><option>فيديو</option><option>صوتيات</option>
+          <option>مستندات</option><option>مضغوطات</option><option>برامج</option><option>برمجة</option><option>أخرى</option>
+        </select>
+        <select id="sortSel" title="الترتيب">
+          <option value="name">الاسم</option>
+          <option value="size">الحجم</option>
+          <option value="mtime">التاريخ</option>
+          <option value="ext">النوع</option>
+        </select>
+        <button class="icon-btn" id="sortDirBtn" title="تصاعدي/تنازلي">⇅</button>
+        <button class="icon-btn" id="hiddenBtn" title="إظهار الملفات المخفية">👁</button>
+        <button class="icon-btn" id="viewBtn" title="تبديل العرض (قائمة/شبكة)">▦</button>
+      </div>
+
+      <!-- شريط التحديد -->
+      <div class="selbar" id="selbar" hidden>
+        <b id="selCount">0</b> محدد · <span id="selSize"></span>
+        <div class="sel-actions">
+          <button data-act="open">فتح</button>
+          <button data-act="download">⬇ تنزيل</button>
+          <button data-act="rename">✏️ تسمية</button>
+          <button data-act="batchRename">✏️✏️ دفعة</button>
+          <button data-act="copy">📄 نسخ</button>
+          <button data-act="cut">✂️ قص</button>
+          <button data-act="moveTo">📂 نقل إلى</button>
+          <button data-act="copyTo">📑 نسخ إلى</button>
+          <button data-act="duplicate">⧉ تكرار</button>
+          <button data-act="zip">🗜 ضغط</button>
+          <button data-act="unzip">📦 فك</button>
+          <button data-act="images">🖼 صور</button>
+          <button data-act="videos">🎬 فيديو</button>
+          <button data-act="meta">🏷 بيانات</button>
+          <button data-act="organize">🗂 تنظيم</button>
+          <button data-act="props">ℹ️ خصائص</button>
+          <button data-act="hash">#️⃣ بصمة</button>
+          <button data-act="delete" class="danger">🗑 حذف</button>
+          <button data-act="clear">✕</button>
+        </div>
+      </div>
+
+      <div class="files-wrap" id="filesWrap">
+        <table class="files list" id="filesTable">
+          <thead>
+            <tr>
+              <th class="c-check"><input type="checkbox" id="checkAll"></th>
+              <th class="c-name" data-sort="name">الاسم</th>
+              <th class="c-size" data-sort="size">الحجم</th>
+              <th class="c-type" data-sort="ext">النوع</th>
+              <th class="c-date" data-sort="mtime">آخر تعديل</th>
+            </tr>
+          </thead>
+          <tbody id="filesBody"></tbody>
+        </table>
+        <div class="grid" id="filesGrid" hidden></div>
+        <div class="empty" id="emptyMsg" hidden>المجلد فارغ — اسحب الملفات هنا لرفعها</div>
+      </div>
+      <div class="statusbar" id="statusbar"></div>
+      <div class="drop-overlay" id="dropOverlay" hidden>أفلت الملفات هنا للرفع ⬇</div>
+    </main>
+  </div>
+</div>
+
+<!-- القائمة اليمنى (كليك يمين) -->
+<div class="ctx" id="ctxMenu" hidden></div>
+<!-- لوحة المهام -->
+<div class="jobs-panel" id="jobsPanel" hidden>
+  <div class="jobs-head"><b>المهام</b><span><button class="link" id="jobsClear">مسح المنتهية</button> <button class="icon-btn" id="jobsClose">✕</button></span></div>
+  <div id="jobsList"></div>
+</div>
+<div class="toasts" id="toasts"></div>
+<div class="upload-bar" id="uploadBar" hidden><div class="upload-text" id="uploadText"></div><div class="progress"><div id="uploadProg"></div></div></div>
+<input type="file" id="fileInput" multiple hidden>
+<input type="file" id="dirInput" webkitdirectory multiple hidden>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

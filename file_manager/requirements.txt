@@ -1,0 +1,5 @@
+flask>=3.0
+waitress>=3.0
+pillow>=10.1
+mutagen>=1.47
+pypdf>=4.0

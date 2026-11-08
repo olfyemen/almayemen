@@ -1,0 +1,9 @@
+{
+  "roots": {
+    "المستندات": "C:/Users/USER/Documents",
+    "الصور": "D:/Photos"
+  },
+  "port": 8000,
+  "password": "",
+  "read_only": false
+}
