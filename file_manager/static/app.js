@@ -1,4 +1,5 @@
-/* الما — مدير الملفات: الواجهة */
+/* الما — مدير الملفات: الواجهة
+   إعداد م/ماهر العلفي / 00967777408089 · جميع الحقوق محفوظة */
 "use strict";
 
 // ============================================================================
@@ -1429,8 +1430,9 @@ async function toolTrash() {
 function showInfo() {
   const i = S.info;
   modal({
-    title: "📶 الدخول من الأجهزة الأخرى", size: "small",
-    body: `<p>افتح أحد هذه الروابط من الجوال أو أي كمبيوتر متصل بنفس الشبكة (الواي فاي):</p>
+    title: "📶 الدخول من الأجهزة الأخرى · حول البرنامج", size: "small",
+    body: `<div class="about-credit">📁 <b>الما — مدير الملفات</b><br>إعداد <b>${esc(i.owner)}</b> / <span dir="ltr">${esc(i.phone)}</span><br><small>جميع الحقوق محفوظة ©</small></div>
+      ${i.modified && i.modified.length ? `<div class="tamper" style="border-radius:8px">⚠ هذه النسخة معدّلة وغير أصلية</div>` : ""}<p>افتح أحد هذه الروابط من الجوال أو أي كمبيوتر متصل بنفس الشبكة (الواي فاي):</p>
       ${i.urls.map(u => `<div class="row" style="margin:6px 0"><input type="text" value="${esc(u)}" readonly class="mono" style="flex:1;font-size:16px"><button class="btn" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(u)}');this.textContent='✓'">نسخ</button></div>`).join("")}
       <div class="hint">${i.password ? "🔒 البرنامج محمي بكلمة مرور." : "⚠ البرنامج غير محمي بكلمة مرور — شغّله بـ <code>--password</code> لحمايته."}${i.read_only ? "<br>👁 وضع القراءة فقط مفعّل." : ""}</div>
       <div class="hint">المكتبات: الصور ${i.features.pil ? "✓" : "✗"} · الفيديو (ffmpeg) ${i.features.ffmpeg ? "✓" : "✗"} · الصوتيات ${i.features.mutagen ? "✓" : "✗"} · PDF ${i.features.pypdf ? "✓" : "✗"}</div>
@@ -1620,7 +1622,24 @@ function bind() {
 // ============================================================================
 // البدء
 // ============================================================================
+// حفظ الحقوق: يعيد سطر الإعداد إذا حُذف من الصفحة
+const CREDIT_HTML = `إعداد <b>م/ماهر العلفي</b> / <a href="tel:00967777408089">00967777408089</a><br>جميع الحقوق محفوظة ©`;
+function guardCredit() {
+  let c = document.getElementById("almaCredit");
+  const side = document.getElementById("sidebar");
+  if (!c || !c.textContent.includes("ماهر العلفي") || !c.textContent.includes("00967777408089") || getComputedStyle(c).display === "none" || getComputedStyle(c).visibility === "hidden") {
+    if (c) c.remove();
+    c = document.createElement("div");
+    c.id = "almaCredit"; c.className = "credit";
+    c.innerHTML = CREDIT_HTML;
+    (side || document.body).appendChild(c);
+  }
+  if (!document.title.includes("ماهر العلفي")) document.title = "الما — مدير الملفات · إعداد م/ماهر العلفي";
+}
+setInterval(guardCredit, 3000);
+
 (async function init() {
+  guardCredit();
   const theme = store.get("theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   document.documentElement.dataset.theme = theme;
   $("#themeBtn").textContent = theme === "dark" ? "☀️" : "🌙";

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+# الما — مدير الملفات · إعداد م/ماهر العلفي / 00967777408089 · جميع الحقوق محفوظة
 """
 الما — مدير الملفات على الشبكة المحلية
+إعداد م/ماهر العلفي / 00967777408089
 =====================================
 برنامج ويب محلي لإدارة الملفات مع أدوات كثيرة لتسريع العمل:
 إعادة تسمية دفعة واحدة، تنظيم وفرز، تحليل المساحة، الملفات المكررة،
@@ -63,6 +65,45 @@ THUMB_DIR = CACHE_DIR / "thumbs"
 TRASH_NAME = ".alma_trash"
 FFMPEG = shutil.which("ffmpeg")
 FFPROBE = shutil.which("ffprobe")
+
+# ----------------------------------------------------------------------------
+# الحقوق والحماية من التعديل
+# ----------------------------------------------------------------------------
+OWNER = "م/ماهر العلفي"
+OWNER_PHONE = "00967777408089"
+CREDIT = f"إعداد {OWNER} / {OWNER_PHONE}"
+CREDIT_HTML = (f'<div class="credit" id="almaCredit">إعداد <b>{OWNER}</b> / '
+               f'<a href="tel:{OWNER_PHONE}">{OWNER_PHONE}</a><br>جميع الحقوق محفوظة ©</div>')
+PROTECTED_FILES = ["app.py", "templates/index.html", "static/app.js", "static/style.css"]
+SEAL_RE = re.compile(r"^# ALMA-SEAL \| (\{.*\}) \| ([0-9a-f]{64})\s*$", re.M)
+MODIFIED = []  # الملفات التي تغيّرت عن النسخة المختومة
+
+
+def file_body(rel):
+    """محتوى الملف بدون سطر الختم (لحساب البصمة)."""
+    raw = (APP_DIR / rel).read_bytes().replace(b"\r\n", b"\n")
+    if rel == "app.py":
+        raw = b"\n".join(l for l in raw.split(b"\n") if not l.startswith(b"# ALMA-SEAL |"))
+    return raw
+
+
+def files_manifest():
+    return {f: hashlib.sha256(file_body(f)).hexdigest()[:20] for f in PROTECTED_FILES}
+
+
+def integrity_check():
+    """يقارن ملفات البرنامج بالبصمات المختومة. أي تعديل يظهر كتحذير."""
+    MODIFIED.clear()
+    try:
+        m = SEAL_RE.search((APP_DIR / "app.py").read_text(encoding="utf-8"))
+        if not m:
+            MODIFIED.append("غير مختوم")
+            return
+        sealed = json.loads(m.group(1))
+        now = files_manifest()
+        MODIFIED.extend(f for f in PROTECTED_FILES if sealed.get(f) != now.get(f))
+    except Exception:  # noqa
+        MODIFIED.append("تعذر الفحص")
 
 app = Flask(__name__, static_folder=str(APP_DIR / "static"), static_url_path="/static")
 app.config["MAX_CONTENT_LENGTH"] = None  # لا حد لحجم الرفع
@@ -254,7 +295,7 @@ LOGIN_HTML = """<!doctype html><html lang="ar" dir="rtl"><head><meta charset="ut
 <link rel="stylesheet" href="/static/style.css"></head><body class="login-body">
 <form method="post" class="login-card"><div class="logo">📁</div><h2>الما — مدير الملفات</h2>
 <p>{msg}</p><input type="password" name="password" placeholder="كلمة المرور" autofocus>
-<button class="btn primary" type="submit">دخول</button></form></body></html>"""
+<button class="btn primary" type="submit">دخول</button>{credit}</form></body></html>"""
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -267,7 +308,7 @@ def login():
             return redirect("/")
         msg = "كلمة المرور غير صحيحة"
         time.sleep(1)
-    return LOGIN_HTML.replace("{msg}", msg)
+    return LOGIN_HTML.replace("{msg}", msg).replace("{credit}", CREDIT_HTML)
 
 
 @app.route("/logout")
@@ -279,7 +320,19 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    return send_file(APP_DIR / "templates" / "index.html")
+    html = (APP_DIR / "templates" / "index.html").read_text(encoding="utf-8")
+    html = re.sub(r'<div class="credit"[^>]*>.*?</div>', "", html, flags=re.S)
+    html = html.replace("<!--CREDIT-->", "")
+    if "</aside>" in html:
+        html = html.replace("</aside>", CREDIT_HTML + "\n    </aside>", 1)
+    else:
+        html = html.replace("</body>", CREDIT_HTML + "</body>", 1)
+    if MODIFIED:
+        html = html.replace("<body>", '<body><div class="tamper">⚠ هذه النسخة معدّلة وغير أصلية — النسخة الأصلية: '
+                            + CREDIT + "</div>", 1)
+    resp = Response(html, mimetype="text/html")
+    resp.headers["X-Author"] = "Maher Al-Olofi 00967777408089"
+    return resp
 
 
 def J():
@@ -445,6 +498,10 @@ def api_info():
         "read_only": READ_ONLY,
         "password": bool(PASSWORD),
         "undo": len(UNDO_STACK),
+        "credit": CREDIT,
+        "owner": OWNER,
+        "phone": OWNER_PHONE,
+        "modified": MODIFIED,
     })
 
 
@@ -1572,6 +1629,8 @@ def api_export_list():
             continue
         w.writerow([f.name, to_rel(f.parent), category_of(f.name), ext_of(f.name), st.st_size, human_size(st.st_size),
                     dt.datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M")])
+    w.writerow([])
+    w.writerow([f"تم التصدير ببرنامج الما — {CREDIT}"])
     data = "\ufeff" + buf.getvalue()
     return Response(data.encode("utf-8"), mimetype="text/csv",
                     headers={"Content-Disposition": f"attachment; filename*=UTF-8''{_quote(base.name + '-قائمة.csv')}"})
@@ -2834,9 +2893,15 @@ def main():
     app.secret_key = key_file.read_text().strip()
     app.permanent_session_lifetime = dt.timedelta(days=30)
 
+    integrity_check()
     print("=" * 60)
     print("  الما — مدير الملفات على الشبكة المحلية")
+    print(f"  {CREDIT}")
     print("=" * 60)
+    if MODIFIED:
+        print("  ⚠ تحذير: هذه النسخة معدّلة وغير أصلية (" + "، ".join(MODIFIED) + ")")
+        print(f"  النسخة الأصلية: {CREDIT}")
+        print("-" * 60)
     for n, p in ROOTS.items():
         print(f"  📁 {n}: {p}")
     print("\n  افتح أحد هذه الروابط من أي جهاز على نفس الشبكة:")
@@ -2859,3 +2924,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# ALMA-SEAL | {"app.py": "aa7c6af0d4a6fb201599", "static/app.js": "e07325289c73e33317b2", "static/style.css": "229162e8ba4623882484", "templates/index.html": "be8c2c1c97606edea56f"} | 8db10282f4d55fd674c2982e90b869ee8a21df8716ac4133357d3ee3c07ffede
