@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6efe1">
+<meta name="description" content="روزنامة هجرية يومية: حكمة، حديث، قصة من تراث العالم، مناسبات إسلامية، كلمات إنجليزية وتحضير للآيلتس">
+<title>الروزنامة الهجرية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6efe1; --paper:#fffaf0; --paper2:#fbf3e2; --ink:#2b2216; --muted:#7c6c55;
+  --line:#e8dcc4; --green:#1f5e4a; --green2:#2e7d64; --gold:#b8862b; --gold-soft:#f3e3bf;
+  --red:#9c2f2f; --red-soft:#f7e1dc; --blue:#2b5c8a; --blue-soft:#e2ecf6;
+  --shadow:0 10px 30px rgba(80,55,20,.10), 0 2px 6px rgba(80,55,20,.06);
+  --serif:"Amiri","Traditional Arabic","Times New Roman",serif;
+  --sans:"Tajawal","Segoe UI",Tahoma,system-ui,sans-serif;
+  --latin:"Georgia","Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16130e; --paper:#221d16; --paper2:#2a241b; --ink:#f1e7d3; --muted:#b4a387;
+    --line:#3d3426; --green:#5cbf9c; --green2:#7fd3b4; --gold:#e0b25a; --gold-soft:#3b301b;
+    --red:#e58a7d; --red-soft:#3b2220; --blue:#8bb9e6; --blue-soft:#1d2a38;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16130e; --paper:#221d16; --paper2:#2a241b; --ink:#f1e7d3; --muted:#b4a387;
+  --line:#3d3426; --green:#5cbf9c; --green2:#7fd3b4; --gold:#e0b25a; --gold-soft:#3b301b;
+  --red:#e58a7d; --red-soft:#3b2220; --blue:#8bb9e6; --blue-soft:#1d2a38;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.85;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;min-height:100vh;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 110px}
+
+/* ===== Top bar ===== */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--green);white-space:nowrap}
+.brand small{font-family:var(--sans);font-size:13px;color:var(--muted);font-weight:500;margin-inline-start:4px}
+.seg{margin-inline-start:auto;display:flex;background:var(--paper2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{padding:5px 13px;border-radius:999px;font-size:14px;font-weight:700;color:var(--muted);transition:.2s}
+.seg button.on{background:var(--green);color:#fff}
+.icon-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--paper2);flex:none}
+.icon-btn svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ===== Day page ===== */
+.stage{position:relative;margin-top:18px}
+.page{animation:none}
+.page.in-next{animation:inNext .32s ease}
+.page.in-prev{animation:inPrev .32s ease}
+@keyframes inNext{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+@keyframes inPrev{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+
+.sheet{background:var(--paper);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;position:relative;border:1px solid var(--line)}
+.rings{display:flex;justify-content:space-around;padding:0 18%;height:0;position:relative;top:-7px}
+.rings i{width:14px;height:22px;border-radius:8px;background:var(--bg);border:2px solid var(--line);display:block;position:relative;top:0}
+.head{background:linear-gradient(160deg,var(--green),var(--green2));color:#fff;padding:22px 20px 18px;text-align:center;position:relative}
+:root[data-theme="dark"] .head{color:#10140f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .head{color:#10140f}}
+.head .wd{font-size:20px;font-weight:800;letter-spacing:.5px;opacity:.95}
+.head .big{font-family:var(--serif);font-size:110px;line-height:1;font-weight:700;margin:6px 0 2px;text-shadow:0 3px 0 rgba(0,0,0,.08)}
+.head .hm{font-family:var(--serif);font-size:28px;font-weight:700}
+.head .gd{margin-top:6px;font-size:16px;opacity:.92;display:inline-block;padding:3px 14px;border-radius:999px;background:rgba(255,255,255,.16)}
+.head .badge-today{position:absolute;top:14px;inset-inline-start:14px;font-size:12px;font-weight:800;background:var(--gold);color:#fff;border-radius:999px;padding:2px 10px}
+.prog{padding:12px 20px 4px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.prog .bar{flex:1;height:6px;background:var(--paper2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.prog .bar b{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--green2));border-radius:999px}
+
+.body{padding:10px 16px 18px;display:grid;gap:14px}
+.occ{border-radius:16px;padding:12px 14px;background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 35%,transparent)}
+.occ h4{font-size:14px;color:var(--gold);font-weight:800;margin-bottom:2px}
+.occ p{font-size:16px}
+.occ p+p{margin-top:6px}
+.occ .t{font-weight:800}
+
+.card{border-radius:16px;padding:14px 16px;background:var(--paper2);border:1px solid var(--line)}
+.card .lbl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--green);margin-bottom:6px;letter-spacing:.3px}
+.card .lbl .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.card .lbl .src{margin-inline-start:auto;color:var(--muted);font-weight:500;font-size:12px}
+.wisdom{font-family:var(--serif);font-size:24px;line-height:1.7;text-align:center;padding:6px 4px}
+.wisdom-o{text-align:center;font-size:13px;color:var(--muted)}
+.hadith{font-family:var(--serif);font-size:21px;line-height:1.9}
+.hadith-s{font-size:13px;color:var(--muted);margin-top:4px}
+.story h3{font-family:var(--serif);font-size:22px;margin-bottom:4px}
+.story .txt{font-size:16.5px}
+.story .lesson{margin-top:8px;padding:8px 12px;border-inline-start:3px solid var(--gold);background:var(--paper);border-radius:8px;font-weight:500}
+.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.motiv{font-size:18px;font-weight:700;text-align:center;color:var(--ink)}
+.motiv::before{content:"✦ ";color:var(--gold)}
+.motiv::after{content:" ✦";color:var(--gold)}
+
+.c-hadith .lbl{color:var(--green)}
+.c-story .lbl{color:var(--red)}
+.c-en .lbl,.c-ielts .lbl{color:var(--blue)}
+.c-wis .lbl{color:var(--gold)}
+
+.en{direction:ltr;text-align:left}
+.en-list{display:grid;gap:10px}
+.en-item{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.en-item .w{font-family:var(--latin);font-size:21px;font-weight:700;color:var(--blue)}
+.en-item .pos{font-size:12px;color:var(--muted);font-style:italic;margin-left:6px}
+.en-item .ar{direction:rtl;text-align:right;font-size:15px;font-weight:700;float:right}
+.en-item .ex{font-family:var(--latin);font-size:15.5px;color:var(--ink);opacity:.85;margin-top:2px;clear:both;line-height:1.5}
+.say{border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:13px;color:var(--blue);margin-left:6px;vertical-align:middle}
+.syn-words{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;direction:ltr;margin:4px 0 8px}
+.syn-words span{font-family:var(--latin);font-weight:700;font-size:19px;background:var(--blue-soft);color:var(--blue);padding:3px 14px;border-radius:999px}
+.syn-mean{text-align:center;font-size:14px;color:var(--muted);margin-bottom:8px}
+.syn-row{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:8px 0;border-top:1px dashed var(--line)}
+.syn-row b{font-family:var(--latin);direction:ltr;color:var(--blue);font-size:17px;min-width:92px}
+.syn-row .d{font-size:15.5px}
+.syn-row .x{display:block;direction:ltr;text-align:left;font-family:var(--latin);font-size:14.5px;opacity:.8;line-height:1.5;margin-top:2px}
+.tip{margin-top:8px;font-size:14px;background:var(--paper);border-radius:10px;padding:8px 12px;border:1px solid var(--line)}
+
+.more-btn{width:100%;padding:13px;border-radius:14px;border:1.5px dashed var(--green);color:var(--green);font-weight:800;font-size:16px;background:transparent}
+.more{display:none;gap:14px}
+.more.open{display:grid;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.list-ev{list-style:none;display:grid;gap:6px}
+.list-ev li{padding-inline-start:16px;position:relative;font-size:15.5px}
+.list-ev li::before{content:"";position:absolute;inset-inline-start:0;top:.75em;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.note{width:100%;min-height:96px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:16px;padding:10px 12px;resize:vertical}
+.saved{font-size:12px;color:var(--muted);margin-top:4px;min-height:18px}
+.check{display:flex;gap:10px;align-items:center;font-weight:700}
+.check input{width:22px;height:22px;accent-color:var(--green)}
+
+/* ===== Locked future ===== */
+.lock{padding:46px 24px 40px;text-align:center}
+.lock .ic{width:84px;height:84px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:var(--gold-soft);border:1px solid var(--line)}
+.lock .ic svg{width:40px;height:40px;stroke:var(--gold);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.lock .q{font-family:var(--serif);font-size:27px;line-height:1.75;margin:8px 0 10px}
+.lock .s{color:var(--muted);font-size:15px}
+.lock .cd{display:inline-block;margin-top:16px;padding:6px 16px;border-radius:999px;background:var(--paper2);border:1px solid var(--line);font-weight:700;font-size:15px}
+.lock .back{margin-top:18px;display:inline-block;padding:10px 22px;border-radius:999px;background:var(--green);color:#fff;font-weight:800}
+
+/* ===== Bottom nav ===== */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.nav-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.nav .arrow{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:50px;border-radius:16px;background:var(--paper);border:1px solid var(--line);font-weight:800;font-size:16px;box-shadow:0 2px 8px rgba(80,55,20,.06)}
+.nav .arrow:active{transform:scale(.97)}
+.nav .arrow[disabled]{opacity:.4}
+.nav .arrow svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.nav .today{height:50px;padding:0 18px;border-radius:16px;background:var(--green);color:#fff;font-weight:800;font-size:15px}
+.nav .today[hidden]{display:none}
+.nav .lbl-sm{font-size:12px;color:var(--muted);display:block;line-height:1.2;font-weight:500}
+.nav .arrow .tx{text-align:center;line-height:1.3}
+
+/* ===== Week / Month ===== */
+.vhead{display:flex;align-items:center;justify-content:center;gap:8px;margin:18px 0 12px;text-align:center}
+.vhead h2{font-family:var(--serif);font-size:26px;color:var(--green);line-height:1.3}
+.vhead p{font-size:14px;color:var(--muted)}
+.week{display:grid;gap:10px}
+.wcell{display:grid;grid-template-columns:62px 1fr auto;gap:12px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:10px 12px;text-align:start;width:100%;box-shadow:0 2px 8px rgba(80,55,20,.05)}
+.wcell .n{font-family:var(--serif);font-size:34px;font-weight:700;color:var(--green);text-align:center;line-height:1.1}
+.wcell .n small{display:block;font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:700}
+.wcell .info .a{font-weight:800;font-size:16px}
+.wcell .info .b{font-size:13.5px;color:var(--muted)}
+.wcell .info .c{font-size:14px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.wcell .tag{font-size:12px;font-weight:800;padding:2px 10px;border-radius:999px;background:var(--gold-soft);color:var(--gold);white-space:nowrap}
+.wcell.today{border:2px solid var(--gold)}
+.wcell.fut{opacity:.55;background:var(--paper2)}
+.wcell.out{opacity:.35}
+
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.mgrid .dn{text-align:center;font-size:12.5px;font-weight:800;color:var(--muted);padding:4px 0}
+.mc{aspect-ratio:1/1.12;border-radius:12px;background:var(--paper);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:2px;min-width:0}
+.mc .h{font-family:var(--serif);font-size:23px;font-weight:700;line-height:1.1}
+.mc .g{font-size:11px;color:var(--muted);line-height:1.2;white-space:nowrap;overflow:hidden;max-width:100%}
+.mc.today{background:var(--green);border-color:var(--green);color:#fff}
+.mc.today .g{color:#fff;opacity:.85}
+.mc.fut{background:var(--paper2);opacity:.55}
+.mc.fut .h::after{content:"";}
+.mc .ev{position:absolute;top:5px;inset-inline-end:5px;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.mc .lk{position:absolute;bottom:4px;width:10px;height:10px;opacity:.6}
+.mc.empty{background:transparent;border:0}
+.legend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block}
+.mevents{margin-top:16px}
+
+/* ===== Settings sheet ===== */
+.modal{position:fixed;inset:0;z-index:40;background:rgba(20,14,6,.45);display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.modal .box{background:var(--paper);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:var(--shadow);animation:up .25s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-family:var(--serif);font-size:24px;color:var(--green);margin-bottom:6px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-of-type{border-bottom:0}
+.row .t{font-weight:700}
+.row .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;line-height:1.5}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button,.chip{min-width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--paper2);font-weight:800;padding:0 10px}
+.chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+.stepper output{min-width:34px;text-align:center;font-weight:800}
+.close{margin-top:14px;width:100%;height:46px;border-radius:14px;background:var(--green);color:#fff;font-weight:800}
+.foot{text-align:center;color:var(--muted);font-size:13px;margin-top:22px}
+
+@media (min-width:700px){
+  .head .big{font-size:130px}
+  .body{padding:14px 26px 24px}
+  .mc .h{font-size:27px}
+  .mc .g{font-size:12px}
+}
+@media (max-width:380px){
+  .brand small{display:none}
+  .seg button{padding:5px 10px}
+  .head .big{font-size:92px}
+  .mc .h{font-size:19px}
+  .mc .g{font-size:10px}
+  .mgrid{gap:4px}
+}
+:root.fs-l body{font-size:19px}
+:root.fs-l .wisdom{font-size:27px}
+:root.fs-l .hadith{font-size:23px}
+:root.fs-l .story .txt{font-size:18.5px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">الروزنامة <small id="yearLbl"></small></div>
+    <div class="seg" role="tablist" aria-label="طريقة العرض">
+      <button data-view="day" class="on">يومي</button>
+      <button data-view="week">أسبوعي</button>
+      <button data-view="month">شهري</button>
+    </div>
+    <button class="icon-btn" id="setBtn" aria-label="الإعدادات">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="stage" id="stage"></div>
+  <p class="foot" id="foot"></p>
+</main>
+
+<nav class="nav">
+  <div class="nav-in">
+    <button class="arrow" id="prevBtn" aria-label="السابق">
+      <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+      <span class="tx"><span id="prevTx">أمس</span><span class="lbl-sm" id="prevSub"></span></span>
+    </button>
+    <button class="today" id="todayBtn">اليوم</button>
+    <button class="arrow" id="nextBtn" aria-label="التالي">
+      <span class="tx"><span id="nextTx">غدًا</span><span class="lbl-sm" id="nextSub"></span></span>
+      <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="box" role="dialog" aria-label="الإعدادات">
+    <h3>الإعدادات</h3>
+    <div class="row">
+      <div class="t">تعديل التاريخ الهجري<small>إذا اختلفت رؤية الهلال في بلدك عن تقويم أم القرى، قدّم أو أخّر يومًا.</small></div>
+      <div class="stepper"><button id="adjMinus">−</button><output id="adjOut">0</output><button id="adjPlus">+</button></div>
+    </div>
+    <div class="row">
+      <div class="t">المظهر</div>
+      <div class="stepper"><button class="chip" data-theme-set="auto">تلقائي</button><button class="chip" data-theme-set="light">فاتح</button><button class="chip" data-theme-set="dark">داكن</button></div>
+    </div>
+    <div class="row">
+      <div class="t">حجم الخط</div>
+      <div class="stepper"><button class="chip" data-fs="n">عادي</button><button class="chip" data-fs="l">كبير</button></div>
+    </div>
+    <div class="row">
+      <div class="t">التنقل<small>اسحب الصفحة يمينًا أو يسارًا، أو استخدم أسهم لوحة المفاتيح، أو الأزرار في الأسفل.</small></div>
+    </div>
+    <button class="close" id="closeSet">تم</button>
+  </div>
+</div>
+<script>
+/* ====================== المحتوى: حِكم من تراث العالم ====================== */
+const WISDOM = [
+["رحلة الألف ميل تبدأ بخطوة واحدة.","لاو تسو — الصين"],
+["أفضل وقت لغرس شجرة كان قبل عشرين عامًا، وثاني أفضل وقت هو الآن.","مثل صيني"],
+["اسقط سبع مرات، وانهض ثماني.","مثل ياباني"],
+["إذا أردت أن تسير سريعًا فسر وحدك، وإذا أردت أن تسير بعيدًا فسر مع الآخرين.","مثل أفريقي"],
+["قطرةً فقطرة يصير البحر.","مثل فارسي"],
+["الصبر مفتاح الفرج.","مثل عربي"],
+["في التأنّي السلامة، وفي العجلة الندامة.","مثل عربي"],
+["ما فات مات، والمؤمَّل غيب، ولك الساعة التي أنت فيها.","حكمة عربية مأثورة"],
+["لا يمكنك أن تنزل في النهر نفسه مرتين.","هيراقليطس — اليونان"],
+["اعرف نفسك.","حكمة إغريقية قديمة"],
+["اغتنم يومك، ولا تثق بالغد إلا قليلًا.","هوراس — روما"],
+["قطرة الماء تثقب الصخر، لا بقوتها بل بدوام سقوطها.","أوفيد — روما"],
+["روما لم تُبنَ في يوم واحد.","مثل أوروبي"],
+["لا تعبر الجسر قبل أن تصل إليه.","مثل إنجليزي"],
+["اصنع التبن ما دامت الشمس مشرقة.","مثل إنجليزي"],
+["المياه الهادئة عميقة.","مثل إنجليزي"],
+["حيث توجد الإرادة يوجد الطريق.","مثل إنجليزي"],
+["من جدّ وجد، ومن زرع حصد.","مثل عربي"],
+["الوقت كالسيف، إن لم تقطعه قطعك.","مثل عربي"],
+["إذا كان الكلام من فضة، فالسكوت من ذهب.","مثل عربي"],
+["خير الأمور أوسطها.","مثل عربي"],
+["قليلٌ دائم خيرٌ من كثيرٍ منقطع.","مثل عربي"],
+["العلم في الصغر كالنقش على الحجر.","مثل عربي"],
+["لكل جوادٍ كبوة، ولكل عالمٍ هفوة.","مثل عربي"],
+["الشجاعة صبر ساعة.","حكمة عربية"],
+["صديقك من صدَقك، لا من صدّقك.","مثل عربي"],
+["يدٌ واحدة لا تصفّق.","مثل عربي"],
+["من ثبت نبت.","مثل عربي"],
+["لا تؤجّل عمل اليوم إلى الغد.","حكمة مأثورة"],
+["ليس الفتى من يقول كان أبي، إن الفتى من يقول ها أنا ذا.","من الشعر العربي"],
+["إذا هبّت رياحك فاغتنمها، فإن لكل خافقةٍ سكونُ.","من الشعر العربي"],
+["احفر البئر قبل أن تعطش.","مثل صيني"],
+["المعلّم يفتح لك الباب، لكن عليك أن تدخل بنفسك.","مثل صيني"],
+["أن تُضيء شمعة خيرٌ من أن تلعن الظلام.","مثل صيني"],
+["لا يهم كم تسير ببطء، ما دمت لا تتوقف.","كونفوشيوس — الصين"],
+["من يسأل يبدو جاهلًا دقيقة، ومن لا يسأل يبقى جاهلًا عمره كله.","مثل ياباني"],
+["حتى القرد يسقط من الشجرة.","مثل ياباني"],
+["الجبل لا يلتقي بالجبل، لكن الإنسان يلتقي بالإنسان.","مثل تركي"],
+["كلمة طيبة تُدفئ ثلاثة أشهر من الشتاء.","مثل ياباني"],
+["جذور العلم مُرّة، لكن ثماره حلوة.","أرسطو — اليونان"],
+["العقل السليم في الجسم السليم.","جوفينال — روما"],
+["من لم يذق مرّ التعلّم ساعة، تجرّع ذلّ الجهل طول حياته.","الإمام الشافعي"],
+["تعلّم كأنك ستعيش أبدًا، وعِش كأنك ستموت غدًا.","حكمة منسوبة إلى غاندي — الهند"],
+["اليوم هو الغد الذي كنت قلقًا بشأنه أمس.","ديل كارنيغي — أمريكا"],
+["من الحكمة أن تعرف ما الذي تتجاهله.","وليام جيمس — أمريكا"],
+["الشجرة التي تنحني للريح لا تنكسر.","مثل أفريقي"],
+["المطر لا يسقط على سقفٍ واحد.","مثل أفريقي — الكاميرون"],
+["عندما تموت شجرة الحكمة في القرية، تحترق مكتبة.","مثل أفريقي (منسوب لأمادو هامباتي با)"],
+["العصا في يد الصبور تُثمر.","مثل فارسي"],
+["الصبر مُرّ، لكن ثمرته حلوة.","جان جاك روسو — فرنسا"],
+["الحياة قصيرة، فاجعلها عريضة.","حكمة مأثورة"],
+["من عرف نفسه لم يضرّه ما قال الناس فيه.","حكمة عربية"],
+["عثرة القدم أسلم من عثرة اللسان.","مثل عربي"],
+["النهر لا يعود إلى منبعه، فاسقِ به حقلك اليوم.","مثل هندي"],
+["ثلاثة لا تعود: السهم إذا انطلق، والكلمة إذا قيلت، والفرصة إذا ضاعت.","حكمة شرقية"],
+["الماء الراكد يأسن، والماء الجاري يبقى عذبًا.","حكمة عربية"],
+["لا تبِع جلد الدب قبل أن تصطاده.","مثل روسي"],
+["الصباح أحكم من المساء.","مثل روسي"],
+["أعطِ كل يوم فرصة ليكون أجمل يوم في حياتك.","مارك توين — أمريكا"],
+["الطريق إلى بيت الصديق لا يطول أبدًا.","مثل دنماركي"]
+];
+
+/* ================ حِكم الصفحات المقفلة: لا تستعجل الغد ================ */
+const LOCK_WISDOM = [
+["لا تعبر الجسر قبل أن تصل إليه.","مثل إنجليزي"],
+["ما فات مات، والمؤمَّل غيب، ولك الساعة التي أنت فيها.","حكمة عربية مأثورة"],
+["إذا أمسيتَ فلا تنتظر الصباح، وإذا أصبحتَ فلا تنتظر المساء.","عبد الله بن عمر رضي الله عنهما — البخاري"],
+["صفحة الغد لم تُكتب بعد؛ فاكتب صفحة اليوم بإتقان.","حكمة"],
+["من استعجل الشيء قبل أوانه عوقب بحرمانه.","قاعدة فقهية"],
+["الزهرة لا تتفتّح أسرع إذا شددتَ أوراقها.","حكمة صينية"],
+["غدًا له شمسه، فدع شمس اليوم تضيء ما بين يديك.","حكمة"],
+["لا تقطف الثمرة قبل أن تنضج، فتخسر حلاوتها وشجرتها.","مثل عربي"],
+["اليوم هبة بين يديك، والغد وعدٌ لم يصل بعد.","حكمة"],
+["في التأنّي السلامة، وفي العجلة الندامة.","مثل عربي"],
+["عِش يومك كأنه عمرك كله، فقد يكون.","حكمة"],
+["الغيم الذي تخافه غدًا قد لا يُمطر أبدًا؛ فلا تحمل مظلّته اليوم.","حكمة"]
+];
+
+/* ====================== أحاديث نبوية وآثار ====================== */
+const HADITH = [
+["«إنما الأعمال بالنيات، وإنما لكل امرئٍ ما نوى».","متفق عليه"],
+["«من أصبح منكم آمنًا في سِربه، معافًى في جسده، عنده قوتُ يومه، فكأنما حِيزت له الدنيا».","رواه الترمذي وابن ماجه"],
+["«نعمتان مغبونٌ فيهما كثيرٌ من الناس: الصحة والفراغ».","رواه البخاري"],
+["«احرص على ما ينفعك، واستعن بالله ولا تعجز».","رواه مسلم"],
+["«من حُسن إسلام المرء تركُه ما لا يعنيه».","رواه الترمذي"],
+["«لا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفسه».","متفق عليه"],
+["«الكلمة الطيبة صدقة».","متفق عليه"],
+["«تبسّمك في وجه أخيك لك صدقة».","رواه الترمذي"],
+["«أحبّ الأعمال إلى الله أدومها وإن قلّ».","متفق عليه"],
+["«ليس الشديد بالصُّرَعة، إنما الشديد الذي يملك نفسه عند الغضب».","متفق عليه"],
+["«من كان يؤمن بالله واليوم الآخر فليقل خيرًا أو ليصمت».","متفق عليه"],
+["«اتّقِ الله حيثما كنت، وأتبع السيئة الحسنة تمحُها، وخالِق الناس بخلقٍ حسن».","رواه الترمذي"],
+["«احفظ الله يحفظك، احفظ الله تجده تجاهك».","رواه الترمذي"],
+["«عجبًا لأمر المؤمن، إن أمره كله خير، إن أصابته سرّاء شكر فكان خيرًا له، وإن أصابته ضرّاء صبر فكان خيرًا له».","رواه مسلم"],
+["«لا تحقرنّ من المعروف شيئًا، ولو أن تلقى أخاك بوجهٍ طلق».","رواه مسلم"],
+["«إن الله رفيقٌ يحب الرفق في الأمر كله».","متفق عليه"],
+["«خيركم من تعلّم القرآن وعلّمه».","رواه البخاري"],
+["«من سلك طريقًا يلتمس فيه علمًا سهّل الله له به طريقًا إلى الجنة».","رواه مسلم"],
+["«كن في الدنيا كأنك غريبٌ أو عابر سبيل».","رواه البخاري"],
+["«إذا مات الإنسان انقطع عنه عمله إلا من ثلاث: صدقةٍ جارية، أو علمٍ يُنتفع به، أو ولدٍ صالح يدعو له».","رواه مسلم"],
+["«الدين النصيحة».","رواه مسلم"],
+["قال رجل: أوصني. قال ﷺ: «لا تغضب»، فردّد مرارًا، قال: «لا تغضب».","رواه البخاري"],
+["«يسّروا ولا تعسّروا، وبشّروا ولا تنفّروا».","متفق عليه"],
+["«المسلم من سلم المسلمون من لسانه ويده».","متفق عليه"],
+["«ما نقصت صدقةٌ من مال».","رواه مسلم"],
+["«من لا يشكر الناس لا يشكر الله».","رواه أبو داود والترمذي"],
+["«إن قامت الساعة وفي يد أحدكم فسيلة، فإن استطاع ألّا تقوم حتى يغرسها فليغرسها».","رواه أحمد والبخاري في الأدب المفرد"],
+["«انظروا إلى من هو أسفل منكم، ولا تنظروا إلى من هو فوقكم، فهو أجدر ألّا تزدروا نعمة الله عليكم».","رواه مسلم"],
+["«ليس الغنى عن كثرة العَرَض، ولكن الغنى غنى النفس».","متفق عليه"],
+["«أكمل المؤمنين إيمانًا أحسنهم خُلُقًا».","رواه أبو داود والترمذي"],
+["«لو أنكم توكّلون على الله حق توكّله لرزقكم كما يرزق الطير، تغدو خِماصًا وتروح بِطانًا».","رواه الترمذي"],
+["«سدّدوا وقاربوا وأبشروا».","رواه البخاري"],
+["«كلمتان خفيفتان على اللسان، ثقيلتان في الميزان، حبيبتان إلى الرحمن: سبحان الله وبحمده، سبحان الله العظيم».","متفق عليه"],
+["«الراحمون يرحمهم الرحمن، ارحموا من في الأرض يرحمكم من في السماء».","رواه أبو داود والترمذي"],
+["«من نفّس عن مؤمنٍ كربةً من كُرب الدنيا، نفّس الله عنه كربةً من كُرب يوم القيامة».","رواه مسلم"],
+["«إن الله لا ينظر إلى صوركم وأموالكم، ولكن ينظر إلى قلوبكم وأعمالكم».","رواه مسلم"],
+["«البرّ حُسن الخلق».","رواه مسلم"],
+["«إن الصدق يهدي إلى البر، وإن البر يهدي إلى الجنة».","متفق عليه"],
+["«اغتنم خمسًا قبل خمس: شبابك قبل هَرَمك، وصحتك قبل سَقَمك، وغناك قبل فقرك، وفراغك قبل شُغلك، وحياتك قبل موتك».","رواه الحاكم وصححه الألباني"],
+["«إن الله يحب إذا عمل أحدكم عملًا أن يتقنه».","رواه الطبراني والبيهقي، وحسّنه الألباني"],
+["«اللهم بارك لأمتي في بُكورها».","رواه أبو داود والترمذي"],
+["«الطُّهور شطر الإيمان».","رواه مسلم"],
+["أثر: «ارتحلت الدنيا مُدبرة، وارتحلت الآخرة مُقبلة… فإن اليوم عملٌ ولا حساب، وغدًا حسابٌ ولا عمل».","علي بن أبي طالب رضي الله عنه — ذكره البخاري"],
+["أثر: «إذا أمسيت فلا تنتظر الصباح، وإذا أصبحت فلا تنتظر المساء، وخذ من صحتك لمرضك، ومن حياتك لموتك».","عبد الله بن عمر رضي الله عنهما — البخاري"],
+["أثر: «حاسبوا أنفسكم قبل أن تُحاسَبوا، وزِنوا أنفسكم قبل أن تُوزَنوا».","عمر بن الخطاب رضي الله عنه — ذكره الترمذي"],
+["أثر: «يا ابن آدم، إنما أنت أيام، فإذا ذهب يومٌ ذهب بعضك».","الحسن البصري رحمه الله"],
+["أثر: «ما ندمتُ على شيء ندمي على يومٍ غربت شمسه، نقص فيه أجلي ولم يزدد فيه عملي».","يُروى عن عبد الله بن مسعود رضي الله عنه"],
+["أثر: «السنة شجرة، والشهور فروعها، والأيام أغصانها، والساعات أوراقها، والأنفاس ثمرها».","ابن القيم — الفوائد"],
+["أثر: «نفسك إن لم تشغلها بالحق شغلتك بالباطل».","يُروى عن الإمام الشافعي رحمه الله"],
+["أثر: «إن الليل والنهار يعملان فيك، فاعمل فيهما».","يُروى عن عمر بن عبد العزيز رحمه الله"],
+["أثر: «قيمة كل امرئٍ ما يُحسنه».","يُروى عن علي بن أبي طالب رضي الله عنه"]
+];
+
+/* ====================== كلمات تحفيزية ====================== */
+const MOTIV = [
+"يومٌ واحدٌ متقن خيرٌ من أسبوعٍ من الوعود.",
+"لست مطالبًا بإنجاز حياتك كلها اليوم، فقط هذا اليوم.",
+"ابدأ صغيرًا، لكن ابدأ الآن.",
+"خطوتك البطيئة ما زالت أسرع من وقوفك.",
+"ما تكرّره كل يوم يصنع ما تصيره كل عام.",
+"اليوم صفحة بيضاء؛ اجعل فيها سطرًا تفخر به.",
+"لا تقارن بدايتك بنهاية غيرك.",
+"الإنجاز الكبير مجموعة أيام عادية أحسنتَ فيها.",
+"ركّز على ما في يدك، لا على ما في الأفق.",
+"تعب اليوم هو راحة الغد.",
+"كل خبير كان يومًا مبتدئًا لم يستسلم.",
+"إن لم تجد الطريق، فاصنعه خطوة خطوة.",
+"قل «بسم الله» وابدأ، فالبداية نصف الطريق.",
+"عشر دقائق من التركيز أنفع من ساعة من التشتت.",
+"أنت أقوى مما تظن، وأقرب مما تتخيل.",
+"لا تنتظر الحماس؛ ابدأ فيأتيك.",
+"اجعل هاتفك في جيبك، وحلمك بين يديك.",
+"الخطأ معلّم صامت؛ استمع إليه ثم امضِ.",
+"سامح نفسك على الأمس، واعمل لليوم.",
+"عادة صغيرة واحدة قد تغيّر حياتك كلها.",
+"الأشجار العظيمة لا تنمو في ليلة.",
+"اترك المكان أجمل مما وجدته.",
+"قيمتك في أثرك، لا في ضجيجك.",
+"اشكر على القليل، يُفتح لك الكثير.",
+"التحسّن واحد بالمئة كل يوم يصنع فرقًا هائلًا في سنة.",
+"لا تحمل همّ الطريق كله؛ انظر إلى الخطوة التي أمامك.",
+"اجعل نيّتك صافية، والباقي على الله.",
+"ابتسم؛ فالابتسامة أقصر طريق بين قلبين.",
+"عندما تتعب تعلّم أن تستريح، لا أن تتوقف.",
+"الوقت الذي تقضيه في التعلّم لا يضيع أبدًا.",
+"كن لطيفًا مع نفسك وأنت تحاول؛ النمو يحتاج وقتًا.",
+"إذا ضاقت فاعلم أنها تتسع، وإذا اشتدّت فاعلم أنها تنفرج.",
+"اقرأ صفحة، اكتب سطرًا، تعلّم كلمة: هكذا تُبنى العقول.",
+"أعظم مشروع تعمل عليه هو نفسك.",
+"لا تؤجّل الخير؛ فربما لا يتكرر الباب مفتوحًا.",
+"من أحسن في يومه كُفي همّ غده.",
+"الطموح بلا عمل حلم، والعمل بلا طموح روتين؛ اجمع بينهما.",
+"قوّتك في استمرارك، لا في اندفاعك.",
+"حين تشعر بالضياع، ارجع إلى صلاتك وقرآنك.",
+"كل يوم تنهض فيه هو فرصة جديدة من الله."
+];
+
+/* ====================== تحدّي اليوم ====================== */
+const CHALLENGE = [
+"اتصل بقريب لم تكلّمه منذ مدة واسأل عن حاله.",
+"اقرأ عشر صفحات من كتاب نافع.",
+"احفظ آية جديدة وتأمّل معناها.",
+"امشِ عشرين دقيقة دون هاتف.",
+"اكتب ثلاث نعم تشكر الله عليها اليوم.",
+"تصدّق ولو بشيء قليل، ولو بابتسامة.",
+"رتّب مكانًا واحدًا في بيتك أو مكتبك.",
+"اشرب ثمانية أكواب من الماء.",
+"اكتب ثلاث جمل إنجليزية تستخدم فيها كلمات اليوم.",
+"أطفئ الشاشات قبل النوم بساعة.",
+"قل كلمة شكر صادقة لشخص ساعدك.",
+"تعلّم شيئًا جديدًا في عشر دقائق: مهارة أو معلومة.",
+"لا تشتكِ اليوم من أي شيء، واستبدل الشكوى بحمد.",
+"اقرأ صفحة من السيرة النبوية.",
+"ابدأ يومك بأصعب مهمة عندك.",
+"اكتب هدفًا واحدًا لهذا الأسبوع وخطوة اليوم نحوه.",
+"تحدث بالإنجليزية لنفسك دقيقتين عن يومك.",
+"ساعد أحدًا في البيت دون أن يطلب منك.",
+"اجلس عشر دقائق في هدوء للذكر والتأمل.",
+"اكتب فقرة قصيرة (IELTS Task 2) عن موضوع تختاره.",
+"تجنّب السكر اليوم.",
+"اقرأ مقالًا بالإنجليزية واستخرج منه كلمتين جديدتين.",
+"اعتذر لمن أخطأت في حقه، أو سامح من أخطأ في حقك.",
+"صلِّ صلاة في وقتها بخشوع أكثر من المعتاد.",
+"احذف تطبيقًا يسرق وقتك ولو ليوم واحد.",
+"علّم أحدًا شيئًا تعرفه.",
+"اكتب رسالة شكر لمعلّم أثّر فيك.",
+"راجع ما أنفقته هذا الأسبوع.",
+"استمع إلى بودكاست إنجليزي ربع ساعة.",
+"نم مبكرًا واستيقظ مبكرًا، فالبركة في البكور."
+];
+
+/* ====================== سؤال للتأمل ====================== */
+const REFLECT = [
+"ما الشيء الذي لو أنجزته اليوم لكان يومي ناجحًا؟",
+"من الشخص الذي أريد أن أُسعده اليوم؟",
+"ما العادة التي أريد أن أتركها؟ ولماذا؟",
+"ما الدرس الذي تعلّمته من آخر خطأ وقعت فيه؟",
+"ما الذي أؤجّله منذ مدة؟ وما أول خطوة فيه؟",
+"لو كان اليوم آخر يوم في السنة، فبماذا أفخر؟",
+"ما النعمة التي اعتدتُها حتى نسيتُ شكرها؟",
+"ما الذي يسرق وقتي أكثر من غيره؟",
+"كيف أريد أن يتذكرني الناس؟",
+"ما الشيء الصغير الذي أسعدني هذا الأسبوع؟",
+"هل أعطيتُ جسدي حقه من النوم والحركة؟",
+"ما الكلمة التي أحتاج أن أسمعها اليوم؟ هل أقولها لغيري؟",
+"ما المهارة التي لو أتقنتها لتغيّرت حياتي؟",
+"هل أعيش يومي، أم أعيش قلق الغد؟",
+"ما الذي أستطيع التحكم فيه الآن، وما الذي ليس بيدي؟",
+"من الذي ساعدني يومًا ولم أشكره بعد؟",
+"ما أكثر شيء أخافه؟ وهل هو حقيقي؟",
+"ماذا تعلّمتُ اليوم؟",
+"ما الخطوة التي تقرّبني من الله اليوم؟",
+"لو نصحتُ نفسي قبل سنة، فماذا سأقول؟"
+];
+
+/* ====================== ذكر اليوم ====================== */
+const DHIKR = [
+"سبحان الله وبحمده، سبحان الله العظيم.",
+"لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير.",
+"لا حول ولا قوة إلا بالله.",
+"أستغفر الله العظيم وأتوب إليه.",
+"اللهم صلِّ وسلّم على نبينا محمد.",
+"حسبي الله لا إله إلا هو، عليه توكلت وهو رب العرش العظيم.",
+"رضيتُ بالله ربًّا، وبالإسلام دينًا، وبمحمدٍ ﷺ نبيًّا.",
+"اللهم أعنّي على ذكرك وشكرك وحسن عبادتك.",
+"يا حيّ يا قيوم، برحمتك أستغيث، أصلح لي شأني كله، ولا تكِلني إلى نفسي طرفة عين.",
+"اللهم إني أسألك علمًا نافعًا، ورزقًا طيبًا، وعملًا متقبّلًا.",
+"ربِّ اشرح لي صدري، ويسّر لي أمري.",
+"سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر.",
+"لا إله إلا أنت سبحانك إني كنت من الظالمين.",
+"اللهم إني أعوذ بك من الهمّ والحزن، والعجز والكسل."
+];
+</script>
+<script>
+/* ====================== قصص من تراث العالم ======================
+   [العنوان، المصدر/البلد، القصة، العبرة] */
+const STORIES = [
+["الفلاح الذي شدّ الزرع ليكبر","الصين — حكاية من عهد منسيوس",
+"كان فلاحٌ صيني قلقًا لأن زرعه ينمو ببطء. فخرج ذات صباح إلى الحقل، وأخذ يشدّ كل نبتة قليلًا إلى أعلى، حتى أنهكه التعب. عاد إلى بيته فرحًا وقال لأهله: «لقد ساعدتُ الزرع على النمو اليوم!». فأسرع ابنه إلى الحقل فوجد النبات كله قد ذبل ومات، لأن جذوره انقطعت من الأرض.",
+"بعض الأشياء لا تُستعجَل؛ للنمو وقته، ومن أراد قطف الثمرة قبل أوانها خسرها."],
+["العجوز الذي يغرس شجرة","فارس — من حكايات كسرى أنوشروان",
+"مرّ الملك كسرى بشيخٍ طاعن في السن يغرس شجرة زيتون، وهي شجرة لا تُثمر إلا بعد سنين طويلة. فقال له متعجبًا: «أتغرس شجرة لن تأكل من ثمرها؟». فقال الشيخ: «غرسوا فأكلنا، ونغرس فيأكلون». فأُعجب الملك بجوابه وأمر له بكيسٍ من الذهب. فقال الشيخ مبتسمًا: «أرأيت أيها الملك؟ لقد أثمرت شجرتي في يومها!».",
+"اعمل اليوم ما ينفع الناس بعدك، فالخير يُثمر في أوقات لا تتوقعها."],
+["حصان الشيخ الهارب","الصين — حكاية «ساي وينغ»",
+"كان لشيخٍ يعيش على الحدود حصانٌ واحد، فهرب. فجاء الجيران يواسونه، فقال: «من يدري، لعله خير». وبعد أيام عاد الحصان ومعه حصانٌ بري جميل، فجاؤوا يهنئونه، فقال: «من يدري، لعله شر». ركب ابنه الحصان الجديد فسقط وكُسرت ساقه، فقال الشيخ: «لعله خير». ثم جاءت الحرب وأُخذ شباب القرية جميعًا، ولم يُؤخذ ابنه لأنه مكسور الساق.",
+"لا تحكم على يومك بنظرة واحدة، فقد يكون في المكروه خيرٌ لا تراه بعد."],
+["جحا وابنه والحمار","تركيا والعالم العربي — من نوادر جحا",
+"خرج جحا وابنه مع حمارهما إلى السوق. ركب جحا وابنه يمشي، فقال الناس: «يا له من أبٍ قاسٍ!». فنزل وأركب ابنه، فقالوا: «يا له من ابنٍ عاق، يركب وأبوه يمشي!». فركبا معًا، فقالوا: «يا لهما من ظالمَين للحمار المسكين!». فنزلا ومشيا بجانبه، فضحك الناس: «انظروا إلى الأحمقين، معهما حمار ولا يركبانه!».",
+"رضا الناس غاية لا تُدرك؛ افعل الصواب ودع الكلام."],
+["نصر الدين يبحث عن المفتاح","تركيا — نوادر نصر الدين خوجة",
+"رآه جاره يبحث في الشارع تحت ضوء المصباح، فسأله: «عمّ تبحث؟». قال: «عن مفتاح بيتي». فبحث معه طويلًا دون جدوى، ثم سأله: «أين أضعته بالضبط؟». قال: «في داخل البيت». قال الجار متعجبًا: «فلماذا تبحث هنا؟!». قال: «لأن الضوء هنا أفضل!».",
+"ابحث عن الحل حيث المشكلة، لا حيث الطريق أسهل."],
+["الحطّاب وشحذ الفأس","حكاية من التراث العالمي",
+"تقدّم حطّاب قوي للعمل عند تاجر خشب، فقطع في يومه الأول ثماني عشرة شجرة. وفي اليوم الثاني قطع خمس عشرة، ثم عشرًا، ثم أقل. فذهب إلى صاحب العمل معتذرًا: «لا أدري ما بي، أعمل أكثر وأنجز أقل!». فسأله: «متى شحذت فأسك آخر مرة؟». قال: «لم يكن عندي وقت للشحذ، كنت مشغولًا بالقطع!».",
+"خصّص وقتًا لتجديد نفسك بالراحة والتعلّم؛ فهو ليس وقتًا ضائعًا."],
+["حزمة العِصيّ","التراث العربي واليوناني",
+"لما حضرت الوفاة رجلًا حكيمًا، جمع أبناءه وكانوا كثيري الخلاف، وأعطى كل واحد منهم عودًا وقال: «اكسروه»، فكسروه بسهولة. ثم جمع أعوادًا كثيرة في حزمة واحدة وقال: «اكسروها»، فلم يستطع أحد منهم. فقال: «هكذا أنتم، إن تفرّقتم كُسرتم، وإن اجتمعتم لم يقدر عليكم أحد».",
+"تأبى الرماح إذا اجتمعن تكسّرًا، وإذا افترقن تكسّرت آحادا."],
+["السلحفاة والأرنب","اليونان — من حكايات إيسوب",
+"سخر الأرنب من بطء السلحفاة، فتحدّته في سباق. انطلق الأرنب سريعًا حتى ابتعد كثيرًا، فقال في نفسه: «سأستريح قليلًا تحت الشجرة». فغلبه النوم. أما السلحفاة فمضت بخطوات بطيئة لكنها لم تتوقف أبدًا، حتى وصلت إلى خط النهاية، والأرنب ما زال نائمًا.",
+"الاستمرار يهزم السرعة، والغرور يُنيم صاحبه عن هدفه."],
+["النملة والجندب","اليونان — من حكايات إيسوب",
+"قضى الجندب الصيف كله يغني ويلعب، بينما كانت النملة تجمع الحبوب وتخزنها. سخر منها الجندب: «لماذا تتعبين نفسك والطعام كثير؟». فلما جاء الشتاء ببرده، لم يجد الجندب ما يأكله، فطرق باب النملة جائعًا، فوجدها في دفء ومعها طعام يكفيها.",
+"اعمل في يومك لما تحتاجه غدًا، دون أن تُشغلك همومُ الغد عن عمل اليوم."],
+["العميان والفيل","الهند — حكاية قديمة رواها الرومي أيضًا",
+"جاء فيلٌ إلى قرية لم يرَ أهلها فيلًا قط، فأُدخل في غرفة مظلمة، ودخل الناس يتحسّسونه. فلمس أحدهم خرطومه فقال: «الفيل كالأنبوب». ولمس آخر أذنه فقال: «بل كالمروحة». ولمس ثالث ساقه فقال: «بل كالعمود». واختلفوا وتجادلوا، وكلٌّ منهم صادقٌ في جزء، مخطئٌ في الكل.",
+"لا تحكم على الأمور من زاويتك وحدها؛ فالحقيقة أوسع مما تراه."],
+["خاتم الملك: «وهذا أيضًا سيمضي»","فارس — حكاية شعبية مشهورة",
+"طلب ملكٌ من حكمائه أن يصنعوا له خاتمًا يُفرحه إذا حزن، ويُحزنه إذا فرح. فتشاوروا أيامًا، ثم جاؤوه بخاتم نُقشت عليه عبارة واحدة: «وهذا أيضًا سيمضي». فكان الملك إذا ضاقت به الدنيا نظر إليه فاطمأنّ، وإذا أعجبته نفسه نظر إليه فتواضع.",
+"لا يدوم حال؛ فلا تيأس في الشدة، ولا تغترّ في الرخاء."],
+["الجرّة المشروخة","الهند — حكاية شعبية",
+"كان لسقّاءٍ جرّتان، إحداهما سليمة والأخرى مشروخة يتسرّب منها الماء في الطريق. وبعد سنتين اعتذرت الجرة المشروخة لصاحبها عن عيبها. فقال لها: «انظري إلى جانبك من الطريق!». فإذا هو مليء بالأزهار، بينما الجانب الآخر جافّ. وقال: «علمتُ بعيبك فزرعت البذور في جهتك، فكنتِ تسقينها كل يوم».",
+"في كل إنسان جمال، وقد يصير عيبك نفسه بابًا للخير إن أحسنت استعماله."],
+["الكِنتسوغي: الإصلاح بالذهب","اليابان — فن تقليدي",
+"يُروى أن حاكمًا يابانيًا كسر وعاء الشاي المفضل لديه، فأُرسل لإصلاحه فعاد مُلصقًا بمشابك معدنية قبيحة. فطلب الحرفيون أن يجدوا طريقة أجمل، فأصلحوه بمادة ممزوجة بالذهب، فصارت الشقوق خطوطًا ذهبية لامعة، وصار الوعاء أثمن من قبل. ومن هنا نشأ فن «الكنتسوغي».",
+"جراحك وتجاربك ليست عارًا؛ قد تصير أجمل ما فيك إذا تعلّمت منها."],
+["الضفدع في قاع البئر","الصين — من كتاب «تشوانغ تسي»",
+"عاش ضفدعٌ في بئر قديمة، وكان يرى السماء من فوهتها دائرة صغيرة، فيظن أنها كل السماء. وجاءته سلحفاة من البحر فحدّثته عن البحر الواسع الذي لا تنقص مياهه في الجفاف ولا تزيد في المطر. فدُهش الضفدع، ولم يصدّق أن في العالم شيئًا أوسع من بئره.",
+"وسّع أفقك بالسفر والقراءة والتعلم؛ فالعالم أكبر من البئر الذي اعتدته."],
+["الأسد والفأر","اليونان — من حكايات إيسوب",
+"أمسك أسدٌ بفأرٍ صغير ليأكله، فتوسّل إليه الفأر: «أطلقني، فلعلي أنفعك يومًا». فضحك الأسد وأطلقه. وبعد أيام وقع الأسد في شبكة صيّاد، فأخذ يزأر عاجزًا. فسمعه الفأر، فجاء وقرض الحبال حتى تحرّر الأسد.",
+"لا تحقرن معروفًا، ولا تستصغرن أحدًا؛ فالصغير قد ينفعك يومًا."],
+["طالب العلم والصخرة","التراث العربي — يُروى عن أحد العلماء",
+"يُروى أن طالب علمٍ يئس من الحفظ والفهم، فترك الدرس وخرج هائمًا. فجلس عند بئر، فرأى حجرًا قد حُفر فيه أخدود عميق من أثر الحبل وتقاطر الماء عليه. فقال في نفسه: «إذا كان الماء اللين قد حفر الحجر الصلب بتكراره، أفلا يحفر العلم في قلبي بالتكرار؟». فرجع إلى الدرس حتى صار من كبار العلماء.",
+"ليّن مع الاستمرار يغلب الصلب؛ والتكرار أمّ التعلّم."],
+["«آن لأبي حنيفة أن يمدّ رجليه»","التراث الإسلامي — العراق",
+"كان الإمام أبو حنيفة يُدرّس في مجلسه، وكان يمدّ رجله لألمٍ فيها. فدخل رجل مهيب الهيئة حسن الثياب، فطوى الإمام رجله احترامًا له. وأثناء الدرس سأل الرجل سؤالًا ساذجًا يدل على جهل كبير. فقال أبو حنيفة: «آن لأبي حنيفة أن يمدّ رجليه!».",
+"قيمة الإنسان في علمه وعقله، لا في مظهره وثيابه؛ فتمهّل قبل أن تحكم."],
+["كرم حاتم الطائي","الجزيرة العربية — قبل الإسلام",
+"يُروى أن ملكًا أرسل رسلًا إلى حاتم الطائي يطلبون فرسه الأصيل الذي يضرب به المثل. فوصلوا في ليلة شديدة البرد والجوع، ولم يكن عند حاتم ما يُطعمهم، فذبح فرسه وأكرمهم به. فلما أصبحوا أخبروه بحاجتهم، فقال: «لو أخبرتموني قبل لأعطيتكموه، أما الآن فقد صار عشاءكم».",
+"الكرم الحقيقي أن تُعطي من أغلى ما تملك، دون انتظار ولا مَنّ."],
+["وفاء السموأل","الجزيرة العربية — قبل الإسلام",
+"أودع امرؤ القيس دروعًا ثمينة عند السموأل قبل سفره. ثم جاء ملكٌ يطلب الدروع، وحاصر حصن السموأل، وأسر ابنه، وهدّده بقتله إن لم يسلّم الأمانة. فقال السموأل: «ما كنت لأخفر ذمتي وأخون أمانتي». فقُتل ابنه أمام عينيه، وحفظ الأمانة حتى سلّمها لورثة صاحبها، فصار يُقال: «أوفى من السموأل».",
+"الأمانة شرف لا يُباع، والوفاء يخلّد صاحبه."],
+["عمر والقِدر التي تغلي بالماء","التراث الإسلامي — المدينة المنورة",
+"خرج عمر بن الخطاب ليلًا يتفقّد الرعية، فرأى امرأة وحولها أطفال يبكون، وأمامها قِدر على النار. فسألها، فقالت: «ليس فيها إلا ماء، أُلهيهم به حتى يناموا». فرجع عمر إلى بيت المال، وحمل كيس الدقيق والسمن على ظهره، ورفض أن يحمله عنه غلامه وقال: «أتحمل عني وزري يوم القيامة؟». ثم طبخ لهم بيده حتى شبعوا وضحكوا.",
+"المسؤولية أمانة، والقائد الحق يخدم الناس بنفسه."],
+["الطائر الطنّان والحريق","أمريكا الجنوبية — من تراث شعب الكيتشوا",
+"اشتعلت النار في الغابة، فهربت الحيوانات ووقفت تنظر عاجزة. إلا طائرًا طنّانًا صغيرًا، كان يطير إلى النهر فيأخذ قطرة في منقاره ويلقيها على النار، ثم يعود. فقالت له الحيوانات: «ماذا تظن أنك تفعل؟ لن تطفئ النار بقطرة!». فقال: «أنا أفعل ما أستطيع».",
+"لست مطالبًا بإصلاح العالم كله، لكنك مسؤول عن قطرتك."],
+["حساء الحجر","أوروبا — حكاية شعبية",
+"وصل مسافرٌ جائع إلى قرية، فلم يُعطه أحد طعامًا. فوضع قدرًا فيه ماء وحجر على النار، وقال: «أطبخ حساء الحجر العجيب». فاقترب الناس فضولًا، فقال: «سيكون ألذّ لو أضفنا جزرة». فأحضر أحدهم جزرة، وآخر بصلة، وثالث لحمًا... حتى صار حساءً لذيذًا أكل منه الجميع.",
+"إذا تشارك الناس بالقليل صنعوا الكثير، والمبادرة تفتح القلوب."],
+["الإسكندر وديوجين","اليونان — حكاية تاريخية",
+"زار الإسكندر المقدوني الفيلسوف ديوجين، فوجده جالسًا في الشمس. فوقف أمامه وقال: «اطلب مني ما تشاء». فقال ديوجين: «تنحَّ قليلًا، فأنت تحجب عني الشمس». فقال الإسكندر لمن معه: «لو لم أكن الإسكندر لوددتُ أن أكون ديوجين».",
+"الغنى الحقيقي غنى النفس، ومن قنع بما لديه لم يحتج إلى أحد."],
+["الكوب الممتلئ","اليابان — من حكايات الزن",
+"زار أستاذٌ جامعي حكيمًا يابانيًا ليتعلم منه، وظل يتكلم عن علمه وآرائه. فقدّم له الحكيم الشاي، وأخذ يصبّ في كوبه حتى امتلأ وفاض وهو مستمر. فصاح الأستاذ: «الكوب ممتلئ، لن يسع المزيد!». فقال الحكيم: «وأنت مثله، ممتلئ بآرائك. كيف أعلّمك قبل أن تُفرغ كوبك؟».",
+"لكي تتعلّم، أفرغ جزءًا من قناعاتك واستمع بتواضع."],
+["الشيخ الذي أزاح الجبل","الصين — حكاية «يو قونغ»",
+"كان شيخ في التسعين يسكن خلف جبلين عظيمين يسدّان طريقه، فقرّر أن يزيلهما مع أبنائه بالفؤوس والسلال. فسخر منه جاره: «أنت لن تعيش حتى تزيل حفنة منه!». فقال الشيخ: «إذا متُّ أكمل أبنائي، ثم أحفادي، وأحفاد أحفادي، والجبل لا يزيد». فبقي يعمل كل يوم.",
+"المهمة العظيمة تُنجز يومًا بيوم، والعزيمة تُزيل الجبال."],
+["جزاء سِنِمّار","العراق — التراث العربي القديم",
+"بنى المهندس سنمار للملك النعمان قصر «الخورنق» العظيم، فأُعجب به الملك إعجابًا شديدًا. فقال سنمار متفاخرًا: «إن في القصر حجرًا لو نُزع لانهار كله، ولا يعرفه أحد غيري». فخاف الملك أن يبني مثله لغيره، فأمر به فأُلقي من أعلى القصر. فصار مثلًا لمن يُجازى على الإحسان بالإساءة.",
+"ليس كل ما يُعرف يُقال؛ احفظ لسانك وأسرارك."],
+["أنانسي وجرّة الحكمة","غانا — غرب أفريقيا",
+"أراد العنكبوت أنانسي أن يحتكر الحكمة كلها، فجمعها في جرّة وأراد أن يخبئها في أعلى شجرة. فربط الجرة على بطنه، وأخذ يحاول التسلق فيفشل. فرآه ابنه الصغير فقال: «يا أبي، لو ربطتها على ظهرك لصعدت بسهولة!». فغضب أنانسي لأن صغيرًا علّمه، فانكسرت الجرة، وتطايرت الحكمة إلى الناس جميعًا.",
+"الحكمة لا يملكها أحد وحده، وقد تتعلّم من أصغر الناس."],
+["النسر الذي ظن نفسه دجاجة","غانا — حكاية رواها جيمس أغري",
+"وجد فلاحٌ فرخ نسر، فربّاه مع الدجاج، فصار يأكل ويمشي مثلها. فمرّ به حكيم وقال: «هذا نسر، قلبه قلب نسر». فحمله إلى قمة جبل عند شروق الشمس وقال: «أنت نسر، فطِر!». فارتجف النسر، ثم نظر إلى الشمس، وفرد جناحيه، وحلّق عاليًا ولم يعد.",
+"لا تدع ظروفك تقنعك بأنك أصغر مما خلقك الله."],
+["اللفتة الكبيرة","روسيا — حكاية شعبية",
+"زرع جدٌّ لفتة، فكبرت حتى صارت ضخمة. حاول أن يقتلعها فلم يقدر، فنادى الجدة، فلم يقدرا. فنادت الحفيدة، ثم الكلب، ثم القطة، ولم يقدروا. ثم جاءت فأرة صغيرة وأمسكت بالقطة، وشدّوا جميعًا، فخرجت اللفتة!",
+"لا تستهن بأي مساهمة؛ فأحيانًا تكون اليد الصغيرة هي التي تُكمل النجاح."],
+["بيربال والخط","الهند — حكايات أكبر وبيربال",
+"رسم الإمبراطور أكبر خطًا على الأرض، وقال لحاشيته: «من يجعل هذا الخط أقصر دون أن يمسح منه شيئًا؟». فتحيّر الجميع. فتقدّم وزيره الحكيم بيربال، ورسم بجانبه خطًا أطول منه، فصار خط الإمبراطور أقصر دون أن يلمسه.",
+"لا تحتاج أن تُصغّر الآخرين لتكبر؛ ابنِ نفسك وتقدّم."],
+["الحذاء والقدم","فارس — من «كلستان» لسعدي الشيرازي",
+"يحكي سعدي الشيرازي أنه كان حافي القدمين لا يملك حذاءً، فدخل مسجد الكوفة ضيّق الصدر يشكو حاله. فرأى هناك رجلًا ليست له قدمان أصلًا. فحمد الله وشكره على نعمة القدمين، وهان عليه أنه بلا حذاء.",
+"انظر إلى من هو دونك في النعمة، تعرف قدر ما أنت فيه."],
+["الطيور والسيمرغ","فارس — «منطق الطير» لفريد الدين العطار",
+"اجتمعت طيور العالم لتبحث عن ملكها الأسطوري «السيمرغ». فانطلقت آلاف الطيور في رحلة شاقة عبر سبعة أودية، فتساقط أكثرها تعبًا أو خوفًا. ولم يصل في النهاية إلا ثلاثون طائرًا، فلما وصلوا ونظروا، رأوا أنفسهم: فـ«سي مرغ» بالفارسية تعني «ثلاثون طائرًا».",
+"ما تبحث عنه طويلًا قد يكون في داخلك؛ والرحلة نفسها هي التي تصنعك."],
+["عباس بن فرناس يحاول الطيران","الأندلس — قرطبة",
+"كان عباس بن فرناس عالمًا ومخترعًا في قرطبة، فكّر في الطيران قبل قرون من غيره. صنع لنفسه جناحين من ريش وحرير، وصعد مرتفعًا، وطار مسافة ثم سقط وأصيب. ويُقال إنه أدرك أنه نسي أن يصنع ذيلًا يساعد على الهبوط كالطيور.",
+"المحاولة شجاعة، والخطأ معلومة جديدة؛ والرواد يفتحون الطريق لمن بعدهم."],
+["حلم الأحنف بن قيس","التراث العربي — البصرة",
+"كان الأحنف بن قيس يُضرب به المثل في الحلم، فسُئل: «ممن تعلّمت الحلم؟». قال: «من قيس بن عاصم؛ رأيته يومًا جالسًا، فجيء إليه بابن أخيه مقتولًا، وبقاتله مقيّدًا وهو ابنه! فما حلّ حَبوته، ولا قطع حديثه، ثم قال: أطلقوا الأسير، وادفنوا القتيل، واحملوا الدية إلى أمّه، فإنها غريبة».",
+"الحلم قوة، وضبط النفس عند الغضب علامة العظماء."],
+["رحلة منسا موسى","مالي — غرب أفريقيا",
+"خرج منسا موسى ملك مالي إلى الحج سنة 724هـ في قافلة عظيمة، ومعه الذهب الكثير. وكان ينفق ويتصدق في كل مدينة يمر بها، حتى قيل إن سعر الذهب في القاهرة انخفض سنوات بسبب كرمه. وعاد إلى بلاده بالعلماء والمهندسين، فبنى المساجد والمدارس في تمبكتو التي صارت منارة للعلم.",
+"المال وسيلة؛ وخير ما يُنفق فيه العلم الذي يبقى بعد صاحبه."],
+["روبرت بروس والعنكبوت","اسكتلندا — حكاية شعبية",
+"يُروى أن الملك روبرت بروس هُزم مرات عديدة، فاختبأ في كهف يائسًا. فرأى عنكبوتًا يحاول أن يمدّ خيطه إلى جدار الكهف، فيسقط ثم يعاود، ست مرات. وفي المرة السابعة نجح. فقال الملك: «إن كان العنكبوت لم ييأس، فلن أيأس أنا». فخرج وحاول مرة أخرى فانتصر.",
+"لا تحسب عدد المرات التي سقطت فيها، بل عدد المرات التي نهضت فيها."],
+["أرخميدس: «وجدتُها!»","اليونان — صقلية",
+"طلب الملك من العالم أرخميدس أن يعرف هل تاجه من ذهب خالص أم مغشوش، دون أن يكسره. فاحتار أيامًا، ثم دخل حوض الاستحمام فلاحظ أن الماء ارتفع بقدر جسمه. فقفز فرحًا وهو يصيح: «يوريكا!» أي: وجدتها! فقد عرف كيف يقيس حجم التاج بالماء.",
+"الحلول تأتي أحيانًا حين يرتاح العقل؛ فاعمل بجد، ثم امنح نفسك استراحة."],
+["ابن سينا والكتاب الصعب","بخارى — من سيرة ابن سينا الذاتية",
+"يحكي ابن سينا أنه قرأ كتاب «ما بعد الطبيعة» لأرسطو أربعين مرة حتى حفظه، ومع ذلك لم يفهم مقصوده، فيئس وقال: «هذا كتاب لا سبيل إلى فهمه». ثم مرّ يومًا بسوق الورّاقين، فعرض عليه بائع كتابًا صغيرًا للفارابي في شرح أغراضه، فاشتراه بثمن زهيد، فقرأه فانفتح له الكتاب كله، فخرج وتصدّق شكرًا لله.",
+"الصبر على الصعب يفتح الأبواب، وقد يأتي الفهم من حيث لا تحتسب."],
+["بائع الزيت والرامي الماهر","الصين — حكاية «ماي يو وينغ»",
+"كان رامٍ مشهور يُصيب الهدف تسع مرات من عشر، فيعجب الناس به. وكان بائع زيت عجوز ينظر إليه دون انبهار. فسأله الرامي غاضبًا: «أتستهين بمهارتي؟». فأخذ العجوز قارورة، ووضع على فوهتها قطعة نقدية مثقوبة، وصبّ الزيت من فوق خلال الثقب دون أن تبتلّ النقود. وقال: «ليس عندي سرّ، إنها الممارسة فقط».",
+"المهارة ثمرة التكرار، لا الموهبة وحدها."],
+["اعقِلها وتوكّل","التراث الإسلامي — الأعرابي والناقة",
+"جاء أعرابي إلى النبي ﷺ وقال: «يا رسول الله، أعقِلُ ناقتي وأتوكّل، أو أُطلقها وأتوكّل؟». فقال ﷺ: «اعقلها وتوكّل» (رواه الترمذي). فصار ذلك قاعدة لكل مسلم: أن يأخذ بالأسباب ويعمل ما يستطيع، ثم يسلّم أمره لله مطمئنًا.",
+"التوكل الحقيقي: عملٌ باليد، وثقةٌ بالقلب."],
+["شجرة الخيزران","حكاية شائعة من شرق آسيا",
+"يزرع الفلاح بذرة الخيزران، ويسقيها كل يوم، فلا يرى شيئًا في السنة الأولى، ولا الثانية، ولا الثالثة، ولا الرابعة. فيضحك منه الناس. وفي السنة الخامسة تنشق الأرض فتنمو الشجرة عشرات الأقدام في أسابيع قليلة. فقد كانت طوال تلك السنين تبني جذورها القوية تحت الأرض.",
+"لا تيأس إذا لم ترَ نتائج جهدك اليوم؛ فالجذور تُبنى في الخفاء."]
+];
+</script>
+<script>
+/* ============ كلمات إنجليزية (مستوى متوسط B1–B2) ============
+   كلمة | نوعها | المعنى | مثال */
+const WORDS = `
+achieve|verb|يُحقّق|She worked hard to achieve her goals.
+afford|verb|يتحمّل تكلفة|I can't afford a new car this year.
+approach|noun|أسلوب / طريقة|We need a new approach to this problem.
+assume|verb|يفترض|Don't assume that everyone agrees with you.
+attempt|noun|محاولة|He passed the exam on his second attempt.
+aware|adjective|مُدرِك / واعٍ|Are you aware of the risks?
+benefit|noun|فائدة|Regular exercise has many benefits.
+brief|adjective|موجز / قصير|She gave a brief summary of the report.
+capable|adjective|قادر / كفء|He is capable of doing much better.
+challenge|noun|تحدٍّ|Learning a language is a real challenge.
+confident|adjective|واثق|She felt confident before the interview.
+consider|verb|يأخذ بعين الاعتبار|Please consider my offer carefully.
+convenient|adjective|مناسب / مريح|Is 5 o'clock convenient for you?
+curious|adjective|فضولي / محبّ للمعرفة|Children are naturally curious.
+decline|verb|ينخفض / يرفض بأدب|Sales declined last month.
+deserve|verb|يستحق|You deserve a break after all that work.
+determine|verb|يحدّد|Your effort will determine your success.
+efficient|adjective|فعّال / كفء|This is a more efficient way to work.
+encourage|verb|يشجّع|My teacher encouraged me to read more.
+essential|adjective|ضروري / أساسي|Water is essential for life.
+estimate|verb|يُقدّر تقريبًا|They estimate the trip will take two hours.
+eventually|adverb|في النهاية|He eventually found a good job.
+evidence|noun|دليل|There is no evidence to support this idea.
+familiar|adjective|مألوف|Your face looks familiar.
+flexible|adjective|مرن|I have a flexible work schedule.
+generous|adjective|كريم|He is generous with his time.
+gradually|adverb|تدريجيًا|My English improved gradually.
+grateful|adjective|ممتنّ|I am grateful for your help.
+habit|noun|عادة|Reading before bed is a good habit.
+hesitate|verb|يتردّد|Don't hesitate to ask questions.
+ignore|verb|يتجاهل|You can't ignore the problem forever.
+improve|verb|يُحسّن|Practice will improve your writing.
+include|verb|يتضمّن|The price includes breakfast.
+influence|noun|تأثير|Parents have a strong influence on children.
+intend|verb|ينوي|I intend to finish this book tonight.
+issue|noun|قضية / مسألة|Climate change is a global issue.
+maintain|verb|يحافظ على|It's hard to maintain a healthy diet.
+manage|verb|يتمكّن من / يُدير|I managed to finish on time.
+mention|verb|يذكر|She didn't mention the meeting.
+obvious|adjective|واضح|The answer seems obvious now.
+occur|verb|يحدث|The accident occurred at night.
+opportunity|noun|فرصة|This job is a great opportunity.
+patient|adjective|صبور|Be patient; results take time.
+perform|verb|يؤدّي|The team performed well this season.
+persuade|verb|يُقنع|He persuaded me to join the club.
+prefer|verb|يُفضّل|I prefer tea to coffee.
+previous|adjective|سابق|In my previous job, I worked nights.
+priority|noun|أولوية|Health should be your first priority.
+proper|adjective|لائق / صحيح|Make sure you use the proper tools.
+purpose|noun|هدف / غاية|What is the purpose of your visit?
+pursue|verb|يسعى وراء|She wants to pursue a career in medicine.
+rarely|adverb|نادرًا|He rarely eats fast food.
+realize|verb|يُدرك|I didn't realize it was so late.
+reasonable|adjective|معقول|The price seems reasonable.
+recover|verb|يتعافى|She recovered quickly from the flu.
+reduce|verb|يُقلّل|We need to reduce waste.
+regret|verb|يندم|I regret not studying harder.
+reliable|adjective|موثوق|He is a reliable friend.
+remain|verb|يبقى|Please remain seated.
+require|verb|يتطلّب|This job requires patience.
+responsible|adjective|مسؤول|Who is responsible for this project?
+reveal|verb|يكشف|The study revealed surprising results.
+schedule|noun|جدول زمني|I have a busy schedule today.
+severe|adjective|شديد / حادّ|There was a severe storm last night.
+significant|adjective|مهم / ملحوظ|There was a significant increase in prices.
+similar|adjective|مشابه|Our ideas are very similar.
+solution|noun|حلّ|We finally found a solution.
+specific|adjective|محدّد|Can you give me a specific example?
+struggle|verb|يكافح / يعاني|Many students struggle with grammar.
+suitable|adjective|مناسب|This film is not suitable for children.
+support|verb|يدعم|My family always supports me.
+suppose|verb|يظن / يفترض|I suppose you're right.
+temporary|adjective|مؤقت|This is only a temporary solution.
+tend|verb|يميل إلى|People tend to sleep less in summer.
+threat|noun|تهديد|Pollution is a threat to wildlife.
+tradition|noun|تقليد / عادة موروثة|It's a family tradition to eat together on Fridays.
+typical|adjective|نموذجي / معتاد|This is a typical day for me.
+unique|adjective|فريد|Every person is unique.
+urgent|adjective|عاجل|I have an urgent message for you.
+valuable|adjective|ثمين / قيّم|Thank you for your valuable advice.
+various|adjective|متنوّع|We discussed various topics.
+willing|adjective|مستعد / راغب|Are you willing to help?
+worth|adjective|يستحق / جدير|This book is worth reading.
+accurate|adjective|دقيق|The information is accurate.
+admire|verb|يُعجب بـ|I admire her courage.
+anxious|adjective|قلق|He felt anxious about the test.
+appreciate|verb|يُقدّر|I really appreciate your kindness.
+arrange|verb|يُرتّب / ينظّم|Can you arrange a meeting for Monday?
+avoid|verb|يتجنّب|Try to avoid sugary drinks.
+commit|verb|يلتزم|I commit to studying one hour every day.
+compare|verb|يقارن|Don't compare yourself to others.
+complain|verb|يشتكي|She never complains about her work.
+concentrate|verb|يركّز|I can't concentrate with this noise.
+contribute|verb|يُساهم|Everyone contributed to the project.
+convince|verb|يُقنع|I convinced him to see a doctor.
+cope|verb|يتأقلم / يتعامل مع|How do you cope with stress?
+delay|noun|تأخير|The flight had a two-hour delay.
+demand|noun|طلب / مطلب|There is high demand for nurses.
+distract|verb|يُشتّت|Phones distract students in class.
+eager|adjective|متلهّف|She is eager to learn.
+emphasize|verb|يؤكّد على|The teacher emphasized the main points.
+exhausted|adjective|منهك جدًا|I was exhausted after the trip.
+expand|verb|يتوسّع|The company plans to expand abroad.
+frustrated|adjective|محبَط|He felt frustrated by the delay.
+honest|adjective|صادق|Please give me your honest opinion.
+humble|adjective|متواضع|Despite his success, he stayed humble.
+independent|adjective|مستقل|She became financially independent.
+inspire|verb|يُلهم|His story inspired many people.
+journey|noun|رحلة|Life is a long journey.
+knowledge|noun|معرفة|Knowledge is power.
+loyal|adjective|وفيّ|Dogs are loyal animals.
+modest|adjective|متواضع / بسيط|They live in a modest house.
+negotiate|verb|يتفاوض|We negotiated a better price.
+neighbourhood|noun|حيّ / جوار|I grew up in a quiet neighbourhood.
+overcome|verb|يتغلّب على|She overcame her fear of speaking.
+peaceful|adjective|هادئ / مسالم|The village is very peaceful.
+postpone|verb|يؤجّل|They postponed the meeting until Sunday.
+precious|adjective|غالٍ / نفيس|Time is precious.
+recommend|verb|يوصي بـ|I recommend this restaurant.
+reflect|verb|يتأمّل / يعكس|Take time to reflect on your day.
+resist|verb|يقاوم|I couldn't resist the dessert.
+sincere|adjective|صادق / مخلص|Please accept my sincere thanks.
+strategy|noun|استراتيجية / خطة|We need a clear strategy.
+thoughtful|adjective|مراعٍ للآخرين|It was thoughtful of you to call.
+wisdom|noun|حكمة|With age comes wisdom.
+`.trim().split('\n').map(l=>l.split('|'));
+
+/* ============ IELTS: ثلاث كلمات متقاربة المعنى والفرق بينها ============ */
+const IELTS = [
+{m:"كبير",w:[["big","الكلمة العامة واليومية؛ مناسبة للكلام لكنها بسيطة في الكتابة الأكاديمية.","They live in a big house."],["huge","كبير جدًا؛ تحمل مبالغة وانفعالًا، شائعة في Speaking.","The concert was a huge success."],["substantial","كبير في الكمية أو الأهمية؛ رسمية وممتازة في Writing.","There was a substantial increase in costs."]],t:"في Writing Task 1 قل: a substantial rise بدل a big rise."},
+{m:"ينظر",w:[["look","فعل إرادي عام: توجيه النظر إلى شيء.","Look at this picture."],["stare","النظر الطويل المُركّز بدون رمش، وقد يكون مزعجًا.","It's rude to stare at people."],["glance","نظرة سريعة خاطفة.","She glanced at her watch."]],t:"stare = طويل، glance = قصير جدًا."},
+{m:"مهم",w:[["important","عامة لكل شيء له قيمة.","Sleep is important for health."],["crucial","حاسم؛ إذا غاب فشل الأمر كله.","Timing is crucial in this experiment."],["significant","مهم وملحوظ، خصوصًا في الأرقام والنتائج.","There was a significant drop in sales."]],t:"significant ممتازة لوصف تغيّر في الرسوم البيانية."},
+{m:"يزداد",w:[["increase","الكلمة العامة للزيادة، فعل واسم.","The population increased by 5%."],["rise","زيادة طبيعية تدريجية، لا يأخذ مفعولًا به.","Prices rose steadily."],["soar","ارتفاع سريع وكبير جدًا.","Temperatures soared to 45°C."]],t:"لا تقل: rise the prices — الصحيح: raise the prices."},
+{m:"مشكلة",w:[["problem","أي صعوبة تحتاج حلًا.","We have a problem with the car."],["issue","موضوع أو قضية للنقاش؛ أكثر حيادية ورسمية.","Unemployment is a major social issue."],["dilemma","موقف صعب بين خيارين كلاهما غير مريح.","She faced a dilemma: stay or leave."]],t:"في Task 2 استخدم issue بدل problem لتبدو أكاديميًا."},
+{m:"يُظهر",w:[["show","عامة وبسيطة.","The chart shows the results."],["indicate","يشير إلى الشيء دون جزم كامل.","The data indicates a clear trend."],["reveal","يكشف شيئًا كان مخفيًا أو غير متوقع.","The survey revealed surprising facts."]],t:"نوّع في Task 1: shows / illustrates / indicates."},
+{m:"يساعد",w:[["help","الكلمة العامة.","Can you help me?"],["assist","رسمية؛ تقديم مساعدة في مهمة.","Nurses assist doctors in surgery."],["support","دعم مستمر ماديًا أو معنويًا.","Parents support their children."]],t:"assist + someone + with/in something."},
+{m:"يغيّر",w:[["change","عامة لأي تغيير.","I changed my mind."],["alter","تغيير جزئي بسيط مع بقاء الأصل.","The tailor altered my jacket."],["transform","تغيير جذري كامل.","Technology has transformed education."]],t:"transform للتغيرات الكبيرة في المجتمع والتقنية."},
+{m:"يبدأ",w:[["begin","عامة، شائعة في الكلام.","The class begins at eight."],["commence","رسمية جدًا (إعلانات وخطابات).","The ceremony will commence at noon."],["initiate","يُطلق مشروعًا أو عملية لأول مرة.","The government initiated a new program."]],t:"commence نادرة في الكلام اليومي، استعملها في الكتابة الرسمية فقط."},
+{m:"مشهور",w:[["famous","مشهور بشكل عام.","He is a famous writer."],["renowned","مشهور ومحترم لإنجاز أو جودة.","The university is renowned for research."],["notorious","مشهور بشيء سيئ!","The area is notorious for crime."]],t:"احذر: notorious معناها سلبي دائمًا."},
+{m:"قديم",w:[["old","عامة للأشياء والأشخاص.","This is an old phone."],["ancient","قديم جدًا منذ آلاف السنين.","They visited ancient ruins in Egypt."],["elderly","كبير السن (للأشخاص)، مهذبة ولطيفة.","We should help elderly people."]],t:"قل the elderly بدل old people في الكتابة."},
+{m:"خطأ",w:[["mistake","خطأ عام عن غير قصد.","I made a mistake in my answer."],["error","رسمي/تقني، في الحسابات والأنظمة.","There was an error in the calculation."],["blunder","خطأ فادح ناتج عن غفلة، محرج.","Selling the land was a terrible blunder."]],t:"make a mistake (وليس do a mistake)."},
+{m:"ينخفض",w:[["decrease","عامة للنقص، فعل واسم.","The number of visitors decreased."],["decline","انخفاض تدريجي مستمر.","Birth rates have declined."],["plummet","سقوط سريع وحاد جدًا.","Share prices plummeted overnight."]],t:"نوّع: dip (خفيف) – drop – fall – plummet (حادّ)."},
+{m:"يؤثر",w:[["affect","فعل: يؤثّر في شيء (غالبًا سلبيًا).","Smoking affects your health."],["influence","يؤثّر في التفكير والقرارات تدريجيًا.","Friends influence our choices."],["impact","تأثير قوي وواضح (يستعمل اسمًا غالبًا).","The internet has a huge impact on society."]],t:"affect فعل، effect اسم: have an effect on."},
+{m:"نتيجة",w:[["result","عامة لما ينتج عن فعل.","The results of the test were good."],["outcome","النتيجة النهائية لحدث أو عملية.","Nobody knows the outcome of the election."],["consequence","نتيجة لاحقة، غالبًا غير مرغوبة.","Pollution has serious consequences."]],t:"as a consequence = نتيجةً لذلك، رابط قوي في Task 2."},
+{m:"ميزة",w:[["advantage","ميزة تجعلك أفضل من غيرك.","Speaking English is an advantage."],["benefit","فائدة تعود عليك أو على الناس.","Exercise has many health benefits."],["merit","قيمة وجدارة الفكرة (رسمية).","The plan has its merits."]],t:"في مقالات advantages/disadvantages نوّع: benefits / drawbacks."},
+{m:"عمل / وظيفة",w:[["job","الوظيفة الحالية التي تكسب منها.","I have a job at a bank."],["career","مسيرة مهنية طويلة عبر السنين.","She has a long career in teaching."],["profession","مهنة تتطلب تدريبًا وشهادة.","Medicine is a respected profession."]],t:"work غير معدودة: لا تقل a work."},
+{m:"رحلة",w:[["trip","رحلة قصيرة والعودة.","We took a trip to the beach."],["journey","الانتقال من مكان لآخر، غالبًا طويل.","The journey took ten hours."],["voyage","رحلة طويلة بحرًا أو في الفضاء.","The ship's voyage lasted a month."]],t:"travel فعل غالبًا، ولا تقل a travel."},
+{m:"واضح",w:[["obvious","واضح جدًا لا يحتاج تفسيرًا.","It's obvious that he's tired."],["evident","واضح بالأدلة والملاحظة (رسمية).","It is evident from the data that..."],["apparent","يبدو واضحًا، وقد لا يكون حقيقيًا.","His apparent calm hid his fear."]],t:"It is evident that… افتتاحية قوية في الكتابة."},
+{m:"كافٍ",w:[["enough","عامة وشائعة.","We have enough food."],["sufficient","رسمية، تعني بالقدر المطلوب.","There is sufficient evidence."],["adequate","مقبول ومُرضٍ، ليس أكثر.","The pay is adequate but not great."]],t:"enough تأتي بعد الصفة: good enough."},
+{m:"ضرر",w:[["damage","ضرر للأشياء والممتلكات.","The storm caused great damage."],["harm","أذى للناس والبيئة والصحة.","Smoking does harm to your body."],["injury","إصابة جسدية.","He suffered a leg injury."]],t:"damage غير معدودة: لا تقل damages بمعنى أضرار مادية."},
+{m:"قدرة",w:[["ability","القدرة على فعل شيء.","She has the ability to stay calm."],["skill","مهارة مكتسبة بالتدريب.","Typing is a useful skill."],["talent","موهبة فطرية.","He has a natural talent for music."]],t:"skills تُكتسب، talent يُولد معك."},
+{m:"هدف",w:[["goal","هدف تسعى إليه على المدى البعيد.","My goal is to study abroad."],["aim","غاية ما تفعله (أقرب للنية).","The aim of this essay is to..."],["objective","هدف محدد قابل للقياس (رسمية).","The objectives of the project are clear."]],t:"The aim of this report is to… بداية ممتازة لرسالة رسمية."},
+{m:"قاعدة / قانون",w:[["rule","قاعدة في مكان أو لعبة.","The school has strict rules."],["law","قانون تفرضه الدولة.","Driving without a licence is against the law."],["regulation","لوائح تنظيمية رسمية مفصّلة.","New safety regulations were introduced."]],t:"break the law / obey the rules."},
+{m:"عادة",w:[["habit","عادة شخصية متكررة.","Biting your nails is a bad habit."],["custom","عادة اجتماعية في مجتمع ما.","It's a local custom to remove shoes."],["tradition","موروث ينتقل عبر الأجيال.","Eid is full of traditions."]],t:"habit فردي، custom/tradition جماعي."},
+{m:"يختار",w:[["choose","عامة.","Choose one answer."],["select","يختار بعناية من مجموعة (رسمية).","Five students were selected."],["opt","يقرّر خيارًا بين بدائل (opt for/to).","Many people opt for online courses."]],t:"opt for + noun / opt to + verb."},
+{m:"رخيص",w:[["cheap","سعر منخفض، وقد توحي بجودة رديئة.","These shoes are cheap but weak."],["inexpensive","سعر منخفض بدون معنى سلبي.","It's an inexpensive hotel."],["affordable","في متناول الناس.","We need more affordable housing."]],t:"affordable housing تعبير شائع جدًا في IELTS."},
+{m:"سعيد",w:[["happy","عامة.","I'm happy to see you."],["content","راضٍ وقانع بهدوء.","He is content with his simple life."],["delighted","سعيد جدًا ومسرور (رسمية لطيفة).","I'd be delighted to come."]],t:"content بمعنى راضٍ تُنطق con-TENT."},
+{m:"غاضب",w:[["annoyed","منزعج قليلًا.","I was annoyed by the noise."],["angry","غاضب بوضوح.","She was angry with him."],["furious","غاضب جدًا ثائر.","He was furious when he lost."]],t:"الترتيب من الأخف: annoyed < angry < furious."},
+{m:"غريب",w:[["strange","غير مألوف ويثير الاستغراب.","I heard a strange noise."],["unusual","غير معتاد (محايدة، قد تكون إيجابية).","It's unusual to see snow here."],["bizarre","غريب جدًا لدرجة السخف.","He told a bizarre story."]],t:"unusual آمنة أكاديميًا، bizarre للكلام."},
+{m:"متعب",w:[["tired","متعب بشكل عام.","I'm tired after work."],["exhausted","منهك تمامًا.","After the marathon, I was exhausted."],["weary","متعب من شيء طال أمده (أدبية).","She grew weary of waiting."]],t:"لا تقل very exhausted؛ قل completely exhausted."},
+{m:"يشتري",w:[["buy","عامة.","I bought some bread."],["purchase","رسمية (عقود وفواتير).","Tickets can be purchased online."],["acquire","يحصل على شيء (ملكية أو معرفة).","The company acquired a rival firm."]],t:"acquire knowledge/skills تعبير أكاديمي ممتاز."},
+{m:"يحمي / يحافظ",w:[["protect","يحمي من الخطر.","Sunscreen protects your skin."],["preserve","يحافظ على شيء كما هو.","We must preserve old buildings."],["conserve","يقتصد ويحفظ الموارد من الهدر.","Conserve water and energy."]],t:"conserve energy / preserve heritage / protect wildlife."},
+{m:"يخبر",w:[["tell","عامة: tell someone something.","Tell me the truth."],["inform","رسمية لإعطاء معلومة.","Please inform us of any changes."],["notify","إعلام رسمي بحدث محدد.","You will be notified by email."]],t:"say something / tell someone."},
+{m:"يعتقد",w:[["think","عامة للرأي.","I think it's a good idea."],["believe","اعتقاد أقوى عن قناعة.","I strongly believe that education is key."],["assume","يفترض دون دليل كافٍ.","I assumed you knew."]],t:"في Task 2 نوّع: I believe / I would argue / In my view."},
+{m:"خطر",w:[["danger","خطر عام قد يسبب أذى.","The sign warns of danger."],["risk","احتمال حدوث شيء سيئ.","Smoking increases the risk of cancer."],["threat","مصدر خطر يهدد شيئًا محددًا.","Climate change is a threat to coastal cities."]],t:"take a risk / pose a threat."},
+{m:"يستخدم",w:[["use","عامة.","I use my phone every day."],["employ","يوظّف طريقة أو أداة (رسمية) أو يوظّف شخصًا.","Researchers employed a new method."],["utilize","يستخدم بفعالية للاستفادة القصوى.","We should utilize solar energy."]],t:"لا تبالغ في utilize؛ use مقبولة دائمًا."},
+{m:"يُقنع",w:[["persuade","يقنعه ليفعل شيئًا.","She persuaded him to stay."],["convince","يقنعه بأن شيئًا صحيح.","He convinced me that he was right."],["urge","يحثّه بقوة على فعل شيء.","Doctors urge people to exercise."]],t:"persuade someone to do / convince someone that."},
+{m:"دقيق",w:[["accurate","صحيح وخالٍ من الأخطاء.","The report is accurate."],["precise","محدد بدقة متناهية.","Give me the precise time."],["exact","مطابق تمامًا.","That's the exact amount."]],t:"accurate data / precise measurements."},
+{m:"مستمر",w:[["constant","مستمر دون توقف أو ثابت.","The constant noise annoyed me."],["continuous","متصل بلا انقطاع.","Continuous rain caused floods."],["continual","متكرر مع انقطاعات (مزعج غالبًا).","I'm tired of your continual complaints."]],t:"continuous = بلا انقطاع، continual = يتكرر."},
+{m:"اقتصادي",w:[["economic","متعلق بالاقتصاد.","The country faces economic problems."],["economical","موفّر لا يهدر المال.","This car is very economical."],["financial","متعلق بالمال والتمويل.","He needs financial advice."]],t:"خطأ شائع: economic growth (وليس economical growth)."},
+{m:"غني",w:[["rich","عامة.","He is a rich man."],["wealthy","غني جدًا (أرقى من rich).","Wealthy families donated money."],["affluent","ميسور الحال، يُستعمل للمجتمعات والأحياء.","They live in an affluent area."]],t:"affluent societies تعبير مفيد في مقالات المجتمع."},
+{m:"فقير",w:[["poor","عامة.","Many poor families need help."],["deprived","محروم من الضروريات.","Children in deprived areas lack schools."],["impoverished","أُفقر وصار فقيرًا جدًا.","War left the region impoverished."]],t:"developing countries أفضل من poor countries في الكتابة."},
+{m:"يجادل",w:[["argue","يقدّم أسبابًا لرأي (أو يتشاجر).","Some people argue that..."],["debate","يناقش بشكل منظم.","The issue is widely debated."],["dispute","يعترض على صحة شيء.","Nobody disputes the facts."]],t:"Some argue that… while others believe… قالب ممتاز لمقال الرأيين."},
+{m:"مزدحم",w:[["crowded","مليء بالناس.","The market was crowded."],["packed","مكتظ تمامًا (غير رسمية).","The stadium was packed."],["congested","مزدحم بالمرور أو الكثافة.","Cities are becoming congested."]],t:"traffic congestion تعبير ممتاز لموضوع المدن."},
+{m:"يطلب / يسأل",w:[["ask","عامة للسؤال والطلب.","Can I ask a question?"],["request","طلب رسمي مهذب.","I would like to request a refund."],["inquire","يستفسر عن معلومات (رسمية).","I am writing to inquire about the course."]],t:"I am writing to inquire about… افتتاحية ممتازة في Letter (GT)."},
+{m:"البيئة / المحيط",w:[["environment","البيئة الطبيعية أو ظروف المكان.","We must protect the environment."],["surroundings","ما يحيط بك ماديًا.","I like peaceful surroundings."],["setting","المكان والزمان الذي تجري فيه أحداث.","The novel's setting is a small village."]],t:"working environment = بيئة العمل."}
+];
+</script>
+<script>
+(function(){
+"use strict";
+/* ---------------- أدوات ---------------- */
+const $ = s => document.querySelector(s);
+const AR = '٠١٢٣٤٥٦٧٨٩';
+const ar = n => String(n).replace(/\d/g, d => AR[d]);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store = {
+  get(k, def){ try{ const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); }catch(e){ return def; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const H_MONTHS = ["محرّم","صفر","ربيع الأول","ربيع الآخر","جمادى الأولى","جمادى الآخرة","رجب","شعبان","رمضان","شوّال","ذو القعدة","ذو الحجة"];
+const G_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const WDAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const WD_SAT = ["السبت","الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة"];
+
+const mkDate = (y,m,d) => new Date(y, m, d, 12, 0, 0);
+const addDays = (dt, n) => mkDate(dt.getFullYear(), dt.getMonth(), dt.getDate() + n);
+const key = dt => dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+
+/* ---------------- التحويل إلى الهجري (أم القرى، مع بديل حسابي) ---------------- */
+let intlFmt = null;
+try{
+  intlFmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', {day:'numeric', month:'numeric', year:'numeric'});
+  const t = intlFmt.formatToParts(mkDate(2026,10,8));
+  const y = +t.find(p => p.type === 'year').value;
+  if (y !== 1448) intlFmt = null;
+}catch(e){ intlFmt = null; }
+
+function tabular(dt){
+  const jd = Math.floor(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) / 86400000) + 2440588;
+  let l = jd - 1948440 + 10632;
+  const n = Math.floor((l - 1) / 10631);
+  l = l - 10631 * n + 354;
+  const j = Math.floor((10985 - l) / 5316) * Math.floor(50 * l / 17719) + Math.floor(l / 5670) * Math.floor(43 * l / 15238);
+  l = l - Math.floor((30 - j) / 15) * Math.floor(17719 * j / 50) - Math.floor(j / 16) * Math.floor(15238 * j / 43) + 29;
+  const m = Math.floor(24 * l / 709);
+  const d = l - Math.floor(709 * m / 24);
+  return {y: 30 * n + j - 30, m, d};
+}
+function hijriRaw(dt){
+  if (intlFmt){
+    const p = intlFmt.formatToParts(dt), g = t => +p.find(x => x.type === t).value;
+    return {y: g('year'), m: g('month'), d: g('day')};
+  }
+  return tabular(dt);
+}
+
+/* ---------------- الإعدادات ---------------- */
+const S = Object.assign({adj:0, theme:'auto', fs:'n', view:'day'}, store.get('rz-set', {}));
+const saveS = () => store.set('rz-set', S);
+function applyLook(){
+  const r = document.documentElement;
+  if (S.theme === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', S.theme);
+  r.classList.toggle('fs-l', S.fs === 'l');
+  document.querySelectorAll('[data-theme-set]').forEach(b => b.classList.toggle('on', b.dataset.themeSet === S.theme));
+  document.querySelectorAll('[data-fs]').forEach(b => b.classList.toggle('on', b.dataset.fs === S.fs));
+  $('#adjOut').textContent = (S.adj > 0 ? '+' : '') + ar(S.adj);
+}
+const hijri = dt => hijriRaw(addDays(dt, S.adj));
+
+/* ---------------- بناء أيام السنة الهجرية الحالية ---------------- */
+let DAYS = [], TODAY = 0, YEAR = 0;
+function build(){
+  const now = new Date(), t = mkDate(now.getFullYear(), now.getMonth(), now.getDate());
+  const th = hijri(t);
+  YEAR = th.y;
+  let start = addDays(t, -(th.d - 1));
+  for (let k = 0; k < 13; k++){                 // الرجوع إلى ١ محرّم
+    const h = hijri(start);
+    if (h.m === 1 && h.d === 1 && h.y === YEAR) break;
+    const prev = addDays(start, -1), ph = hijri(prev);
+    start = addDays(prev, -(ph.d - 1));
+  }
+  DAYS = [];
+  for (let dt = start, i = 0; i < 400; i++, dt = addDays(dt, 1)){
+    const h = hijri(dt);
+    if (h.y !== YEAR) break;
+    DAYS.push({g: dt, y: h.y, m: h.m, d: h.d, i, k: key(dt)});
+  }
+  TODAY = DAYS.findIndex(x => x.k === key(t));
+  if (TODAY < 0) TODAY = 0;
+  $('#yearLbl').textContent = ar(YEAR) + 'هـ';
+}
+
+/* ---------------- اختيار المحتوى اليومي ---------------- */
+const gcd = (a,b) => b ? gcd(b, a % b) : a;
+function stepFor(n, seed){
+  const c = [7,11,13,17,19,23,29,31,37];
+  for (let s = 0; s < c.length; s++){ const k = c[(s + seed) % c.length]; if (gcd(k, n) === 1 && k < n) return k; }
+  return 1;
+}
+const pick = (arr, i, seed, off) => arr[((i * stepFor(arr.length, seed)) + off) % arr.length];
+function content(i){
+  const N = WORDS.length, kw = stepFor(N, 3), off = YEAR % 7;
+  return {
+    wis: pick(WISDOM, i, 0, off), had: pick(HADITH, i, 1, off), sto: pick(STORIES, i, 2, off),
+    mot: pick(MOTIV, i, 3, off), ch: pick(CHALLENGE, i, 4, off), rf: pick(REFLECT, i, 5, off),
+    dh: pick(DHIKR, i, 6, off), ie: pick(IELTS, i, 7, off), wis2: pick(WISDOM, i + 31, 8, off),
+    words: [0,1,2].map(j => WORDS[(((i * 3 + j) * kw) + off) % N])
+  };
+}
+
+/* ---------------- المناسبات والأحداث ---------------- */
+const OCC = {
+ "1-1":[["رأس السنة الهجرية","بداية عام هجري جديد؛ ذكرى هجرة النبي ﷺ من مكة إلى المدينة. جدّد نيتك وخطّط لعامك."]],
+ "1-9":[["يوم تاسوعاء","يُستحب صيامه مع عاشوراء؛ قال ﷺ: «لئن بقيتُ إلى قابل لأصومنّ التاسع» (رواه مسلم)."]],
+ "1-10":[["يوم عاشوراء","اليوم الذي نجّى الله فيه موسى عليه السلام وقومه من فرعون. وصيامه «يُكفّر السنة التي قبله» (رواه مسلم)."]],
+ "3-12":[["ذكرى مولد النبي ﷺ","على القول المشهور وُلد النبي ﷺ في ربيع الأول عام الفيل، وفي الثاني عشر منه — على المشهور أيضًا — كانت وفاته سنة ١١هـ. فرصة لقراءة سيرته والاقتداء به."]],
+ "7-27":[["ذكرى الإسراء والمعراج","على قولٍ مشهور. رحلة النبي ﷺ من المسجد الحرام إلى المسجد الأقصى، ثم العروج إلى السماء، وفيها فُرضت الصلوات الخمس."]],
+ "8-15":[["منتصف شعبان","شهر تُرفع فيه الأعمال إلى الله؛ كان ﷺ يُكثر الصيام فيه. استعد لرمضان من الآن."]],
+ "9-1":[["أول أيام رمضان المبارك","«من صام رمضان إيمانًا واحتسابًا غُفر له ما تقدّم من ذنبه» (متفق عليه). رمضان كريم!"]],
+ "9-17":[["ذكرى غزوة بدر الكبرى","سنة ٢هـ، يوم الفرقان، أول معركة فاصلة في الإسلام وانتصر فيها المسلمون على قلّتهم."]],
+ "9-20":[["ذكرى فتح مكة","سنة ٨هـ، دخل النبي ﷺ مكة فاتحًا وقال لأهلها: «اذهبوا فأنتم الطلقاء»."]],
+ "10-1":[["عيد الفطر المبارك","تقبّل الله منا ومنكم. يُسنّ التكبير، ولُبس الأحسن، وصلة الأرحام. ويحرم صوم هذا اليوم."]],
+ "10-2":[["صيام ست من شوال","«من صام رمضان ثم أتبعه ستًا من شوال كان كصيام الدهر» (رواه مسلم)."]],
+ "12-1":[["بداية العشر من ذي الحجة","أفضل أيام الدنيا؛ «ما من أيامٍ العملُ الصالح فيهن أحبّ إلى الله من هذه الأيام» (رواه البخاري). أكثِر من التكبير والتهليل."]],
+ "12-8":[["يوم التروية","يتوجّه فيه الحجاج إلى منى."]],
+ "12-9":[["يوم عرفة","خير يوم طلعت فيه الشمس، وصيامه لغير الحاج «يُكفّر السنة التي قبله والسنة التي بعده» (رواه مسلم). أكثِر من الدعاء."]],
+ "12-10":[["عيد الأضحى المبارك","يوم النحر، أعظم الأيام عند الله. تقبّل الله طاعتكم وأضاحيكم."]],
+ "12-11":[["أول أيام التشريق","«أيام أكلٍ وشربٍ وذِكرٍ لله» (رواه مسلم)."]],
+ "12-12":[["ثاني أيام التشريق","يوم ذِكرٍ وتكبير."]],
+ "12-13":[["آخر أيام التشريق","آخر أيام التكبير المقيّد بعد الصلوات."]]
+};
+const HIST_DAY = {
+ "1-10":"سنة ٦١هـ: استشهاد الحسين بن علي رضي الله عنهما في كربلاء.",
+ "4-24":"سنة ٥٨٣هـ: معركة حطّين بقيادة صلاح الدين الأيوبي.",
+ "5-20":"سنة ٨٥٧هـ: فتح القسطنطينية على يد السلطان محمد الفاتح.",
+ "6-22":"سنة ١٣هـ: وفاة الخليفة أبي بكر الصديق رضي الله عنه (على المشهور).",
+ "7-27":"سنة ٥٨٣هـ: تحرير صلاح الدين الأيوبي لبيت المقدس.",
+ "8-15":"سنة ٢هـ (على قولٍ لكثير من أهل السِّير): تحويل القبلة من بيت المقدس إلى الكعبة.",
+ "9-25":"سنة ٦٥٨هـ: معركة عين جالوت وانكسار المغول.",
+ "10-15":"سنة ٣هـ: غزوة أُحد (في منتصف شوال على المشهور).",
+ "12-18":"سنة ٣٥هـ: استشهاد الخليفة عثمان بن عفان رضي الله عنه.",
+ "12-26":"سنة ٢٣هـ: طُعن الخليفة عمر بن الخطاب رضي الله عنه (على المشهور)."
+};
+const HIST_MONTH = {
+ 1:["سنة ٧هـ: غزوة خيبر (على قول).","سنة ٦١هـ: معركة كربلاء.","تبدأ به السنة الهجرية منذ عهد عمر بن الخطاب رضي الله عنه."],
+ 2:["سنة ٢هـ: غزوة الأبواء (ودّان)، أول غزوة غزاها النبي ﷺ.","سنة ٤هـ: حادثة بئر معونة."],
+ 3:["سنة ١هـ: وصول النبي ﷺ إلى قباء ثم المدينة مهاجرًا.","سنة ١١هـ: وفاة النبي ﷺ.","سنة ٤هـ: غزوة بني النضير."],
+ 4:["سنة ٥٨٣هـ: معركة حطّين.","سنة ٢٣٣هـ تقريبًا: من أيام ازدهار بيت الحكمة في بغداد."],
+ 5:["سنة ٨هـ: غزوة مؤتة.","سنة ٨٥٧هـ: فتح القسطنطينية."],
+ 6:["سنة ١٣هـ: وفاة أبي بكر الصديق وتولّي عمر بن الخطاب الخلافة.","سنة ٣٦هـ: موقعة الجمل (على قول)."],
+ 7:["سنة ٩هـ: غزوة تبوك، آخر غزوات النبي ﷺ.","سنة ١٥هـ: معركة اليرموك (على المشهور).","سنة ٥٨٣هـ: تحرير بيت المقدس.","سنة ٤٧٩هـ: معركة الزلّاقة في الأندلس."],
+ 8:["سنة ٢هـ: فرض صيام رمضان وتحويل القبلة (على قول).","سنة ٥هـ أو ٦هـ: غزوة بني المصطلق."],
+ 9:["بدء نزول القرآن الكريم على النبي ﷺ في غار حراء.","سنة ٢هـ: غزوة بدر الكبرى.","سنة ٨هـ: فتح مكة.","سنة ٩٢هـ: فتح الأندلس بقيادة طارق بن زياد.","سنة ٦٥٨هـ: معركة عين جالوت."],
+ 10:["سنة ٣هـ: غزوة أُحد.","سنة ٨هـ: غزوة حُنين والطائف.","سنة ٥هـ: غزوة الخندق (الأحزاب) على قول."],
+ 11:["سنة ٦هـ: صلح الحديبية وبيعة الرضوان.","سنة ٧هـ: عمرة القضاء."],
+ 12:["قبل الهجرة بعام: بيعة العقبة الثانية.","سنة ١٠هـ: حجة الوداع وخطبة النبي ﷺ في عرفات.","سنة ٢٣هـ: طعن عمر بن الخطاب رضي الله عنه.","سنة ٣٥هـ: استشهاد عثمان بن عفان رضي الله عنه."]
+};
+const G_DAYS = {
+ "1-1":"رأس السنة الميلادية.",
+ "2-21":"اليوم الدولي للغة الأم.",
+ "4-7":"يوم الصحة العالمي.",
+ "4-23":"اليوم العالمي للكتاب.",
+ "5-22":"العيد الوطني للجمهورية اليمنية (يوم الوحدة).",
+ "6-5":"اليوم العالمي للبيئة.",
+ "9-8":"اليوم الدولي لمحو الأمية.",
+ "9-26":"ذكرى ثورة ٢٦ سبتمبر اليمنية.",
+ "10-5":"اليوم العالمي للمعلّم.",
+ "10-14":"ذكرى ثورة ١٤ أكتوبر اليمنية.",
+ "10-16":"يوم الأغذية العالمي.",
+ "11-30":"ذكرى عيد الاستقلال اليمني.",
+ "12-18":"اليوم العالمي للغة العربية."
+};
+function occasions(day){
+  const mk = day.m + '-' + day.d, list = (OCC[mk] || []).slice(), sun = [];
+  if (day.m === 9 && day.d >= 21) list.push(["من العشر الأواخر","أيام الاجتهاد والاعتكاف؛ كان ﷺ إذا دخلت العشر أحيا ليله وأيقظ أهله وشدّ مئزره."]);
+  if (day.m === 9 && day.d >= 20 && day.d <= 28 && day.d % 2 === 0) list.push(["الليلة ليلة الـ" + ar(day.d + 1),"من ليالي الوتر التي تُرجى فيها ليلة القدر؛ أكثِر من قول: «اللهم إنك عفوٌّ تحب العفو فاعفُ عني»."]);
+  if (day.m === 12 && day.d >= 2 && day.d <= 7) list.push(["من العشر الأوائل من ذي الحجة","أكثِر من التكبير والتهليل والتحميد والعمل الصالح."]);
+  if ([13,14,15].includes(day.d) && !(day.m === 12 && day.d === 13) && day.m !== 9) sun.push("من الأيام البيض: يُسنّ صيام الثالث عشر والرابع عشر والخامس عشر من كل شهر.");
+  const wd = day.g.getDay();
+  if (wd === 5) sun.push("يوم الجمعة: قراءة سورة الكهف، والإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة.");
+  if ((wd === 1 || wd === 4) && day.m !== 9 && !(day.m === 10 && day.d === 1) && !(day.m === 12 && day.d >= 10 && day.d <= 13)) sun.push("يُسنّ صيام يوم " + WDAYS[wd] + "؛ «تُعرض الأعمال يوم الاثنين والخميس» (رواه الترمذي).");
+  const hist = HIST_DAY[mk] ? [HIST_DAY[mk]] : [];
+  const gk = (day.g.getMonth() + 1) + '-' + day.g.getDate();
+  if (G_DAYS[gk]) hist.push(G_DAYS[gk]);
+  return {list, sun, hist};
+}
+
+/* ---------------- الرسم: صفحة اليوم ---------------- */
+const stage = $('#stage');
+let cur = 0, view = S.view || 'day', dir = '';
+const fmtG = dt => ar(dt.getDate()) + ' ' + G_MONTHS[dt.getMonth()] + ' ' + ar(dt.getFullYear()) + 'م';
+const fmtH = d => ar(d.d) + ' ' + H_MONTHS[d.m - 1] + ' ' + ar(d.y) + 'هـ';
+const LOCK_SVG = '<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+function headHTML(day, isToday){
+  return `<div class="rings"><i></i><i></i><i></i><i></i></div>
+  <div class="head">${isToday ? '<span class="badge-today">اليوم</span>' : ''}
+    <div class="wd">${WDAYS[day.g.getDay()]}</div>
+    <div class="big">${ar(day.d)}</div>
+    <div class="hm">${H_MONTHS[day.m - 1]} ${ar(day.y)}هـ</div>
+    <div class="gd">${fmtG(day.g)}</div>
+  </div>`;
+}
+
+function dayHTML(i){
+  const day = DAYS[i], c = content(i), o = occasions(day), isToday = i === TODAY;
+  const pct = Math.round((i + 1) / DAYS.length * 100);
+  let occ = '';
+  if (o.list.length || o.hist.length || o.sun.length){
+    occ = `<div class="occ"><h4>مناسبات وأحداث</h4>
+      ${o.list.map(x => `<p><span class="t">${esc(x[0])}:</span> ${esc(x[1])}</p>`).join('')}
+      ${o.hist.map(x => `<p>📜 ${esc(x)}</p>`).join('')}
+      ${o.sun.map(x => `<p style="font-size:14.5px">🌙 ${esc(x)}</p>`).join('')}
+    </div>`;
+  }
+  const words = c.words.map(w => `<div class="en-item">
+      <span class="ar">${esc(w[2])}</span>
+      <span class="w">${esc(w[0])}</span><span class="pos">${esc(w[1])}</span><button class="say" data-say="${esc(w[0])}" aria-label="استمع">🔊</button>
+      <div class="ex">${esc(w[3])}</div></div>`).join('');
+  const ie = c.ie;
+  const ieRows = ie.w.map(r => `<div class="syn-row"><b>${esc(r[0])}</b><div class="d">${esc(r[1])}<span class="x">${esc(r[2])}</span></div></div>`).join('');
+  const nk = 'rz-note-' + day.k, ck = 'rz-ch-' + day.k;
+  const monthEv = (HIST_MONTH[day.m] || []).map(x => `<li>${esc(x)}</li>`).join('');
+
+  return `<article class="page ${dir}"><div class="sheet">
+    ${headHTML(day, isToday)}
+    <div class="prog"><span>اليوم ${ar(i + 1)} من ${ar(DAYS.length)}</span><span class="bar"><b style="width:${pct}%"></b></span><span>${ar(pct)}٪</span></div>
+    <div class="body">
+      ${occ}
+      <section class="card c-wis"><div class="lbl"><span class="dot"></span>حكمة اليوم</div>
+        <p class="wisdom">${esc(c.wis[0])}</p><p class="wisdom-o">— ${esc(c.wis[1])}</p></section>
+      <section class="card c-hadith"><div class="lbl"><span class="dot"></span>${c.had[0].startsWith('أثر') ? 'أثر' : 'من هدي النبي ﷺ'}</div>
+        <p class="hadith">${esc(c.had[0].replace(/^أثر: /,''))}</p><p class="hadith-s">${esc(c.had[1])}</p></section>
+      <section class="card c-story story"><div class="lbl"><span class="dot"></span>قصة من تراث العالم<span class="src">${esc(c.sto[1])}</span></div>
+        <h3>${esc(c.sto[0])}</h3><p class="txt clamp" id="stTxt">${esc(c.sto[2])}</p>
+        <button class="say" id="stToggle" style="margin:6px 0 0;padding:2px 12px;color:var(--red)">أكمل القصة ←</button>
+        <p class="lesson" id="stLesson" hidden>💡 ${esc(c.sto[3])}</p></section>
+      <section class="card"><p class="motiv">${esc(c.mot)}</p></section>
+      <section class="card c-en"><div class="lbl"><span class="dot"></span>ثلاث كلمات إنجليزية<span class="src">مستوى متوسط</span></div>
+        <div class="en en-list">${words}</div></section>
+      <section class="card c-ielts"><div class="lbl"><span class="dot"></span>استعداد للآيلتس IELTS<span class="src">كلمات متقاربة المعنى</span></div>
+        <div class="syn-words">${ie.w.map(r => `<span>${esc(r[0])}</span>`).join('')}</div>
+        <p class="syn-mean">المعنى المشترك: «${esc(ie.m)}» — فما الفرق؟</p>
+        ${ieRows}<p class="tip">📝 ${esc(ie.t)}</p></section>
+
+      <button class="more-btn" id="moreBtn">المزيد لهذا اليوم ⌄</button>
+      <div class="more" id="more">
+        <section class="card"><div class="lbl"><span class="dot"></span>حدث في مثل هذا الشهر (${H_MONTHS[day.m - 1]})</div><ul class="list-ev">${monthEv}</ul></section>
+        <section class="card c-wis"><div class="lbl"><span class="dot"></span>حكمة إضافية</div><p class="wisdom" style="font-size:20px">${esc(c.wis2[0])}</p><p class="wisdom-o">— ${esc(c.wis2[1])}</p></section>
+        <section class="card"><div class="lbl"><span class="dot"></span>تحدّي اليوم</div>
+          <label class="check"><input type="checkbox" id="chBox" ${store.get(ck, false) ? 'checked' : ''}> <span>${esc(c.ch)}</span></label></section>
+        <section class="card"><div class="lbl"><span class="dot"></span>سؤال للتأمل</div><p style="font-size:18px;font-weight:700">${esc(c.rf)}</p></section>
+        <section class="card c-hadith"><div class="lbl"><span class="dot"></span>ذِكر اليوم</div><p class="hadith" style="text-align:center">${esc(c.dh)}</p></section>
+        <section class="card"><div class="lbl"><span class="dot"></span>يومياتي — ملاحظة خاصة بهذا اليوم</div>
+          <textarea class="note" id="note" placeholder="اكتب ما تعلّمته اليوم، أو ما تشكر الله عليه…">${esc(store.get(nk, ''))}</textarea>
+          <div class="saved" id="saved">تُحفظ في هذا المتصفح فقط.</div></section>
+      </div>
+    </div></div></article>`;
+}
+
+function lockHTML(i){
+  const day = DAYS[i], w = LOCK_WISDOM[i % LOCK_WISDOM.length];
+  const diff = i - TODAY;
+  let when;
+  if (diff === 1){
+    const now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+    const mins = Math.max(1, Math.round((mid - now) / 60000)), h = Math.floor(mins / 60), m = mins % 60;
+    when = 'تُفتح هذه الصفحة بعد ' + (h ? ar(h) + ' ساعة' + (m ? ' و' : '') : '') + (m ? ar(m) + ' دقيقة' : '');
+  } else when = 'تُفتح هذه الصفحة بعد ' + ar(diff) + ' يومًا';
+  return `<article class="page ${dir}"><div class="sheet">${headHTML(day, false)}
+    <div class="lock"><div class="ic">${LOCK_SVG}</div>
+      <p class="s">لا تستعجل الغد…</p>
+      <p class="q">${esc(w[0])}</p>
+      <p class="s">— ${esc(w[1])}</p>
+      <span class="cd">⏳ ${when}</span><br>
+      <button class="back" id="backToday">عُد إلى يومك</button>
+    </div></div></article>`;
+}
+
+/* ---------------- الرسم: الأسبوع ---------------- */
+function weekStart(i){ const wd = (DAYS[i].g.getDay() + 1) % 7; return i - wd; }
+function weekHTML(){
+  const s = weekStart(cur);
+  const first = DAYS[Math.max(0, s)], last = DAYS[Math.min(DAYS.length - 1, s + 6)];
+  let cells = '';
+  for (let k = 0; k < 7; k++){
+    const i = s + k;
+    if (i < 0 || i >= DAYS.length){ cells += `<div class="wcell out"><div class="n">—</div><div class="info"><div class="a">${WD_SAT[k]}</div><div class="b">خارج هذه السنة</div></div></div>`; continue; }
+    const d = DAYS[i], o = occasions(d), fut = i > TODAY;
+    const tag = o.list[0] ? `<span class="tag">${esc(o.list[0][0])}</span>` : (o.hist[0] ? '<span class="tag">📜</span>' : '');
+    const snip = fut ? '🔒 لم يحن بعد — لا تستعجل' : esc(content(i).wis[0]);
+    cells += `<button class="wcell ${i === TODAY ? 'today' : ''} ${fut ? 'fut' : ''}" data-go="${i}">
+      <div class="n">${ar(d.d)}<small>${H_MONTHS[d.m - 1]}</small></div>
+      <div class="info"><div class="a">${WDAYS[d.g.getDay()]}${i === TODAY ? ' — اليوم' : ''}</div><div class="b">${fmtG(d.g)}</div><div class="c">${snip}</div></div>${tag}</button>`;
+  }
+  return `<div class="page ${dir}"><div class="vhead"><div><h2>الأسبوع</h2><p>${fmtH(first)} — ${fmtH(last)}</p></div></div><div class="week">${cells}</div></div>`;
+}
+
+/* ---------------- الرسم: الشهر ---------------- */
+function monthHTML(){
+  const m = DAYS[cur].m, md = DAYS.filter(d => d.m === m);
+  const lead = (md[0].g.getDay() + 1) % 7;
+  let g = WD_SAT.map(x => `<div class="dn">${x.replace('ال','')}</div>`).join('');
+  for (let k = 0; k < lead; k++) g += '<div class="mc empty"></div>';
+  const evs = [];
+  md.forEach(d => {
+    const o = occasions(d), fut = d.i > TODAY, has = o.list.length || o.hist.length;
+    if (has) evs.push(`<li><b>${ar(d.d)} ${H_MONTHS[d.m - 1]}</b> (${ar(d.g.getDate())} ${G_MONTHS[d.g.getMonth()]}): ${esc(o.list.map(x => x[0]).concat(o.hist).join(' · '))}</li>`);
+    g += `<button class="mc ${d.i === TODAY ? 'today' : ''} ${fut ? 'fut' : ''}" data-go="${d.i}" aria-label="${fmtH(d)}">
+      ${has ? '<span class="ev"></span>' : ''}<span class="h">${ar(d.d)}</span><span class="g">${ar(d.g.getDate())}${(d.g.getDate() === 1 || d.d === 1) ? ' ' + G_MONTHS[d.g.getMonth()] : ''}</span></button>`;
+  });
+  const g0 = md[0].g, g1 = md[md.length - 1].g;
+  const gr = G_MONTHS[g0.getMonth()] + (g0.getMonth() !== g1.getMonth() ? ' — ' + G_MONTHS[g1.getMonth()] : '') + ' ' + ar(g1.getFullYear()) + 'م';
+  return `<div class="page ${dir}"><div class="vhead"><div><h2>${H_MONTHS[m - 1]} ${ar(YEAR)}هـ</h2><p>${gr} · ${ar(md.length)} يومًا</p></div></div>
+    <div class="mgrid">${g}</div>
+    <div class="legend"><span><i></i> مناسبة أو حدث</span><span>الأيام الباهتة لم يحن وقتها 🔒</span></div>
+    ${evs.length ? `<section class="card mevents"><div class="lbl"><span class="dot"></span>مناسبات هذا الشهر</div><ul class="list-ev">${evs.join('')}</ul></section>` : ''}
+  </div>`;
+}
+
+/* ---------------- العرض والتنقل ---------------- */
+function render(){
+  document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  if (view === 'day') stage.innerHTML = cur > TODAY ? lockHTML(cur) : dayHTML(cur);
+  else if (view === 'week') stage.innerHTML = weekHTML();
+  else stage.innerHTML = monthHTML();
+  dir = '';
+  wire();
+  navState();
+  $('#foot').textContent = 'التاريخ الهجري وفق تقويم أم القرى' + (S.adj ? ' (مع تعديل ' + (S.adj > 0 ? '+' : '') + ar(S.adj) + ' يوم)' : '') + (intlFmt ? '' : ' — حساب تقريبي');
+}
+function navState(){
+  const P = $('#prevBtn'), N = $('#nextBtn'), T = $('#todayBtn');
+  let canP, canN, pt, nt, ps = '', ns = '';
+  if (view === 'day'){
+    canP = cur > 0; canN = cur <= TODAY && cur < DAYS.length - 1;
+    pt = cur === TODAY ? 'أمس' : cur === TODAY + 1 ? 'اليوم' : 'السابق';
+    nt = cur === TODAY ? 'غدًا' : cur === TODAY - 1 ? 'اليوم' : 'التالي';
+    if (canP) ps = ar(DAYS[cur - 1].d) + ' ' + H_MONTHS[DAYS[cur - 1].m - 1];
+    if (canN) ns = cur === TODAY ? 'لم يحن بعد 🔒' : ar(DAYS[cur + 1].d) + ' ' + H_MONTHS[DAYS[cur + 1].m - 1];
+    T.hidden = cur === TODAY;
+  } else if (view === 'week'){
+    const s = weekStart(cur); canP = s > 0; canN = s + 7 < DAYS.length;
+    pt = 'الأسبوع السابق'; nt = 'الأسبوع التالي';
+    T.hidden = s <= TODAY && TODAY < s + 7;
+  } else {
+    const m = DAYS[cur].m; canP = m > DAYS[0].m; canN = m < DAYS[DAYS.length - 1].m;
+    pt = 'الشهر السابق'; nt = 'الشهر التالي';
+    if (canP) ps = H_MONTHS[m - 2]; if (canN) ns = H_MONTHS[m];
+    T.hidden = m === DAYS[TODAY].m;
+  }
+  P.disabled = !canP; N.disabled = !canN;
+  $('#prevTx').textContent = pt; $('#nextTx').textContent = nt;
+  $('#prevSub').textContent = ps; $('#nextSub').textContent = ns;
+}
+function go(step){
+  if (view === 'day'){
+    const n = cur + step;
+    if (n < 0 || n >= DAYS.length || (step > 0 && cur > TODAY)) return;
+    cur = n;
+  } else if (view === 'week'){
+    const s = weekStart(cur) + step * 7;
+    if (s + 6 < 0 || s >= DAYS.length) return;
+    cur = Math.min(DAYS.length - 1, Math.max(0, s + 3));
+    if (s <= TODAY && TODAY < s + 7) cur = TODAY;
+  } else {
+    const m = DAYS[cur].m + step, f = DAYS.find(d => d.m === m);
+    if (!f) return;
+    cur = DAYS[TODAY].m === m ? TODAY : (f.i > TODAY ? f.i : Math.min(TODAY, DAYS.filter(d => d.m === m).pop().i));
+  }
+  dir = step > 0 ? 'in-next' : 'in-prev';
+  render();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function goToday(){ dir = cur > TODAY ? 'in-prev' : 'in-next'; cur = TODAY; render(); window.scrollTo({top:0, behavior:'smooth'}); }
+function setView(v){ view = v; S.view = v; saveS(); if (v === 'day' && cur > TODAY) cur = TODAY; dir = ''; render(); }
+
+function speak(t){
+  try{ const u = new SpeechSynthesisUtterance(t); u.lang = 'en-US'; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
+}
+function wire(){
+  stage.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { cur = +b.dataset.go; view = 'day'; S.view = 'day'; saveS(); dir = 'in-next'; render(); window.scrollTo({top:0}); }));
+  stage.querySelectorAll('[data-say]').forEach(b => b.addEventListener('click', () => speak(b.dataset.say)));
+  const bt = $('#backToday'); if (bt) bt.addEventListener('click', goToday);
+  const st = $('#stToggle');
+  const openStory = open => { $('#stTxt').classList.toggle('clamp', !open); $('#stLesson').hidden = !open; st.textContent = open ? 'إخفاء ↑' : 'أكمل القصة ←'; };
+  if (st) st.addEventListener('click', () => openStory($('#stTxt').classList.contains('clamp')));
+  const mb = $('#moreBtn');
+  if (mb) mb.addEventListener('click', () => {
+    const m = $('#more'), open = !m.classList.contains('open');
+    m.classList.toggle('open', open); mb.textContent = open ? 'إخفاء المزيد ⌃' : 'المزيد لهذا اليوم ⌄';
+    openStory(open);
+    store.set('rz-more', open);
+  });
+  if (mb && store.get('rz-more', false)) mb.click();
+  const note = $('#note');
+  if (note){
+    const k = 'rz-note-' + DAYS[cur].k; let t;
+    note.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { store.set(k, note.value); $('#saved').textContent = '✓ حُفظت'; }, 400); });
+  }
+  const cb = $('#chBox');
+  if (cb) cb.addEventListener('change', () => store.set('rz-ch-' + DAYS[cur].k, cb.checked));
+}
+
+/* ---------------- الأحداث العامة ---------------- */
+$('#prevBtn').addEventListener('click', () => go(-1));
+$('#nextBtn').addEventListener('click', () => go(1));
+$('#todayBtn').addEventListener('click', goToday);
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || $('#modal').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') go(1);          // في الواجهة العربية: اليسار = التالي
+  else if (e.key === 'ArrowRight') go(-1);
+  else if (e.key === 'Home' || e.key === 't') goToday();
+});
+let tx = 0, ty = 0, tt = 0;
+stage.addEventListener('touchstart', e => { const p = e.changedTouches[0]; tx = p.clientX; ty = p.clientY; tt = Date.now(); }, {passive: true});
+stage.addEventListener('touchend', e => {
+  if (e.target.closest('textarea')) return;
+  const p = e.changedTouches[0], dx = p.clientX - tx, dy = p.clientY - ty;
+  if (Math.abs(dx) > 60 && Math.abs(dy) < Math.abs(dx) * 0.6 && Date.now() - tt < 800) go(dx > 0 ? 1 : -1);
+}, {passive: true});
+
+const modal = $('#modal');
+$('#setBtn').addEventListener('click', () => { modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); });
+const closeM = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); };
+$('#closeSet').addEventListener('click', closeM);
+modal.addEventListener('click', e => { if (e.target === modal) closeM(); });
+function changeAdj(n){
+  S.adj = Math.max(-2, Math.min(2, S.adj + n)); saveS(); applyLook();
+  const wasToday = cur === TODAY, k = DAYS[cur] && DAYS[cur].k;
+  build();
+  const f = DAYS.findIndex(d => d.k === k);
+  cur = wasToday || f < 0 ? TODAY : f;
+  render();
+}
+$('#adjMinus').addEventListener('click', () => changeAdj(-1));
+$('#adjPlus').addEventListener('click', () => changeAdj(1));
+document.querySelectorAll('[data-theme-set]').forEach(b => b.addEventListener('click', () => { S.theme = b.dataset.themeSet; saveS(); applyLook(); }));
+document.querySelectorAll('[data-fs]').forEach(b => b.addEventListener('click', () => { S.fs = b.dataset.fs; saveS(); applyLook(); }));
+
+/* عند منتصف الليل: تنتقل الروزنامة تلقائيًا إلى اليوم الجديد */
+let lastKey = key(new Date());
+setInterval(() => {
+  const k = key(new Date());
+  if (k !== lastKey){
+    lastKey = k; const wasToday = cur === TODAY || cur === TODAY + 1;
+    build(); if (wasToday) cur = TODAY; render();
+  } else if (view === 'day' && cur === TODAY + 1) render();
+}, 60000);
+
+/* ---------------- البدء ---------------- */
+applyLook();
+build();
+cur = TODAY;
+render();
+})();
+</script>
+</body>
+</html>
