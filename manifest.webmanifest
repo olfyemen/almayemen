@@ -1,0 +1,23 @@
+{
+  "name": "الما ALMA — نقل الملفات وأدوات PDF",
+  "short_name": "الما",
+  "description": "البرنامج اليمني لنقل الملفات وأدوات PDF بدون إنترنت — تصميم م/ماهر العلفي",
+  "lang": "ar",
+  "dir": "rtl",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#f4f6fb",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "أدوات PDF", "short_name": "PDF", "url": "./pdf.html", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "مسح المستندات", "short_name": "مسح", "url": "./pdf.html#scan", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "ضغط PDF", "short_name": "ضغط", "url": "./pdf.html#compress", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}
