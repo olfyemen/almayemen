@@ -10,6 +10,9 @@
 <meta name="author" content="م/ماهر العلفي">
 <meta name="description" content="الما PDF — أدوات PDF تعمل داخل المتصفح بدون إنترنت وبدون رفع الملفات">
 <title>الما PDF</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{
   --bg:#f4f6fb; --panel:#ffffff; --line:#e7eaf3; --text:#1e2240; --muted:#7a809e;
@@ -104,6 +107,18 @@ h2{font-size:17px;margin-bottom:4px}
 .bar button{padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);font-size:13px;background:#fff}
 .pad{width:100%;height:170px;border:1.5px dashed #cfc7ff;border-radius:14px;background:#fff;touch-action:none;display:block}
 .top .home{font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;padding:8px 10px;border-radius:12px;background:var(--soft);white-space:nowrap}
+/* محرر القص */
+.cropper{position:fixed;inset:0;z-index:50;background:#111827;display:flex;flex-direction:column;color:#fff}
+.cr-top{padding:12px 14px;font-size:14px;font-weight:600;text-align:center}
+.cr-top span{color:#c4b5fd;margin-inline-start:6px}
+.cr-stage{flex:1;min-height:0;display:grid;place-items:center;padding:8px 18px}
+.cr-box{position:relative;line-height:0}
+.cr-box img{max-width:calc(100vw - 36px);max-height:calc(100vh - 150px);display:block;user-select:none;-webkit-user-drag:none}
+.cr-box svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;overflow:visible}
+.cr-box circle{cursor:grab}
+.cr-bar{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px 10px calc(12px + env(safe-area-inset-bottom))}
+.cr-bar button{padding:9px 12px;border-radius:10px;background:#1f2937;color:#fff;font-size:13px;border:1px solid #374151}
+.cr-bar .ok{background:var(--accent);border-color:var(--accent);font-weight:700;padding:9px 20px}
 @media (max-width:420px){.tools{grid-template-columns:1fr 1fr}.tool{padding:12px 8px}}
 </style>
 </head>
@@ -126,6 +141,7 @@ h2{font-size:17px;margin-bottom:4px}
     <!-- الشاشة الرئيسية -->
     <section id="home">
       <div class="note">كل المعالجة تتم داخل المتصفح. لا رفع ولا خادم ولا إنترنت.</div>
+      <button class="go hidden" id="installBtn" style="margin:0 0 14px">تثبيت «الما» كتطبيق على الجوال</button>
       <div class="tools" id="tools"></div>
     </section>
 
@@ -157,6 +173,18 @@ h2{font-size:17px;margin-bottom:4px}
 </div>
 </div>
 
+<div class="cropper hidden" id="cropper">
+  <div class="cr-top">اسحب الأركان الأربعة إلى زوايا الورقة <span id="crRot"></span></div>
+  <div class="cr-stage"><div class="cr-box"><img id="crImg" alt=""><svg id="crSvg"></svg></div></div>
+  <div class="cr-bar" id="crBar">
+    <button type="button" data-c="auto">تحديد تلقائي</button>
+    <button type="button" data-c="full">الصورة كاملة</button>
+    <button type="button" data-c="rot">تدوير ↻</button>
+    <button type="button" data-c="clear">بدون قص</button>
+    <button type="button" data-c="cancel">إلغاء</button>
+    <button type="button" data-c="ok" class="ok">تم</button>
+  </div>
+</div>
 <script>
 /* pdf-lib 1.17.1 — MIT License — https://pdf-lib.js.org */
 !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeof define&&define.amd?define(["exports"],e):e((t=t||self).PDFLib={})}(this,(function(t){"use strict";
@@ -252,6 +280,7 @@ const ICON = {
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
   sign:'<path d="M3 21c3-1 5-4 6-7 1 3 2 4 4 4 1 0 2-2 3-2s1 2 3 2"/><path d="M16 3l5 5-9 9H7v-5z"/>',
   toimg:'<path d="M6 3h8l4 4v6"/><path d="M6 3v12"/><rect x="9" y="14" width="12" height="8" rx="1"/><path d="M21 20l-3-3-5 5"/>',
+  crop:'<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>',
   prev:'<path d="M9 6l6 6-6 6"/>', next:'<path d="M15 6l-6 6 6 6"/>', rot:'<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/>',
   compress:'<path d="M4 4l6 6M10 5v5H5M20 20l-6-6M14 19v-5h5M20 4l-6 6M19 10h-5V5M4 20l6-6M5 14h5v5"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
@@ -628,13 +657,15 @@ const TOOLS = {
         <label><input type="radio" name="enh" value="color">ألوان محسّنة</label>
         <label><input type="radio" name="enh" value="">بدون تحسين</label></div>
         <div class="hint">«مستند» الأوضح للأوراق المكتوبة، ويعطي أصغر حجم.</div></div>
+      <div class="field"><div class="seg"><label><input type="checkbox" id="autoCrop" checked>قص الورقة وتعديل زاويتها تلقائياً</label></div>
+        <div class="hint">أو اضغط زر القص ✂ بجانب أي صورة لتحدد أركان الورقة بإصبعك.</div></div>
       <div class="field"><label>الوضوح</label><div class="seg">
         <label><input type="radio" name="sq" value="1400">عادي</label>
         <label><input type="radio" name="sq" value="2000" checked>واضح</label>
         <label><input type="radio" name="sq" value="2600">عالٍ</label></div></div>
       <div class="field"><div class="hint">نصيحة: صوّر الورقة من فوق مباشرة، في إضاءة جيدة، واملأ الصورة بالورقة.</div></div>`,
     async run(files) {
-      const doc = await imagesToPdf(files, { fit: false, mg: 0, maxSide: +opt('sq'), enh: opt('enh') });
+      const doc = await imagesToPdf(files, { fit: false, mg: 0, maxSide: +opt('sq'), enh: opt('enh'), autoCrop: $('#autoCrop').checked });
       return [{ name: 'مستند ممسوح.pdf', doc }];
     }
   },
@@ -940,11 +971,17 @@ function jpegOrientation(buf) {
 }
 
 // يجهّز الصورة: JPG/PNG كما هي إن أمكن، وغيرها يُحوّل عبر canvas. ويصغّرها أو يحسّنها (مسح المستندات) إن طُلب.
-async function imageBytes(file, maxSide, enh) {
+async function imageBytes(file, maxSide, enh, crop) {
   const isJ = /jpe?g$/i.test(file.type), isP = /png$/i.test(file.type);
   const raw = await file.arrayBuffer();
   const asIs = (isJ && jpegOrientation(raw) === 1) || isP;
-  if (asIs && !maxSide && !enh) return { bytes: raw, type: isP ? 'png' : 'jpg' };
+  if (asIs && !maxSide && !enh && !crop) return { bytes: raw, type: isP ? 'png' : 'jpg' };
+  if (crop) {   // قص الورقة وتعديل زاويتها ثم التحسين
+    const c = warpPaper(await loadImg(file), crop.pts, maxSide, crop.rot), g = c.getContext('2d', { willReadFrequently: true });
+    if (enh) enhanceScan(g, c.width, c.height, enh);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', enh ? 0.72 : 0.85));
+    return { bytes: await blob.arrayBuffer(), type: 'jpg' };
+  }
   const url = URL.createObjectURL(file);
   try {
     const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(); i.src = url; })
@@ -960,11 +997,13 @@ async function imageBytes(file, maxSide, enh) {
   } finally { URL.revokeObjectURL(url); }
 }
 
-async function imagesToPdf(files, { fit, mg, maxSide, enh }) {
+async function imagesToPdf(files, { fit, mg, maxSide, enh, autoCrop }) {
   const doc = await PDFDocument.create();
   for (let i = 0; i < files.length; i++) {
     await progress(`جارٍ تجهيز الصورة ${i + 1} من ${files.length}…`);
-    const { bytes, type } = await imageBytes(files[i], maxSide, enh);
+    let crop = CROP.get(files[i]);
+    if (!crop && autoCrop) { const pts = detectPaper(await loadImg(files[i])); if (pts) crop = { pts, rot: 0 }; }
+    const { bytes, type } = await imageBytes(files[i], maxSide, enh, crop);
     const img = type === 'png' ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
     let pw, ph;
     if (fit) { pw = img.width + mg * 2; ph = img.height + mg * 2; }
@@ -975,6 +1014,115 @@ async function imagesToPdf(files, { fit, mg, maxSide, enh }) {
   }
   return doc;
 }
+
+/* ===== قص الورقة وتعديل زاويتها (مسح المستندات) ===== */
+const CROP = new WeakMap();   // الملف ← { pts: [أعلى يسار، أعلى يمين، أسفل يمين، أسفل يسار] بإحداثيات الصورة, rot }
+const loadImg = file => new Promise((ok, no) => { const u = URL.createObjectURL(file), i = new Image();
+  i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('تعذّر قراءة الصورة «' + file.name + '».')); }; i.src = u; });
+
+// يكتشف الورقة (أفتح من الخلفية) ويعيد أركانها الأربعة، أو null إن لم يتأكد
+function detectPaper(img) {
+  const W0 = img.naturalWidth, H0 = img.naturalHeight, k = 320 / Math.max(W0, H0);
+  const w = Math.max(1, Math.round(W0 * k)), h = Math.max(1, Math.round(H0 * k));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data, n = w * h, L = new Uint8Array(n), hist = new Uint32Array(256);
+  for (let i = 0; i < n; i++) { const y = (d[i * 4] * 77 + d[i * 4 + 1] * 150 + d[i * 4 + 2] * 29) >> 8; L[i] = y; hist[y]++; }
+  // عتبة أوتسو تفصل الورقة عن الخلفية
+  let sum = 0; for (let t = 0; t < 256; t++) sum += t * hist[t];
+  let sB = 0, wB = 0, best = 0, th = 128;
+  for (let t = 0; t < 256; t++) { wB += hist[t]; if (!wB) continue; const wF = n - wB; if (!wF) break;
+    sB += t * hist[t]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > best) { best = v; th = t; } }
+  // أكبر منطقة فاتحة متصلة
+  const lab = new Int32Array(n).fill(-1), stack = new Int32Array(n); let bestId = -1, bestA = 0, id = 0;
+  for (let s = 0; s < n; s++) {
+    if (lab[s] !== -1 || L[s] <= th) continue;
+    let top = 0, area = 0; stack[top++] = s; lab[s] = id;
+    while (top) { const p = stack[--top]; area++; const x = p % w, y = (p / w) | 0;
+      if (x > 0 && lab[p - 1] === -1 && L[p - 1] > th) { lab[p - 1] = id; stack[top++] = p - 1; }
+      if (x < w - 1 && lab[p + 1] === -1 && L[p + 1] > th) { lab[p + 1] = id; stack[top++] = p + 1; }
+      if (y > 0 && lab[p - w] === -1 && L[p - w] > th) { lab[p - w] = id; stack[top++] = p - w; }
+      if (y < h - 1 && lab[p + w] === -1 && L[p + w] > th) { lab[p + w] = id; stack[top++] = p + w; } }
+    if (area > bestA) { bestA = area; bestId = id; } id++;
+  }
+  if (bestA < n * 0.15 || bestA > n * 0.95) return null;   // لا ورقة واضحة، أو الورقة تملأ الصورة أصلاً
+  let tl, tr, br, bl, a = Infinity, b = -Infinity, cc = -Infinity, dd = Infinity;
+  for (let p = 0; p < n; p++) { if (lab[p] !== bestId) continue; const x = p % w, y = (p / w) | 0;
+    if (x + y < a) { a = x + y; tl = [x, y]; } if (x + y > b) { b = x + y; br = [x, y]; }
+    if (x - y > cc) { cc = x - y; tr = [x, y]; } if (x - y < dd) { dd = x - y; bl = [x, y]; } }
+  // إن لامست المنطقة ثلاث حواف أو أكثر فالورقة تملأ الصورة (أو قسمها ظل): لا نقص
+  const m = 3, edges = [tl[1] <= m || tr[1] <= m, br[1] >= h - 1 - m || bl[1] >= h - 1 - m, tl[0] <= m || bl[0] <= m, tr[0] >= w - 1 - m || br[0] >= w - 1 - m];
+  if (edges.filter(Boolean).length >= 3) return null;
+  const pts = [tl, tr, br, bl].map(([x, y]) => [x / k, y / k]);
+  const quadArea = Math.abs(pts.reduce((s, p, i) => { const q = pts[(i + 1) % 4]; return s + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+  return quadArea > W0 * H0 * 0.12 ? pts : null;
+}
+
+// مصفوفة التحويل المنظوري من مستطيل الناتج إلى أركان الورقة
+function homography(from, to) {
+  const A = [], B = [];
+  for (let i = 0; i < 4; i++) { const [x, y] = from[i], [X, Y] = to[i];
+    A.push([x, y, 1, 0, 0, 0, -x * X, -y * X]); B.push(X);
+    A.push([0, 0, 0, x, y, 1, -x * Y, -y * Y]); B.push(Y); }
+  for (let c = 0; c < 8; c++) {
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [B[c], B[p]] = [B[p], B[c]];
+    for (let r = 0; r < 8; r++) { if (r === c) continue; const f = A[r][c] / A[c][c]; if (!f) continue;
+      for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; B[r] -= f * B[c]; }
+  }
+  return B.map((v, i) => v / A[i][i]);
+}
+
+// يقص الورقة ويعدّل زاويتها لتصبح مستطيلاً، ثم يدوّرها إن طُلب
+function warpPaper(img, pts, maxSide, rot) {
+  const sS = Math.min(1, 4000 / Math.max(img.naturalWidth, img.naturalHeight));
+  const sw = Math.round(img.naturalWidth * sS), sh = Math.round(img.naturalHeight * sS);
+  const sc = document.createElement('canvas'); sc.width = sw; sc.height = sh;
+  const sg = sc.getContext('2d', { willReadFrequently: true }); sg.drawImage(img, 0, 0, sw, sh);
+  const P = pts.map(([x, y]) => [x * sS, y * sS]), dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const ow = Math.max(dist(P[0], P[1]), dist(P[3], P[2])), oh = Math.max(dist(P[0], P[3]), dist(P[1], P[2]));
+  const s = Math.min(1, (maxSide || 4000) / Math.max(ow, oh)), W = Math.max(1, Math.round(ow * s)), H = Math.max(1, Math.round(oh * s));
+  const [a, b, c, d, e, f, g, h] = homography([[0, 0], [W, 0], [W, H], [0, H]], P);
+  const src = sg.getImageData(0, 0, sw, sh).data, oc = document.createElement('canvas'); oc.width = W; oc.height = H;
+  const og = oc.getContext('2d', { willReadFrequently: true }), out = og.createImageData(W, H), o = out.data;
+  for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
+    const z = g * u + h * v + 1, x = (a * u + b * v + c) / z, y = (d * u + e * v + f) / z, k = (v * W + u) * 4;
+    const x0 = Math.max(0, Math.min(sw - 2, x | 0)), y0 = Math.max(0, Math.min(sh - 2, y | 0)), fx = Math.min(1, Math.max(0, x - x0)), fy = Math.min(1, Math.max(0, y - y0));
+    const i00 = (y0 * sw + x0) * 4, i10 = i00 + 4, i01 = i00 + sw * 4, i11 = i01 + 4;
+    for (let ch = 0; ch < 3; ch++) o[k + ch] = (src[i00 + ch] * (1 - fx) + src[i10 + ch] * fx) * (1 - fy) + (src[i01 + ch] * (1 - fx) + src[i11 + ch] * fx) * fy;
+    o[k + 3] = 255;
+  }
+  og.putImageData(out, 0, 0);
+  if (!rot) return oc;
+  const rc = document.createElement('canvas'), q = rot % 180 !== 0; rc.width = q ? H : W; rc.height = q ? W : H;
+  const rg = rc.getContext('2d', { willReadFrequently: true }); rg.translate(rc.width / 2, rc.height / 2); rg.rotate(rot * Math.PI / 180); rg.drawImage(oc, -W / 2, -H / 2);
+  return rc;
+}
+
+// محرر القص: أربعة أركان تُسحب بالإصبع
+const cropper = {
+  async open(file) {
+    const img = await loadImg(file), W = img.naturalWidth, H = img.naturalHeight;
+    const inset = () => [[W * .04, H * .04], [W * .96, H * .04], [W * .96, H * .96], [W * .04, H * .96]];
+    const old = CROP.get(file);
+    this.file = file; this.img = img; this.rot = old ? old.rot : 0;
+    this.pts = old ? old.pts.map(p => p.slice()) : (detectPaper(img) || inset());
+    this.inset = inset;
+    const el = $('#crImg'); this.url = URL.createObjectURL(file); el.src = this.url;
+    $('#cropper').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+    await new Promise(r => { if (el.complete && el.naturalWidth) r(); else el.onload = el.onerror = r; });
+    this.draw();
+  },
+  draw() {
+    const el = $('#crImg'), k = el.clientWidth / this.img.naturalWidth, sv = $('#crSvg');
+    sv.setAttribute('width', el.clientWidth); sv.setAttribute('height', el.clientHeight);
+    const P = this.pts.map(([x, y]) => [x * k, y * k]);
+    sv.innerHTML = `<polygon points="${P.map(p => p.join(',')).join(' ')}" fill="rgba(108,92,231,.18)" stroke="#8e7dff" stroke-width="2.5"/>` +
+      P.map(([x, y], i) => `<circle data-h="${i}" cx="${x}" cy="${y}" r="16" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="3"/>`).join('');
+    $('#crRot').textContent = this.rot ? `التدوير: ${this.rot}°` : '';
+  },
+  close() { $('#cropper').classList.add('hidden'); document.body.style.overflow = ''; $('#crImg').removeAttribute('src'); URL.revokeObjectURL(this.url); this.img = null; }
+};
 
 /* ===== الواجهة ===== */
 let cur = null, files = [], urls = [];
@@ -1015,7 +1163,8 @@ async function render() {
   const thumbs = cur.accept.startsWith('image');
   $('#list').innerHTML = files.map((f, i) => `<li class="item">
       ${thumbs ? `<img data-i="${i}" alt="">` : ''}
-      <span class="nm">${esc(f.name)}<small>${sizeTxt(f.size)}</small></span>
+      <span class="nm">${esc(f.name)}<small>${sizeTxt(f.size)}${CROP.get(f) ? ' · ✂ تم تحديد الورقة' : ''}</small></span>
+      ${cur.camera ? `<button class="mini" data-a="crop" data-i="${i}" aria-label="قص الورقة">${svg('crop')}</button>` : ''}
       ${cur.multi ? `<button class="mini" data-a="up" data-i="${i}" ${i ? '' : 'disabled'} aria-label="أعلى">${svg('up')}</button>
       <button class="mini" data-a="down" data-i="${i}" ${i < files.length - 1 ? '' : 'disabled'} aria-label="أسفل">${svg('down')}</button>` : ''}
       <button class="mini del" data-a="x" data-i="${i}" aria-label="إزالة">${svg('x')}</button></li>`).join('');
@@ -1028,6 +1177,7 @@ async function render() {
 $('#list').onclick = e => {
   const b = e.target.closest('[data-a]'); if (!b) return;
   const i = +b.dataset.i, a = b.dataset.a;
+  if (a === 'crop') { cropper.open(files[i]).catch(err => msg('err', esc(err.message))); return; }
   if (a === 'x') { files.splice(i, 1); cur.onFiles && cur.onFiles(files); }
   else { const j = a === 'up' ? i - 1 : i + 1; [files[i], files[j]] = [files[j], files[i]]; }
   clearOuts(); render();
@@ -1087,7 +1237,37 @@ $('#go').onclick = async () => {
   } finally { go.disabled = files.length < (cur.min || 1); }
 };
 
+// أحداث محرر القص
+(() => {
+  const sv = $('#crSvg'); let drag = -1;
+  sv.addEventListener('pointerdown', e => { const h = e.target.dataset.h; if (h == null) return; drag = +h; sv.setPointerCapture(e.pointerId); e.preventDefault(); });
+  sv.addEventListener('pointermove', e => {
+    if (drag < 0) return; const r = sv.getBoundingClientRect(), k = $('#crImg').clientWidth / cropper.img.naturalWidth;
+    const x = Math.max(0, Math.min(cropper.img.naturalWidth, (e.clientX - r.left) / k)), y = Math.max(0, Math.min(cropper.img.naturalHeight, (e.clientY - r.top) / k));
+    cropper.pts[drag] = [x, y]; cropper.draw(); });
+  sv.addEventListener('pointerup', () => drag = -1); sv.addEventListener('pointercancel', () => drag = -1);
+  addEventListener('resize', () => { if (cropper.img) cropper.draw(); });
+  $('#crBar').onclick = e => { const c = e.target.dataset.c; if (!c) return;
+    if (c === 'auto') { const p = detectPaper(cropper.img); if (p) cropper.pts = p; else alert('لم تُكتشف الورقة تلقائياً. اسحب الأركان بإصبعك.'); }
+    if (c === 'full') { const W = cropper.img.naturalWidth, H = cropper.img.naturalHeight; cropper.pts = [[0, 0], [W, 0], [W, H], [0, H]]; }
+    if (c === 'rot') cropper.rot = (cropper.rot + 90) % 360;
+    if (c === 'ok') { CROP.set(cropper.file, { pts: cropper.pts, rot: cropper.rot }); cropper.close(); clearOuts(); render(); return; }
+    if (c === 'clear') { CROP.delete(cropper.file); cropper.close(); clearOuts(); render(); return; }
+    if (c === 'cancel') { cropper.close(); return; }
+    cropper.draw(); };
+})();
+
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// زر التثبيت كتطبيق (يظهر عندما يسمح المتصفح)
+let installEv = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; $('#installBtn').classList.remove('hidden'); });
+$('#installBtn').onclick = async () => { if (!installEv) return; installEv.prompt(); await installEv.userChoice.catch(() => {}); installEv = null; $('#installBtn').classList.add('hidden'); };
+addEventListener('appinstalled', () => $('#installBtn').classList.add('hidden'));
+
+// فتح أداة مباشرة من الرابط، مثل pdf.html#scan (اختصارات التطبيق)
+const startTool = location.hash.slice(1);
+if (TOOLS[startTool]) { history.replaceState(null, '', location.pathname); open(startTool); }
 </script>
 <script>
 (function(){ // قفل الحقوق: يفرض سطر «تصميم م/ماهر العلفي» مهما عُدِّل أو حُذف
@@ -1107,4 +1287,4 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.se
 </script>
 </body>
 </html>
-<!-- ALMA-SEAL v9 | 282bbfe38b9b32f1f632fb6ce0b1f90ec37139a163b2e3454ab480dfb551f47f -->
+<!-- ALMA-SEAL v9 | 1ae8763d9d8379b32800430fbc111f032240831a88b7ad78e694657ec8e123dd -->

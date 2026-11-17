@@ -1,7 +1,7 @@
 // الما ALMA — يحفظ الصفحات في الجوال بعد أول فتح، فتعمل لاحقاً بدون إنترنت
-const CACHE = 'alma-v3';
+const CACHE = 'alma-v4';
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html', './pdf.html'])));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html', './pdf.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'])));
   self.skipWaiting();
 });
 self.addEventListener('activate', e => e.waitUntil(
