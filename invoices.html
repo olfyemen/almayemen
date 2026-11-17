@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f4f6fb">
 <meta name="author" content="م/ماهر العلفي">
-<meta name="description" content="قارئ الفواتير اليدوية — يتعرف على رقم الفاتورة (الأحمر) ومبلغها من الصور">
-<title>قارئ الفواتير</title>
+<meta name="description" content="ماسح الفواتير اليدوية — يقرأ رقم الفاتورة الأحمر والمبلغ المكتوب باليد، عدة فواتير في الصورة الواحدة">
+<title>ماسح الفواتير</title>
 <style>
 :root{
   --bg:#f4f6fb; --panel:#ffffff; --line:#e7eaf3; --text:#1e2240; --muted:#7a809e;
@@ -33,18 +33,21 @@ input[type=text],input[type=password],select{
   font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);
   border-radius:10px;padding:8px 10px;width:100%}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-.row > div{flex:1 1 220px}
+.row > div{flex:1 1 200px}
 button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 16px;background:var(--soft);color:var(--text)}
 button.primary{background:var(--accent);color:#fff;font-weight:600}
+button.big{font-size:18px;padding:16px 20px;border-radius:14px;width:100%}
 button:disabled{opacity:.5;cursor:not-allowed}
 button.sm{padding:4px 10px;font-size:13px}
 button.on{background:var(--accent);color:#fff}
-.drop{border:2px dashed var(--line);border-radius:16px;padding:24px 16px;text-align:center;cursor:pointer;transition:.2s}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.two{grid-template-columns:1fr}}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.2s;display:flex;flex-direction:column;justify-content:center}
 .drop.over{border-color:var(--accent);background:var(--soft)}
-.drop b{display:block;font-size:17px;margin-bottom:4px}
-.drop span{color:var(--muted);font-size:14px}
+.drop b{display:block;font-size:16px}
+.drop span{color:var(--muted);font-size:13px}
 .hint{font-size:13px;color:var(--muted);margin-top:6px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .stat{background:var(--soft);border-radius:12px;padding:10px 12px}
 .stat small{color:var(--muted);font-size:12px;display:block}
 .stat b{font-size:20px;font-variant-numeric:tabular-nums}
@@ -54,12 +57,14 @@ button.on{background:var(--accent);color:#fff}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
 th{color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
-td img{width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block}
+td img{width:84px;height:64px;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block;background:var(--line)}
 td input{font:inherit;color:var(--text);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 7px;width:100%;min-width:90px;font-variant-numeric:tabular-nums}
 td input:focus{border-color:var(--accent);background:var(--bg);outline:none}
 input.num{color:var(--red)!important;font-weight:700}
 tr.low td{background:rgba(217,119,6,.08)}
 tr.dup td input.num{background:rgba(229,72,77,.12)}
+tr.ph td{color:var(--muted);font-size:13px}
+.src{font-size:11px;color:var(--muted);white-space:nowrap}
 .extra{display:none}
 body.extras .extra{display:table-cell}
 .badge{font-size:12px;padding:2px 8px;border-radius:99px;white-space:nowrap;display:inline-block}
@@ -79,21 +84,50 @@ dialog::backdrop{background:rgba(0,0,0,.75)}
 #zoom img{max-width:96vw;max-height:94vh;display:block}
 #review{background:var(--panel);color:var(--text);width:min(1000px,96vw)}
 .rv{display:flex;flex-wrap:wrap;gap:14px;padding:14px}
-.rv-img{flex:2 1 320px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;min-height:260px;overflow:auto}
+.rv-img{flex:2 1 320px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;min-height:260px;overflow:auto;position:relative}
 .rv-img img{max-width:100%;max-height:70vh;display:block;cursor:zoom-in}
 .rv-img img.big{max-width:none;max-height:none;cursor:zoom-out}
+.rv-img button{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:#fff}
 .rv-form{flex:1 1 240px;display:flex;flex-direction:column;gap:10px}
 .rv-form input{font-size:18px}
 .rv-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .rv-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
 .rv-nav button{flex:1}
+
+/* ---------- scanner ---------- */
+#scanner{position:fixed;inset:0;background:#000;z-index:50;display:flex;flex-direction:column;color:#fff}
+#scanner.hidden{display:none}
+.sc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top))}
+.sc-top button,.sc-top select{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:10px;padding:8px 12px;font:inherit;width:auto}
+.sc-top select option{color:#000}
+.sc-view{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#video{width:100%;height:100%;object-fit:contain;background:#000}
+.guide{position:absolute;inset:6%;border:2px solid rgba(255,255,255,.7);border-radius:12px;display:grid;pointer-events:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.25)}
+.guide i{border:1px dashed rgba(255,255,255,.45)}
+.guide.g1{grid-template:1fr/1fr}
+.guide.g2{grid-template:1fr/1fr 1fr}
+.guide.g4{grid-template:1fr 1fr/1fr 1fr}
+.guide.g6{grid-template:1fr 1fr 1fr/1fr 1fr}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+.flash.go{opacity:.8;transition:none}
+.toast{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:8px 14px;border-radius:12px;font-size:14px;max-width:92%;text-align:center}
+.toast:empty{display:none}
+.sc-bottom{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;padding-bottom:max(14px,env(safe-area-inset-bottom));gap:10px}
+.sc-bottom .side{width:90px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px}
+.sc-bottom .side b{font-size:22px}
+#shutter{width:78px;height:78px;border-radius:50%;background:#fff;border:6px solid rgba(255,255,255,.35);background-clip:padding-box;padding:0;flex:none}
+#shutter:active{transform:scale(.92)}
+#torch{background:rgba(255,255,255,.15);color:#fff;border-radius:50%;width:52px;height:52px;padding:0;font-size:22px}
+#torch.on{background:#ffd43b;color:#000}
+.sc-err{padding:24px;text-align:center;line-height:1.9}
+
 footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
 .hidden{display:none!important}
 .print-only{display:none}
 @media print{
   body{background:#fff;color:#000;padding:0}
   .card{box-shadow:none;border:0;padding:0}
-  .no-print,header p,.alerts,td:nth-child(2),th:nth-child(2),td:last-child,th:last-child,.badge{display:none!important}
+  .no-print,header p,.alerts,td:nth-child(2),th:nth-child(2),td:last-child,th:last-child,.badge,tr.ph{display:none!important}
   .print-only{display:block}
   td input{border:0;color:#000!important;padding:0}
   tr.low td,tr.dup td input.num{background:none}
@@ -104,8 +138,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
 <div class="wrap">
 
 <header>
-  <h1>🧾 قارئ الفواتير اليدوية</h1>
-  <p>ارفع صور الفواتير (حتى 50 صورة أو أكثر) فيستخرج رقم الفاتورة المكتوب بالأحمر ومبلغها المكتوب بخط اليد، ثم صدّرها إلى Excel.</p>
+  <h1>🧾 ماسح الفواتير اليدوية</h1>
+  <p>صوّر حتى 4 فواتير في اللقطة الواحدة، فيقرأ رقم كل فاتورة (الأحمر) ومبلغها المكتوب باليد، ويجمعها في جدول جاهز لـ Excel.</p>
   <p class="print-only" id="printDate"></p>
 </header>
 
@@ -125,6 +159,16 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
       </select>
     </div>
     <div>
+      <label for="per">عدد الفواتير في كل صورة</label>
+      <select id="per">
+        <option value="4">4 فواتير</option>
+        <option value="2">فاتورتان</option>
+        <option value="1">فاتورة واحدة</option>
+        <option value="6">6 فواتير</option>
+        <option value="0">تلقائي (يحسبها بنفسه)</option>
+      </select>
+    </div>
+    <div>
       <label for="cur">العملة (للعرض فقط)</label>
       <input id="cur" type="text" value="ريال">
     </div>
@@ -132,21 +176,24 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
   <div class="row" style="margin-top:10px">
     <label class="chk"><input type="checkbox" id="extras"> استخراج التاريخ واسم العميل أيضاً</label>
   </div>
-  <p class="hint">قراءة الخط اليدوي تحتاج ذكاءً اصطناعياً؛ تُرسل كل صورة (مصغّرة) إلى Claude مباشرة من متصفحك. احصل على مفتاح من console.anthropic.com. النتائج والصور تُحفظ تلقائياً في هذا المتصفح، فلا تضيع لو أُغلقت الصفحة.</p>
+  <p class="hint">قراءة الخط اليدوي تحتاج ذكاءً اصطناعياً؛ تُرسل كل صورة إلى Claude مباشرة من متصفحك. احصل على مفتاح من console.anthropic.com. كل شيء يُحفظ تلقائياً في هذا المتصفح.</p>
 </section>
 
 <section class="card no-print">
-  <h2>٢. الصور</h2>
-  <div id="drop" class="drop" tabindex="0">
-    <b>🖼 اضغط لاختيار الصور أو اسحبها هنا</b>
-    <span>يمكن اختيار عدة صور مرة واحدة · JPG / PNG / HEIC (حسب المتصفح)</span>
+  <h2>٢. المسح</h2>
+  <div class="two">
+    <button id="scanBtn" class="primary big">📷 افتح الماسح<br><small style="font-weight:400;font-size:13px">صوّر 4 فواتير في كل لقطة</small></button>
+    <div id="drop" class="drop" tabindex="0">
+      <b>🖼 أو ارفع صوراً جاهزة</b>
+      <span>اضغط للاختيار أو اسحب الصور هنا</span>
+    </div>
   </div>
   <input id="file" type="file" accept="image/*" multiple class="hidden">
   <input id="cam" type="file" accept="image/*" capture="environment" class="hidden">
-  <div class="actions" style="margin-top:12px">
-    <button id="camBtn">📷 تصوير فاتورة بالكاميرا</button>
-    <button id="start" class="primary" disabled>▶ ابدأ التعرّف</button>
-    <button id="stop" class="hidden">⏸ إيقاف</button>
+  <p class="hint">💡 للحصول على أفضل قراءة: رتّب الفواتير متجاورة على سطح فاتح بدون تداخل، وصوّر من فوق مباشرة في إضاءة جيدة.</p>
+  <div class="actions" style="margin-top:10px">
+    <button id="pause" class="hidden">⏸ إيقاف مؤقت</button>
+    <button id="resume" class="primary hidden">▶ تابع القراءة</button>
     <button id="retryErr" class="hidden">↻ إعادة الفاشلة</button>
     <button id="clear">🗑 مسح الكل</button>
   </div>
@@ -155,8 +202,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
 
 <section class="card">
   <div class="stats">
+    <div class="stat no-print"><small>الصور</small><b id="sPhotos">0</b></div>
     <div class="stat"><small>عدد الفواتير</small><b id="sCount">0</b></div>
-    <div class="stat"><small>تمت قراءتها</small><b id="sDone">0</b></div>
     <div class="stat no-print"><small>تحتاج مراجعة</small><b id="sLow">0</b></div>
     <div class="stat"><small>من رقم – إلى رقم</small><b id="sRange">—</b></div>
     <div class="stat"><small>الإجمالي</small><b id="sTotal">0</b></div>
@@ -182,24 +229,49 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
   <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th>#</th><th>الصورة</th><th>رقم الفاتورة</th><th>المبلغ</th>
+        <th>#</th><th>الفاتورة</th><th>رقم الفاتورة</th><th>المبلغ</th>
         <th class="extra">التاريخ</th><th class="extra">العميل</th>
         <th class="no-print">الحالة</th><th class="no-print">ملاحظة</th><th></th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
   </div>
-  <p id="empty" class="hint" style="text-align:center;padding:18px">لا توجد صور بعد.</p>
+  <p id="empty" class="hint" style="text-align:center;padding:18px">لا توجد فواتير بعد — افتح الماسح وابدأ التصوير.</p>
 </section>
 
 <footer>تصميم م/ماهر العلفي · لوجه الله</footer>
+</div>
+
+<!-- ماسح الكاميرا -->
+<div id="scanner" class="hidden">
+  <div class="sc-top">
+    <button id="scClose">✕ إنهاء</button>
+    <select id="scPer" aria-label="عدد الفواتير في اللقطة">
+      <option value="4">4 فواتير</option>
+      <option value="2">فاتورتان</option>
+      <option value="1">فاتورة</option>
+      <option value="6">6 فواتير</option>
+      <option value="0">تلقائي</option>
+    </select>
+  </div>
+  <div class="sc-view">
+    <video id="video" playsinline muted autoplay></video>
+    <div id="guide" class="guide g4"><i></i><i></i><i></i><i></i></div>
+    <div id="flash" class="flash"></div>
+    <div id="toast" class="toast"></div>
+  </div>
+  <div class="sc-bottom">
+    <div class="side"><b id="scShots">0</b>لقطة</div>
+    <button id="shutter" aria-label="التقاط"></button>
+    <div class="side"><button id="torch" class="hidden" aria-label="الفلاش">🔦</button><span id="scInv"></span></div>
+  </div>
 </div>
 
 <dialog id="zoom"><img id="zoomImg" alt=""></dialog>
 
 <dialog id="review">
   <div class="rv">
-    <div class="rv-img"><img id="rvImg" alt="" title="اضغط للتكبير"></div>
+    <div class="rv-img"><img id="rvImg" alt="" title="اضغط للتكبير"><button class="sm" id="rvFull">الصورة كاملة</button></div>
     <div class="rv-form">
       <div class="rv-head">
         <b id="rvTitle"></b>
@@ -216,6 +288,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
         <button id="rvOk" class="primary">✓ تأكيد والتالية</button>
         <button id="rvNext">التالية ←</button>
       </div>
+      <button id="rvDel" class="sm" style="align-self:flex-start">✕ حذف هذا السطر</button>
     </div>
   </div>
 </dialog>
@@ -230,66 +303,101 @@ const store = {
 };
 
 const CONCURRENCY = 3;
-const MAX_SIDE = 1600;
-const FIELDS = ['num', 'amount', 'date', 'customer'];
-let items = [];          // {id, name, b64, status, num, amount, date, customer, conf, note}
-let running = false, stopFlag = false, nextId = 1, filter = 'all';
+const MAX_SIDE = 2576;     // أعلى دقة تقرؤها نماذج Claude الحالية — مهم لقراءة 4 فواتير في لقطة واحدة
+const THUMB_SIDE = 900;
+let photos = [];   // {id, name, b64, w, h, status:'wait'|'run'|'done'|'err', note, per, order}
+let rows = [];     // {id, photoId, idx, num, amount, date, customer, conf, note, box, thumb, status:'ok'|'low'}
+let paused = false, active = 0, nextId = 1, filter = 'all', sortByNum = false;
 
 // ---------- persistence (IndexedDB) ----------
 const db = (() => {
   let p;
   const open = () => p || (p = new Promise((res, rej) => {
-    const r = indexedDB.open('invoice-reader', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('items', {keyPath: 'id'});
+    const r = indexedDB.open('invoice-reader', 2);
+    r.onupgradeneeded = e => {
+      const d = r.result, t = r.transaction;
+      if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', {keyPath: 'id'});
+      if (!d.objectStoreNames.contains('rows')) d.createObjectStore('rows', {keyPath: 'id'});
+      if (e.oldVersion === 1 && d.objectStoreNames.contains('items')){
+        // ترحيل بيانات النسخة السابقة: كل صورة كانت فاتورة واحدة
+        t.objectStore('items').getAll().onsuccess = ev => {
+          for (const it of ev.target.result){
+            const st = it.status === 'run' ? 'wait' : it.status;
+            const done = st === 'ok' || st === 'low';
+            t.objectStore('photos').put({id: it.id, name: it.name, b64: it.b64, w: 0, h: 0,
+              status: done ? 'done' : st, note: done ? '' : it.note, per: 1, order: it.order ?? it.id});
+            if (done) t.objectStore('rows').put({id: it.id, photoId: it.id, idx: 0, num: it.num, amount: it.amount,
+              date: it.date || '', customer: it.customer || '', conf: it.conf, note: it.note, box: null,
+              thumb: 'data:image/jpeg;base64,' + it.b64, status: st});
+          }
+          d.deleteObjectStore('items');
+        };
+      }
+    };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   }));
-  const tx = async (mode, fn) => {
-    const d = await open();
+  let conn = null;
+  open().then(d => conn = d).catch(() => {});
+  const tx = async (stores, mode, fn) => {
+    // عند توفر الاتصال ننشئ المعاملة فوراً (بدون انتظار) حتى يُحفظ التعديل الأخير قبل إغلاق الصفحة
+    const d = conn || await open();
     return new Promise((res, rej) => {
-      const t = d.transaction('items', mode);
-      const out = fn(t.objectStore('items'));
+      const t = d.transaction(stores, mode);
+      const out = fn(t);
       t.oncomplete = () => res(out && out.result);
       t.onerror = () => rej(t.error);
     });
   };
   return {
-    all: () => tx('readonly', s => s.getAll()),
-    put: it => tx('readwrite', s => s.put(it)),
-    del: id => tx('readwrite', s => s.delete(id)),
-    clear: () => tx('readwrite', s => s.clear())
+    all: async () => ({
+      photos: await tx('photos', 'readonly', t => t.objectStore('photos').getAll()),
+      rows: await tx('rows', 'readonly', t => t.objectStore('rows').getAll())
+    }),
+    put: (s, v) => tx(s, 'readwrite', t => t.objectStore(s).put(v)),
+    del: (s, id) => tx(s, 'readwrite', t => t.objectStore(s).delete(id)),
+    clear: () => tx(['photos', 'rows'], 'readwrite', t => { t.objectStore('photos').clear(); t.objectStore('rows').clear(); })
   };
 })();
 const dirty = new Set();
 let saveTimer = null;
-function save(it){
-  dirty.add(it);
+function save(obj){
+  dirty.add(obj);
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
+  saveTimer = setTimeout(flush, 200);
+}
+function flush(){
+  clearTimeout(saveTimer);
+  {
     for (const x of dirty){
-      if (!items.includes(x) || !x.b64) continue;
-      const {id, name, b64, num, amount, date, customer, conf, note, order} = x;
-      const status = x.status === 'run' ? 'wait' : x.status;
-      db.put({id, name, b64, status, num, amount, date, customer, conf, note, order}).catch(() => {});
+      if (photos.includes(x)){
+        if (!x.b64) continue;
+        db.put('photos', {...x, status: x.status === 'run' ? 'wait' : x.status}).catch(() => {});
+      } else if (rows.includes(x)){
+        db.put('rows', {...x}).catch(() => {});
+      }
     }
     dirty.clear();
-  }, 400);
+  }
 }
-const saveOrder = () => items.forEach((it, i) => { it.order = i; save(it); });
+addEventListener('pagehide', flush);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
 
 // ---------- settings ----------
 $('key').value = store.get('inv_key') || '';
 $('model').value = store.get('inv_model') || 'claude-sonnet-5-5';
 $('cur').value = store.get('inv_cur') || 'ريال';
+$('per').value = store.get('inv_per') || '4';
 $('extras').checked = store.get('inv_extras') === '1';
 const applyExtras = () => {
   document.body.classList.toggle('extras', $('extras').checked);
   document.querySelectorAll('.rv-extra').forEach(e => e.classList.toggle('hidden', !$('extras').checked));
 };
 applyExtras();
-$('key').addEventListener('input', e => { store.set('inv_key', e.target.value.trim()); refresh(); });
+$('key').addEventListener('input', e => { store.set('inv_key', e.target.value.trim()); pump(); refresh(); });
 $('model').addEventListener('change', e => store.set('inv_model', e.target.value));
 $('cur').addEventListener('input', e => { store.set('inv_cur', e.target.value); refresh(); });
+$('per').addEventListener('change', e => { store.set('inv_per', e.target.value); $('scPer').value = e.target.value; setGuide(); });
 $('extras').addEventListener('change', e => { store.set('inv_extras', e.target.checked ? '1' : '0'); applyExtras(); });
 
 // ---------- helpers ----------
@@ -304,38 +412,73 @@ const parseAmount = s => {
 const fmt = n => n == null ? '' : n.toLocaleString('en-US', {maximumFractionDigits: 2});
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const src = it => it.b64 ? 'data:image/jpeg;base64,' + it.b64 : '';
-const needsReview = it => it.status === 'low' || it.status === 'err';
+const photoSrc = p => p && p.b64 ? 'data:image/jpeg;base64,' + p.b64 : '';
+const photoOf = r => photos.find(p => p.id === r.photoId);
+const photoNo = p => photos.indexOf(p) + 1;
+const dupMap = () => { const m = {}; rows.forEach(r => { if (r.num) m[r.num] = (m[r.num] || 0) + 1; }); return m; };
+const flagged = (r, dup = dupMap()) => r.status === 'low' || (r.num && dup[r.num] > 1);
 
-function prepare(item, file){
+function canvasToB64(c){ return c.toDataURL('image/jpeg', 0.88).split(',')[1]; }
+function scaleCanvas(src, sw, sh){
+  const s = Math.min(1, MAX_SIDE / Math.max(sw, sh));
+  const c = document.createElement('canvas');
+  c.width = Math.round(sw * s); c.height = Math.round(sh * s);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(src, 0, 0, c.width, c.height);
+  return c;
+}
+function fileToPhoto(photo, file){
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
-      const c = document.createElement('canvas');
-      c.width = Math.round(img.naturalWidth * scale);
-      c.height = Math.round(img.naturalHeight * scale);
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-      ctx.drawImage(img, 0, 0, c.width, c.height);
-      item.b64 = c.toDataURL('image/jpeg', 0.85).split(',')[1];
-      URL.revokeObjectURL(url);
-      res();
+      const c = scaleCanvas(img, img.naturalWidth, img.naturalHeight);
+      photo.b64 = canvasToB64(c); photo.w = c.width; photo.h = c.height;
+      URL.revokeObjectURL(url); res();
     };
     img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('تعذّر فتح الصورة')); };
     img.src = url;
   });
 }
+const imgCache = new Map();
+function photoImage(p){
+  if (imgCache.has(p.id)) return imgCache.get(p.id);
+  const pr = new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = photoSrc(p); });
+  imgCache.set(p.id, pr);
+  return pr;
+}
+async function makeThumb(p, box){
+  const img = await photoImage(p);
+  const W = img.naturalWidth, H = img.naturalHeight;
+  let [x1, y1, x2, y2] = Array.isArray(box) && box.length === 4 ? box.map(Number) : [0, 0, W, H];
+  if (!(x2 > x1 && y2 > y1)) [x1, y1, x2, y2] = [0, 0, W, H];
+  const px = (x2 - x1) * 0.04, py = (y2 - y1) * 0.04;
+  x1 = Math.max(0, x1 - px); y1 = Math.max(0, y1 - py);
+  x2 = Math.min(W, x2 + px); y2 = Math.min(H, y2 + py);
+  const w = x2 - x1, h = y2 - y1;
+  if (w < 20 || h < 20) return photoSrc(p);
+  const s = Math.min(1, THUMB_SIDE / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.getContext('2d').drawImage(img, x1, y1, w, h, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.82);
+}
 
-// ---------- adding files ----------
+// ---------- adding photos ----------
+function newPhoto(name){
+  paused = false;   // إضافة صور جديدة تعني متابعة القراءة
+  const p = {id: nextId++, name, b64: '', w: 0, h: 0, status: 'wait', note: '', per: +$('per').value, order: photos.length};
+  photos.push(p);
+  return p;
+}
 function addFiles(list){
   const files = [...list].filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name));
   files.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}));
   for (const f of files){
-    const it = {id: nextId++, name: f.name || 'صورة', status: 'wait', num: '', amount: '', date: '', customer: '', conf: '', note: '', order: items.length};
-    items.push(it);
-    prepare(it, f).then(() => { save(it); render(); }).catch(e => { it.status = 'err'; it.note = e.message; render(); });
+    const p = newPhoto(f.name || 'صورة');
+    fileToPhoto(p, f).then(() => { save(p); render(); pump(); })
+      .catch(e => { p.status = 'err'; p.note = e.message; render(); });
   }
   render();
 }
@@ -343,54 +486,171 @@ const drop = $('drop');
 drop.addEventListener('click', () => $('file').click());
 drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') $('file').click(); });
 $('file').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
-$('camBtn').addEventListener('click', () => $('cam').click());
-$('cam').addEventListener('change', e => {
-  const f = e.target.files[0];
-  if (f) addFiles([new File([f], 'كاميرا-' + new Date().toTimeString().slice(0, 8).replace(/:/g, '') + '.jpg', {type: f.type || 'image/jpeg'})]);
-  e.target.value = '';
-});
+$('cam').addEventListener('change', e => { if (e.target.files[0]) addFiles([e.target.files[0]]); e.target.value = ''; });
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 
-// ---------- Claude call ----------
-const prompt = extras => `هذه صورة فاتورة يدوية (مكتوبة بخط اليد غالباً).
-المطلوب استخراج:
-1) رقم الفاتورة: هو الرقم المطبوع أو المكتوب باللون الأحمر (عادةً في أعلى الفاتورة، رقم تسلسلي لدفتر الفواتير). تجاهل أي أرقام أخرى مثل التاريخ أو رقم الهاتف أو السجل التجاري.
-2) مبلغ الفاتورة: المبلغ الإجمالي المكتوب بخط اليد (خانة "المجموع" أو "الإجمالي" أو "المبلغ"). إذا وُجدت عدة بنود فخذ المجموع النهائي. إذا كان المبلغ مكتوباً كتابةً (بالحروف) وأرقاماً فاستخدمهما للتحقق من بعض.
-${extras ? `3) تاريخ الفاتورة بصيغة YYYY-MM-DD إن أمكن (وإلا كما هو مكتوب).
-4) اسم العميل (المشتري / "المطلوب من" / "السيد").
-` : ''}اكتب الأرقام بالأرقام الإنجليزية (0-9) بدون فواصل الآلاف ولا رمز العملة.
-إن لم تستطع قراءة قيمة فاتركها فارغة. قيّم ثقتك: high أو medium أو low.`;
+// ---------- scanner (live camera) ----------
+let stream = null, track = null, torchOn = false, sessionShots = 0, sessionStartRows = 0;
+const video = $('video');
+function setGuide(){
+  const n = +$('scPer').value;
+  const g = $('guide');
+  const cells = n === 0 ? 1 : n;
+  g.className = 'guide g' + (n === 0 ? 1 : n);
+  g.innerHTML = '<i></i>'.repeat(cells);
+}
+$('scPer').value = $('per').value; setGuide();
+$('scPer').addEventListener('change', e => { $('per').value = e.target.value; store.set('inv_per', e.target.value); setGuide(); });
 
-const tool = extras => {
-  const properties = {
-    invoice_number: {type: 'string', description: 'رقم الفاتورة الأحمر، أرقام إنجليزية فقط، أو فارغ'},
-    amount: {type: 'string', description: 'المبلغ الإجمالي كرقم، مثل 15000 أو 2500.50، أو فارغ'},
-    confidence: {type: 'string', enum: ['high', 'medium', 'low']},
-    note: {type: 'string', description: 'ملاحظة قصيرة بالعربية إن كان هناك شك أو غموض، وإلا فارغ'}
-  };
-  if (extras){
-    properties.date = {type: 'string', description: 'تاريخ الفاتورة أو فارغ'};
-    properties.customer = {type: 'string', description: 'اسم العميل أو فارغ'};
+let toastTimer;
+function toast(msg, ms = 2500){
+  $('toast').textContent = msg;
+  clearTimeout(toastTimer);
+  if (ms) toastTimer = setTimeout(() => $('toast').textContent = '', ms);
+}
+
+async function openScanner(){
+  if (!$('key').value.trim()){ alert('أدخل مفتاح Claude API أولاً'); $('key').focus(); return; }
+  if (!navigator.mediaDevices?.getUserMedia){
+    // المتصفح لا يسمح بالكاميرا المباشرة (مثلاً ملف مفتوح بدون https): نستخدم كاميرا الجوال العادية
+    $('cam').click(); return;
   }
-  return {name: 'record_invoice', description: 'سجّل بيانات الفاتورة المستخرجة من الصورة',
-          input_schema: {type: 'object', properties, required: ['invoice_number', 'amount', 'confidence']}};
+  $('scanner').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  sessionShots = 0; sessionStartRows = rows.length;
+  $('scShots').textContent = '0'; $('scInv').textContent = '';
+  toast('رتّب الفواتير داخل الإطار ثم اضغط زر التصوير', 4000);
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {facingMode: {ideal: 'environment'}, width: {ideal: 3840}, height: {ideal: 2160}}
+    });
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    $('torch').classList.toggle('hidden', !caps.torch);
+    if (caps.focusMode && caps.focusMode.includes('continuous'))
+      track.applyConstraints({advanced: [{focusMode: 'continuous'}]}).catch(() => {});
+  } catch (e){
+    closeScanner();
+    if (confirm('تعذّر فتح الكاميرا المباشرة (' + (e.name || e.message) + ').\nهل تريد استخدام كاميرا الجوال العادية بدلاً منها؟')) $('cam').click();
+  }
+}
+function closeScanner(){
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; track = null; torchOn = false;
+  $('torch').classList.remove('on');
+  $('scanner').classList.add('hidden');
+  document.body.style.overflow = '';
+  render();
+}
+let audioCtx;
+function beep(){
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 1100; g.gain.value = 0.08;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.08);
+  } catch {}
+}
+async function capture(){
+  if (!video.videoWidth) return;
+  let c;
+  try {
+    // ImageCapture يعطي دقة الصورة الكاملة على أندرويد
+    if (window.ImageCapture && track){
+      const blob = await new ImageCapture(track).takePhoto().catch(() => null);
+      if (blob){
+        const bmp = await createImageBitmap(blob);
+        c = scaleCanvas(bmp, bmp.width, bmp.height);
+      }
+    }
+  } catch {}
+  if (!c) c = scaleCanvas(video, video.videoWidth, video.videoHeight);
+  const f = $('flash'); f.classList.add('go'); requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('go')));
+  beep(); if (navigator.vibrate) navigator.vibrate(40);
+  const p = newPhoto('لقطة-' + new Date().toTimeString().slice(0, 8));
+  p.b64 = canvasToB64(c); p.w = c.width; p.h = c.height;
+  sessionShots++;
+  $('scShots').textContent = sessionShots;
+  toast('✓ تم التصوير — جارٍ القراءة… رتّب الفواتير التالية');
+  save(p); render(); pump();
+}
+$('scanBtn').addEventListener('click', openScanner);
+$('scClose').addEventListener('click', closeScanner);
+$('shutter').addEventListener('click', capture);
+$('torch').addEventListener('click', () => {
+  if (!track) return;
+  torchOn = !torchOn;
+  track.applyConstraints({advanced: [{torch: torchOn}]}).catch(() => {});
+  $('torch').classList.toggle('on', torchOn);
+});
+document.addEventListener('keydown', e => {
+  if ($('scanner').classList.contains('hidden')) return;
+  if (e.code === 'Space' || e.key === 'Enter' || e.key === 'VolumeUp'){ e.preventDefault(); capture(); }
+  if (e.key === 'Escape') closeScanner();
+});
+
+// ---------- Claude call ----------
+function buildPrompt(p, extras){
+  const count = p.per ? `يُتوقع وجود ${p.per} ${p.per === 1 ? 'فاتورة' : 'فواتير'} في الصورة (قد يكون العدد الفعلي أقل أو أكثر — اعتمد على ما تراه).`
+                      : 'قد تحتوي الصورة على فاتورة واحدة أو عدة فواتير.';
+  return `هذه صورة لفواتير يدوية (دفتر فواتير مكتوب بخط اليد). ${count}
+أبعاد الصورة: ${p.w}×${p.h} بكسل.
+
+لكل فاتورة ظاهرة في الصورة استخرج:
+1) invoice_number: رقم الفاتورة المطبوع باللون الأحمر (رقم تسلسلي لدفتر الفواتير، غالباً في أعلى الفاتورة). تجاهل التاريخ ورقم الهاتف والسجل التجاري وأي رقم غير أحمر.
+2) amount: المبلغ الإجمالي المكتوب بخط اليد (خانة "المجموع" أو "الإجمالي" أو "المبلغ"). إذا وُجدت عدة بنود فخذ المجموع النهائي. إذا كُتب المبلغ بالحروف والأرقام فاستخدمهما للتحقق من بعض.
+${extras ? `3) date: تاريخ الفاتورة بصيغة YYYY-MM-DD إن أمكن.
+4) customer: اسم العميل ("المطلوب من" / "السيد").
+` : '3) date و customer: اتركهما فارغين.\n'}5) box: مستطيل الفاتورة كاملة في الصورة [x1, y1, x2, y2] بالبكسل.
+6) confidence: high أو medium أو low.
+7) note: ملاحظة قصيرة بالعربية إن كان هناك شك (رقم غير واضح، فاتورة مقطوعة، ...)، وإلا فارغ.
+
+رتّب الفواتير من الأعلى إلى الأسفل، ومن اليمين إلى اليسار في الصف الواحد.
+اكتب الأرقام بالأرقام الإنجليزية (0-9) بدون فواصل الآلاف ولا رمز العملة. لا تخمّن: إن لم تستطع قراءة قيمة فاتركها فارغة وضع confidence = low.
+لا تُدرج فاتورة لا يظهر منها رقم أحمر ولا مبلغ (مثل ورقة مقطوعة بالكامل).`;
+}
+const SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['invoices'],
+  properties: {
+    invoices: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['invoice_number', 'amount', 'date', 'customer', 'box', 'confidence', 'note'],
+        properties: {
+          invoice_number: {type: 'string'},
+          amount: {type: 'string'},
+          date: {type: 'string'},
+          customer: {type: 'string'},
+          box: {type: 'array', items: {type: 'integer'}},
+          confidence: {type: 'string', enum: ['high', 'medium', 'low']},
+          note: {type: 'string'}
+        }
+      }
+    }
+  }
 };
 
-async function callClaude(item){
-  const extras = $('extras').checked;
+async function callClaude(p){
   const body = {
     model: $('model').value,
-    max_tokens: 500,
-    tools: [tool(extras)],
-    tool_choice: {type: 'tool', name: 'record_invoice'},
+    max_tokens: 16000,
+    output_config: {effort: 'medium', format: {type: 'json_schema', schema: SCHEMA}},
     messages: [{role: 'user', content: [
-      {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: item.b64}},
-      {type: 'text', text: prompt(extras)}
+      {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: p.b64}},
+      {type: 'text', text: buildPrompt(p, $('extras').checked)}
     ]}]
   };
-  for (let attempt = 0; attempt < 5; attempt++){
+  for (let attempt = 0; attempt < 6; attempt++){
     let r;
     try {
       r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -404,81 +664,86 @@ async function callClaude(item){
         body: JSON.stringify(body)
       });
     } catch {
-      await sleep(2000 * 2 ** attempt);   // انقطاع الإنترنت مؤقتاً
-      continue;
+      await sleep(2000 * 2 ** attempt); continue;    // انقطاع مؤقت في الإنترنت
     }
     if (r.status === 429 || r.status === 529 || r.status >= 500){
-      await sleep(2000 * 2 ** attempt);
-      continue;
+      const ra = parseFloat(r.headers.get('retry-after'));
+      await sleep(isFinite(ra) ? ra * 1000 : 2000 * 2 ** attempt); continue;
     }
     const data = await r.json().catch(() => ({}));
     if (!r.ok){
       if (r.status === 401) throw new Error('المفتاح غير صحيح');
       throw new Error(data?.error?.message || ('خطأ ' + r.status));
     }
-    const tu = (data.content || []).find(b => b.type === 'tool_use');
-    if (!tu) throw new Error('لم يُرجع النموذج نتيجة');
-    return tu.input;
+    if (data.stop_reason === 'refusal') throw new Error('رفض النموذج قراءة الصورة');
+    if (data.stop_reason === 'max_tokens') throw new Error('الرد انقطع — أعد المحاولة');
+    const txt = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    try { return JSON.parse(txt).invoices || []; }
+    catch { throw new Error('رد غير مفهوم من النموذج'); }
   }
   throw new Error('تعذّر الاتصال أو الخادم مشغول، حاول لاحقاً');
 }
 
-async function processItem(item){
-  item.status = 'run'; render();
+async function processPhoto(p){
+  p.status = 'run'; p.note = ''; render();
   try {
-    for (let i = 0; !item.b64 && i < 300; i++) await sleep(100);
-    if (!item.b64) throw new Error('الصورة لم تُجهَّز');
-    const out = await callClaude(item);
-    item.num = toLatin(out.invoice_number || '').replace(/\s+/g, '');
-    const a = parseAmount(out.amount);
-    item.amount = a == null ? '' : String(a);
-    if (out.date != null) item.date = toLatin(out.date);
-    if (out.customer != null) item.customer = out.customer;
-    item.conf = out.confidence || '';
-    item.note = out.note || '';
-    item.status = (item.conf === 'low' || !item.num || item.amount === '') ? 'low' : 'ok';
+    const list = await callClaude(p);
+    if (!photos.includes(p)) return;
+    // احذف نتائج القراءة السابقة لهذه الصورة
+    rows.filter(r => r.photoId === p.id).forEach(r => db.del('rows', r.id).catch(() => {}));
+    rows = rows.filter(r => r.photoId !== p.id);
+    let i = 0;
+    for (const inv of list){
+      const amt = parseAmount(inv.amount);
+      const r = {
+        id: nextId++, photoId: p.id, idx: i++,
+        num: toLatin(inv.invoice_number || '').replace(/\s+/g, ''),
+        amount: amt == null ? '' : String(amt),
+        date: toLatin(inv.date || ''), customer: inv.customer || '',
+        conf: inv.confidence || '', note: inv.note || '', box: inv.box || null, thumb: ''
+      };
+      r.status = (r.conf === 'low' || !r.num || r.amount === '') ? 'low' : 'ok';
+      r.thumb = await makeThumb(p, r.box).catch(() => photoSrc(p));
+      rows.push(r); save(r);
+    }
+    p.status = 'done';
+    if (!list.length){ p.status = 'err'; p.note = 'لم يُعثر على فواتير في الصورة'; }
+    else if (p.per && list.length !== p.per) p.note = `وُجد ${list.length} بدل ${p.per}`;
+    if (!$('scanner').classList.contains('hidden'))
+      toast(`لقطة ${photoNo(p)}: قُرئت ${list.length} ${list.length === 1 ? 'فاتورة' : 'فواتير'}` +
+            (list.some(x => x.confidence === 'low') ? ' (بعضها يحتاج مراجعة)' : ''));
   } catch (e){
-    item.status = 'err';
-    item.note = e.message;
+    p.status = 'err'; p.note = e.message;
+    if (!$('scanner').classList.contains('hidden')) toast('⚠ لقطة ' + photoNo(p) + ': ' + e.message, 4000);
   }
-  save(item);
-  render();
+  save(p); render();
 }
 
-async function run(ids){
-  if (running) return;
-  if (!$('key').value.trim()){ alert('أدخل مفتاح Claude API أولاً'); $('key').focus(); return; }
-  running = true; stopFlag = false; render();
-  const queue = items.filter(i => ids ? ids.includes(i.id) : (i.status === 'wait' || i.status === 'err'));
-  queue.forEach(i => { if (i.status === 'err') i.status = 'wait'; });
-  const worker = async () => {
-    while (!stopFlag){
-      const it = queue.shift();
-      if (!it) break;
-      if (!items.includes(it)) continue;
-      await processItem(it);
-    }
-  };
-  await Promise.all(Array.from({length: CONCURRENCY}, worker));
-  running = false; render();
+function pump(){
+  if (paused || !$('key').value.trim()) { refresh(); return; }
+  while (active < CONCURRENCY){
+    const p = photos.find(x => x.status === 'wait' && x.b64);
+    if (!p) break;
+    active++;
+    processPhoto(p).finally(() => { active--; pump(); });
+  }
+  refresh();
 }
-$('start').addEventListener('click', () => run());
-$('stop').addEventListener('click', () => { stopFlag = true; });
-$('retryErr').addEventListener('click', () => run(items.filter(i => i.status === 'err').map(i => i.id)));
+$('pause').addEventListener('click', () => { paused = true; refresh(); });
+$('resume').addEventListener('click', () => {
+  if (!$('key').value.trim()){ alert('أدخل مفتاح Claude API أولاً'); $('key').focus(); return; }
+  paused = false; pump();
+});
+$('retryErr').addEventListener('click', () => { photos.forEach(p => { if (p.status === 'err') p.status = 'wait'; }); paused = false; pump(); });
 $('clear').addEventListener('click', () => {
-  if (running) return;
-  if (items.length && !confirm('مسح كل الصور والنتائج؟ (لا يمكن التراجع)')) return;
-  items = []; db.clear().catch(() => {}); render();
+  if (active) { alert('انتظر حتى تنتهي القراءة الجارية أو أوقفها مؤقتاً'); return; }
+  if ((photos.length || rows.length) && !confirm('مسح كل الصور والنتائج؟ (لا يمكن التراجع)')) return;
+  photos = []; rows = []; imgCache.clear(); db.clear().catch(() => {}); render();
 });
 $('sort').addEventListener('click', () => {
-  items.sort((a, b) => {
-    const x = parseFloat(a.num), y = parseFloat(b.num);
-    if (isNaN(x) && isNaN(y)) return 0;
-    if (isNaN(x)) return 1;
-    if (isNaN(y)) return -1;
-    return x - y;
-  });
-  saveOrder(); render();
+  sortByNum = !sortByNum;
+  $('sort').classList.toggle('on', sortByNum);
+  render();
 });
 const setFilter = f => {
   filter = f;
@@ -490,16 +755,24 @@ $('fAll').addEventListener('click', () => setFilter('all'));
 $('fLow').addEventListener('click', () => setFilter('low'));
 
 // ---------- table ----------
-const STATUS = {
-  wait: ['b-wait', 'بانتظار'], run: ['b-run', 'جارٍ القراءة…'],
-  ok: ['b-ok', '✓ تم'], low: ['b-low', '⚠ راجِع'], err: ['b-err', '✗ خطأ']
-};
+const P_STATUS = {wait: ['b-wait', 'بانتظار القراءة'], run: ['b-run', 'جارٍ القراءة…'], err: ['b-err', '✗ خطأ']};
+const R_STATUS = {ok: ['b-ok', '✓ تم'], low: ['b-low', '⚠ راجِع']};
 const tbody = $('rows');
-const dupMap = () => {
-  const m = {};
-  items.forEach(i => { if (i.num) m[i.num] = (m[i.num] || 0) + 1; });
-  return m;
-};
+
+function orderedRows(){
+  const pos = new Map(photos.map((p, i) => [p.id, i]));
+  const list = rows.filter(r => pos.has(r.photoId));
+  if (sortByNum){
+    return list.sort((a, b) => {
+      const x = parseFloat(a.num), y = parseFloat(b.num);
+      if (isNaN(x) && isNaN(y)) return 0;
+      if (isNaN(x)) return 1;
+      if (isNaN(y)) return -1;
+      return x - y;
+    });
+  }
+  return list.sort((a, b) => pos.get(a.photoId) - pos.get(b.photoId) || a.idx - b.idx);
+}
 
 function render(){
   const dup = dupMap();
@@ -508,27 +781,44 @@ function render(){
   const fid = fk ? focused.dataset.id : null;
   const sel = fk ? focused.selectionStart : 0;
 
-  tbody.innerHTML = items.map((it, idx) => {
-    if (filter === 'low' && !needsReview(it) && !(it.num && dup[it.num] > 1)) return '';
-    const [cls, label] = STATUS[it.status];
-    const isDup = it.num && dup[it.num] > 1;
-    const inp = (k, extra = '') => `<input data-id="${it.id}" data-k="${k}" value="${esc(it[k])}" placeholder="—" ${extra}>`;
-    return `<tr class="${it.status === 'low' ? 'low' : ''} ${isDup ? 'dup' : ''}">
-      <td>${idx + 1}</td>
-      <td>${it.b64 ? `<img src="${src(it)}" data-zoom="${it.id}" alt="${esc(it.name)}" title="${esc(it.name)}" loading="lazy">` : '…'}</td>
+  const list = orderedRows();
+  let html = list.map((r, i) => {
+    if (filter === 'low' && !flagged(r, dup)) return '';
+    const p = photoOf(r);
+    const [cls, label] = R_STATUS[r.status] || R_STATUS.low;
+    const isDup = r.num && dup[r.num] > 1;
+    const inp = (k, extra = '') => `<input data-id="${r.id}" data-k="${k}" value="${esc(r[k])}" placeholder="—" ${extra}>`;
+    return `<tr class="${r.status === 'low' ? 'low' : ''} ${isDup ? 'dup' : ''}">
+      <td>${i + 1}<div class="src">لقطة ${photoNo(p)}</div></td>
+      <td>${r.thumb ? `<img src="${r.thumb}" data-zoom="${r.id}" alt="فاتورة" loading="lazy">` : '…'}</td>
       <td>${inp('num', 'class="num" inputmode="numeric"')}</td>
       <td>${inp('amount', 'inputmode="decimal"')}</td>
       <td class="extra">${inp('date')}</td>
       <td class="extra">${inp('customer')}</td>
       <td class="no-print"><span class="badge ${cls}">${label}</span></td>
-      <td class="note no-print">${esc(it.note)}${isDup ? ' <b style="color:var(--danger)">رقم مكرر</b>' : ''}</td>
+      <td class="note no-print">${esc(r.note)}${isDup ? ' <b style="color:var(--danger)">رقم مكرر</b>' : ''}</td>
       <td style="white-space:nowrap">
-        <button class="sm" data-act="review" data-id="${it.id}" title="مراجعة">🔍</button>
-        <button class="sm" data-act="redo" data-id="${it.id}" title="إعادة القراءة" ${running ? 'disabled' : ''}>↻</button>
-        <button class="sm" data-act="del" data-id="${it.id}" title="حذف" ${running ? 'disabled' : ''}>✕</button>
+        <button class="sm" data-act="review" data-id="${r.id}" title="مراجعة">🔍</button>
+        <button class="sm" data-act="del" data-id="${r.id}" title="حذف السطر">✕</button>
       </td>
     </tr>`;
   }).join('');
+
+  // صور لم تكتمل قراءتها أو فيها ملاحظة
+  html += photos.filter(p => p.status !== 'done' || p.note).map(p => {
+    const st = P_STATUS[p.status];
+    return `<tr class="ph">
+      <td colspan="2">📷 لقطة ${photoNo(p)}${p.b64 ? ` <img src="${photoSrc(p)}" data-pzoom="${p.id}" alt="" style="display:inline-block;vertical-align:middle;width:48px;height:36px;margin-right:6px">` : ''}</td>
+      <td colspan="2">${st ? `<span class="badge ${st[0]}">${st[1]}</span>` : '<span class="badge b-low">⚠ تنبيه</span>'}</td>
+      <td class="extra"></td><td class="extra"></td>
+      <td colspan="2" class="note">${esc(p.note)}</td>
+      <td style="white-space:nowrap">
+        <button class="sm" data-act="redo" data-pid="${p.id}" title="إعادة قراءة الصورة" ${p.status === 'run' ? 'disabled' : ''}>↻</button>
+        <button class="sm" data-act="pdel" data-pid="${p.id}" title="حذف الصورة ونتائجها" ${p.status === 'run' ? 'disabled' : ''}>✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = html;
 
   if (fk && fid){
     const el = tbody.querySelector(`input[data-id="${fid}"][data-k="${fk}"]`);
@@ -538,33 +828,32 @@ function render(){
 }
 
 function refresh(){
-  const done = items.filter(i => i.status === 'ok' || i.status === 'low').length;
-  const errs = items.filter(i => i.status === 'err').length;
-  const total = items.reduce((s, i) => s + (parseAmount(i.amount) || 0), 0);
-  const ints = items.map(i => i.num).filter(n => /^\d+$/.test(n)).map(Number);
-  $('sCount').textContent = items.length;
-  $('sDone').textContent = done;
-  $('sLow').textContent = items.filter(needsReview).length;
+  const done = photos.filter(p => p.status === 'done').length;
+  const errs = photos.filter(p => p.status === 'err').length;
+  const pending = photos.filter(p => p.status === 'wait').length;
+  const total = rows.reduce((s, r) => s + (parseAmount(r.amount) || 0), 0);
+  const ints = rows.map(r => r.num).filter(n => /^\d+$/.test(n)).map(Number);
+  const dup = dupMap();
+  $('sPhotos').textContent = photos.length;
+  $('sCount').textContent = rows.length;
+  $('sLow').textContent = rows.filter(r => flagged(r, dup)).length + errs;
   $('sRange').textContent = ints.length ? Math.min(...ints) + ' – ' + Math.max(...ints) : '—';
   $('sTotal').textContent = fmt(total) + ' ' + $('cur').value;
-  $('bar').style.width = items.length ? (done + errs) / items.length * 100 + '%' : '0';
-  $('empty').classList.toggle('hidden', items.length > 0);
-  const pending = items.some(i => i.status === 'wait' || i.status === 'err');
-  $('start').disabled = running || !pending;
-  $('start').textContent = running ? '… جارٍ العمل' : '▶ ابدأ التعرّف';
-  $('stop').classList.toggle('hidden', !running);
-  $('retryErr').classList.toggle('hidden', running || !errs);
-  $('clear').disabled = running;
-  renderAlerts();
+  $('bar').style.width = photos.length ? (done + errs) / photos.length * 100 + '%' : '0';
+  $('empty').classList.toggle('hidden', photos.length > 0);
+  $('pause').classList.toggle('hidden', paused || !(active || pending));
+  $('resume').classList.toggle('hidden', !(pending && (paused || !$('key').value.trim())));
+  $('retryErr').classList.toggle('hidden', !errs);
+  $('scInv').textContent = rows.length - sessionStartRows > 0 ? (rows.length - sessionStartRows) + ' فاتورة' : '';
+  renderAlerts(dup);
 }
 
-function renderAlerts(){
+function renderAlerts(dup){
   const out = [];
-  const nums = items.map(i => i.num).filter(Boolean);
-  const dups = [...new Set(nums.filter((n, i) => nums.indexOf(n) !== i))];
-  if (dups.length) out.push(`<div class="bad">أرقام مكررة: ${dups.map(esc).join('، ')}</div>`);
-  const ints = [...new Set(nums.filter(n => /^\d+$/.test(n)).map(Number))].sort((a, b) => a - b);
-  if (ints.length >= 2 && items.every(i => i.status !== 'wait' && i.status !== 'run')){
+  const dups = Object.keys(dup).filter(n => dup[n] > 1);
+  if (dups.length) out.push(`<div class="bad">أرقام مكررة: ${dups.map(esc).join('، ')} — ربما صُوّرت الفاتورة مرتين.</div>`);
+  const ints = [...new Set(rows.map(r => r.num).filter(n => /^\d+$/.test(n)).map(Number))].sort((a, b) => a - b);
+  if (ints.length >= 2 && !photos.some(p => p.status === 'wait' || p.status === 'run')){
     const lo = ints[0], hi = ints[ints.length - 1];
     if (hi - lo < 1000){
       const set = new Set(ints), missing = [];
@@ -573,83 +862,101 @@ function renderAlerts(){
         out.push(`<div>أرقام ناقصة في التسلسل (${lo} – ${hi}): ${missing.join('، ')}</div>`);
     }
   }
-  const noAmt = items.filter(i => (i.status === 'ok' || i.status === 'low') && i.amount === '').length;
+  const noAmt = rows.filter(r => r.amount === '').length;
   if (noAmt) out.push(`<div>${noAmt} فاتورة بدون مبلغ — راجعها.</div>`);
   $('alerts').innerHTML = out.join('');
 }
 
-const byId = id => items.find(i => i.id == id);
+const rowById = id => rows.find(r => r.id == id);
+const photoById = id => photos.find(p => p.id == id);
 tbody.addEventListener('input', e => {
-  const t = e.target, it = byId(t.dataset.id);
-  if (!it) return;
-  it[t.dataset.k] = t.dataset.k === 'customer' ? t.value : toLatin(t.value);
-  save(it); refresh();
+  const t = e.target, r = rowById(t.dataset.id);
+  if (!r) return;
+  r[t.dataset.k] = t.dataset.k === 'customer' ? t.value : toLatin(t.value);
+  save(r); refresh();
 });
 tbody.addEventListener('change', e => {
-  const it = byId(e.target.dataset.id);
-  if (!it) return;
-  if (it.status === 'low' && it.num && it.amount !== '') it.status = 'ok';
-  save(it); render();
+  const r = rowById(e.target.dataset.id);
+  if (!r) return;
+  if (r.status === 'low' && r.num && r.amount !== '') r.status = 'ok';
+  save(r); render();
 });
 tbody.addEventListener('click', e => {
   const z = e.target.closest('[data-zoom]');
-  if (z){ $('zoomImg').src = src(byId(z.dataset.zoom)); $('zoom').showModal(); return; }
+  if (z){ openReview(rowById(z.dataset.zoom), false); return; }
+  const pz = e.target.closest('[data-pzoom]');
+  if (pz){ $('zoomImg').src = photoSrc(photoById(pz.dataset.pzoom)); $('zoom').showModal(); return; }
   const b = e.target.closest('button[data-act]');
   if (!b) return;
-  const it = byId(b.dataset.id);
-  if (!it) return;
-  if (b.dataset.act === 'del'){
-    items = items.filter(i => i !== it); db.del(it.id).catch(() => {}); render();
-  } else if (b.dataset.act === 'redo'){
-    it.status = 'wait'; run([it.id]);
-  } else if (b.dataset.act === 'review'){
-    openReview(items.indexOf(it), false);
+  const act = b.dataset.act;
+  if (act === 'del'){
+    const r = rowById(b.dataset.id);
+    if (r){ rows = rows.filter(x => x !== r); db.del('rows', r.id).catch(() => {}); render(); }
+  } else if (act === 'review'){
+    openReview(rowById(b.dataset.id), false);
+  } else if (act === 'redo'){
+    const p = photoById(b.dataset.pid);
+    if (p){ p.status = 'wait'; paused = false; pump(); render(); }
+  } else if (act === 'pdel'){
+    const p = photoById(b.dataset.pid);
+    if (!p) return;
+    rows.filter(r => r.photoId === p.id).forEach(r => db.del('rows', r.id).catch(() => {}));
+    rows = rows.filter(r => r.photoId !== p.id);
+    photos = photos.filter(x => x !== p); db.del('photos', p.id).catch(() => {}); imgCache.delete(p.id);
+    render();
   }
 });
 $('zoom').addEventListener('click', () => $('zoom').close());
 
 // ---------- quick review ----------
-let rvIdx = -1, rvOnlyFlagged = true;
-const rvList = () => items.map((it, i) => i).filter(i => !rvOnlyFlagged || needsReview(items[i]) || (items[i].num && dupMap()[items[i].num] > 1));
-function openReview(idx, onlyFlagged){
+let rvRow = null, rvOnlyFlagged = true, rvShowFull = false;
+const rvList = () => { const dup = dupMap(); return orderedRows().filter(r => !rvOnlyFlagged || flagged(r, dup)); };
+function openReview(row, onlyFlagged){
   rvOnlyFlagged = onlyFlagged;
-  if (idx == null){
+  if (!row){
     const l = rvList();
     if (!l.length){ alert(onlyFlagged ? 'لا توجد فواتير تحتاج مراجعة 👍' : 'لا توجد فواتير'); return; }
-    idx = l[0];
+    row = l[0];
   }
-  rvIdx = idx; showReview();
+  rvRow = row; rvShowFull = false; showReview();
   if (!$('review').open) $('review').showModal();
   setTimeout(() => $('rvNum').focus(), 50);
 }
 function showReview(){
-  const it = items[rvIdx];
-  if (!it) { $('review').close(); return; }
-  const l = rvList(), pos = l.indexOf(rvIdx);
-  $('rvTitle').textContent = `فاتورة ${rvIdx + 1} من ${items.length}` + (rvOnlyFlagged && pos >= 0 ? ` · مراجعة ${pos + 1}/${l.length}` : '');
-  $('rvImg').src = src(it); $('rvImg').classList.remove('big');
-  $('rvNum').value = it.num; $('rvAmt').value = it.amount;
-  $('rvDate').value = it.date || ''; $('rvCust').value = it.customer || '';
-  const isDup = it.num && dupMap()[it.num] > 1;
-  $('rvNote').textContent = [STATUS[it.status][1], it.note, isDup ? 'رقم مكرر' : ''].filter(Boolean).join(' · ');
+  const r = rvRow;
+  if (!r || !rows.includes(r)){ $('review').close(); return; }
+  const all = orderedRows(), l = rvList(), p = photoOf(r);
+  $('rvTitle').textContent = `فاتورة ${all.indexOf(r) + 1} من ${all.length}` +
+    (rvOnlyFlagged && l.includes(r) ? ` · مراجعة ${l.indexOf(r) + 1}/${l.length}` : '');
+  $('rvImg').src = rvShowFull ? photoSrc(p) : (r.thumb || photoSrc(p));
+  $('rvImg').classList.remove('big');
+  $('rvFull').textContent = rvShowFull ? 'الفاتورة فقط' : 'الصورة كاملة';
+  $('rvNum').value = r.num; $('rvAmt').value = r.amount;
+  $('rvDate').value = r.date || ''; $('rvCust').value = r.customer || '';
+  const isDup = r.num && dupMap()[r.num] > 1;
+  $('rvNote').textContent = ['لقطة ' + photoNo(p), R_STATUS[r.status][1], r.note, isDup ? 'رقم مكرر' : ''].filter(Boolean).join(' · ');
 }
 function rvSave(){
-  const it = items[rvIdx];
-  if (!it) return;
-  it.num = toLatin($('rvNum').value).trim();
-  it.amount = toLatin($('rvAmt').value).trim();
-  it.date = toLatin($('rvDate').value).trim();
-  it.customer = $('rvCust').value.trim();
-  save(it);
+  const r = rvRow;
+  if (!r || !rows.includes(r)) return;
+  r.num = toLatin($('rvNum').value).trim();
+  r.amount = toLatin($('rvAmt').value).trim();
+  r.date = toLatin($('rvDate').value).trim();
+  r.customer = $('rvCust').value.trim();
+  save(r);
 }
 function rvMove(dir){
   rvSave();
-  const l = rvOnlyFlagged ? rvList() : items.map((_, i) => i);
-  let next;
-  if (dir > 0) next = l.find(i => i > rvIdx);
-  else next = [...l].reverse().find(i => i < rvIdx);
-  if (next == null){ render(); if (dir > 0 && rvOnlyFlagged && !rvList().length) { $('review').close(); alert('انتهت المراجعة 👍'); } return; }
-  rvIdx = next; showReview(); render(); $('rvNum').focus();
+  const l = rvOnlyFlagged ? rvList() : orderedRows();
+  const all = orderedRows();
+  const cur = all.indexOf(rvRow);
+  const cand = dir > 0 ? l.filter(r => all.indexOf(r) > cur) : l.filter(r => all.indexOf(r) < cur).reverse();
+  render();
+  if (!cand.length){
+    if (dir > 0 && rvOnlyFlagged && !rvList().length){ $('review').close(); alert('انتهت المراجعة 👍'); }
+    return;
+  }
+  rvRow = cand[0]; rvShowFull = false; showReview(); $('rvNum').focus();
 }
 $('reviewBtn').addEventListener('click', () => openReview(null, true));
 $('rvClose').addEventListener('click', () => $('review').close());
@@ -658,11 +965,19 @@ $('rvPrev').addEventListener('click', () => rvMove(-1));
 $('rvNext').addEventListener('click', () => rvMove(1));
 $('rvOk').addEventListener('click', () => {
   rvSave();
-  const it = items[rvIdx];
-  if (it && it.num && it.amount !== '') it.status = 'ok';
-  save(it);
+  const r = rvRow;
+  if (r && r.num && r.amount !== ''){ r.status = 'ok'; save(r); }
   rvMove(1);
 });
+$('rvDel').addEventListener('click', () => {
+  const r = rvRow;
+  if (!r || !confirm('حذف هذا السطر؟')) return;
+  const all = orderedRows(), next = all[all.indexOf(r) + 1] || all[all.indexOf(r) - 1];
+  rows = rows.filter(x => x !== r); db.del('rows', r.id).catch(() => {});
+  render();
+  if (next){ rvRow = next; showReview(); } else $('review').close();
+});
+$('rvFull').addEventListener('click', () => { rvShowFull = !rvShowFull; showReview(); });
 $('review').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); $('rvOk').click(); }
 });
@@ -671,13 +986,14 @@ $('rvImg').addEventListener('click', e => e.target.classList.toggle('big'));
 // ---------- export ----------
 const extrasOn = () => $('extras').checked;
 $('csv').addEventListener('click', () => {
-  if (!items.length) return;
+  if (!rows.length) return;
   const ex = extrasOn();
-  const head = ['م', 'رقم الفاتورة', 'المبلغ', ...(ex ? ['التاريخ', 'العميل'] : []), 'اسم الصورة', 'ملاحظة'];
-  const rows = items.map((it, i) => [i + 1, it.num, parseAmount(it.amount) ?? '', ...(ex ? [it.date, it.customer] : []), it.name, it.note]);
-  const total = items.reduce((s, i) => s + (parseAmount(i.amount) || 0), 0);
+  const head = ['م', 'رقم الفاتورة', 'المبلغ', ...(ex ? ['التاريخ', 'العميل'] : []), 'رقم اللقطة', 'ملاحظة'];
+  const list = orderedRows();
+  const data = list.map((r, i) => [i + 1, r.num, parseAmount(r.amount) ?? '', ...(ex ? [r.date, r.customer] : []), photoNo(photoOf(r)), r.note]);
+  const total = rows.reduce((s, r) => s + (parseAmount(r.amount) || 0), 0);
   const totalRow = ['', 'الإجمالي', total, ...(ex ? ['', ''] : []), '', ''];
-  const lines = [head, ...rows, totalRow].map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+  const lines = [head, ...data, totalRow].map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
   const blob = new Blob(['﻿' + lines.join('\r\n')], {type: 'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -686,26 +1002,28 @@ $('csv').addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 });
 $('copy').addEventListener('click', async () => {
-  if (!items.length) return;
+  if (!rows.length) return;
   const ex = extrasOn();
   const text = [['رقم الفاتورة', 'المبلغ', ...(ex ? ['التاريخ', 'العميل'] : [])].join('\t'),
-    ...items.map(i => [i.num, parseAmount(i.amount) ?? '', ...(ex ? [i.date, i.customer] : [])].join('\t'))].join('\n');
+    ...orderedRows().map(r => [r.num, parseAmount(r.amount) ?? '', ...(ex ? [r.date, r.customer] : [])].join('\t'))].join('\n');
   try { await navigator.clipboard.writeText(text); $('copy').textContent = '✓ تم النسخ'; }
   catch { window.prompt('انسخ النص:', text); }
   setTimeout(() => $('copy').textContent = '📋 نسخ للصق في Excel', 1500);
 });
 $('print').addEventListener('click', () => {
-  $('printDate').textContent = 'تاريخ التقرير: ' + new Date().toLocaleDateString('ar') + ' · عدد الفواتير: ' + items.length;
+  $('printDate').textContent = 'تاريخ التقرير: ' + new Date().toLocaleDateString('ar') + ' · عدد الفواتير: ' + rows.length;
   if (filter !== 'all') setFilter('all');
   window.print();
 });
 
 // ---------- restore saved session ----------
-db.all().then(saved => {
-  if (!saved || !saved.length) return;
-  saved.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
-  items = saved.map(s => ({date: '', customer: '', ...s}));
-  nextId = Math.max(...items.map(i => i.id)) + 1;
+db.all().then(({photos: ps, rows: rs}) => {
+  if (!ps || !ps.length) return;
+  photos = ps.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id)).map(p => ({...p, status: p.status === 'run' ? 'wait' : p.status}));
+  rows = rs || [];
+  nextId = Math.max(0, ...photos.map(p => p.id), ...rows.map(r => r.id)) + 1;
+  // لا نكمل قراءة الصور المعلّقة تلقائياً بعد إعادة الفتح؛ يضغط المستخدم «تابع»
+  if (photos.some(p => p.status === 'wait')) paused = true;
   render();
 }).catch(() => {});
 
