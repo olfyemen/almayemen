@@ -142,7 +142,7 @@ object LedgerShare {
             c.cell("الرصيد النهائي: " + balanceText(bal, cur), M, y, inner, tp(12f, true, if (bal > 0) red else if (bal < 0) green else Color.BLACK)); y += 26
         }
         // footer on last page
-        c.cell("حقيبة الما 🧰", M, H - M, inner, tp(8f, color = Color.GRAY), center, 1)
+        c.cell("حقيبة الما 🧰 · ${com.alma.toolbox.Credits.DESIGNER} · «${com.alma.toolbox.Credits.SLOGAN}»", M, H - M, inner, tp(8f, color = Color.GRAY), center, 1)
         doc.finishPage(page)
 
         val dir = File(ctx.cacheDir, "shared").apply { mkdirs() }

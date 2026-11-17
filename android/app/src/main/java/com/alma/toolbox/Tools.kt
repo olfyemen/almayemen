@@ -26,6 +26,13 @@ enum class Tool(val id: String, val title: String, val emoji: String, val desc: 
     companion object { fun of(id: String?) = entries.firstOrNull { it.id == id } }
 }
 
+object Credits {
+    const val DESIGNER = "تصميم م/ماهر العلفي"
+    const val PHONE = "00967777408089"
+    const val DUA = "لوجه الله * نسألكم الدعاء"
+    const val SLOGAN = "نبدأ من حيث انتهى الآخرون - يد ويد"
+}
+
 object Shortcuts {
     fun emojiIcon(emoji: String, bg: Long, size: Int = 216): Bitmap {
         val b = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)

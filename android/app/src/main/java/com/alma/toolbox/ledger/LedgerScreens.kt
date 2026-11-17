@@ -115,6 +115,7 @@ fun LedgerHome(nav: NavHostController, onBack: () -> Unit) {
                     }
                 }
                 item { OutlinedButton(onClick = { addGroup = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Add, null); Text(" مجموعة جديدة (حساب أم)") } }
+                item { Text("«${com.alma.toolbox.Credits.SLOGAN}»", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
                 item { Text("اضغط مطولاً على مجموعة لتعديلها أو حذفها", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
             }
         }

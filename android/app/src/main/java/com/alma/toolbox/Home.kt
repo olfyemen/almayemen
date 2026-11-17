@@ -90,6 +90,7 @@ fun HomeScreen(nav: NavHostController) {
                 Column(Modifier.weight(1f)) {
                     Text("حقيبة الما", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
                     Text("أدواتك اليومية في مكان واحد", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = .6f))
+                    Text("«${Credits.SLOGAN}»", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
                 TextButton(onClick = { about = true }) { Text("حول") }
             }
@@ -129,6 +130,7 @@ fun HomeScreen(nav: NavHostController) {
             Text("اضغط مطولاً على أي أداة أو على 📌 لإضافتها اختصاراً إلى الشاشة الرئيسية", style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(8.dp), color = MaterialTheme.colorScheme.onBackground.copy(alpha = .5f))
         }
+        item(span = { GridItemSpan(maxLineSpan) }) { CreditsCard() }
     }
     menuFor?.let { t ->
         AlertDialog(
@@ -151,10 +153,40 @@ fun HomeScreen(nav: NavHostController) {
         icon = { Text("🧰", fontSize = 40.sp) },
         title = { Text("حقيبة الما") },
         text = {
-            Text("الإصدار ${BuildConfigVersion.NAME}\nمن برامج «الما» · تصميم م/ماهر العلفي\n\nيعمل بدون إنترنت (عدا قياس السرعة).\nرسوم الإيموجي في الشعار من Twemoji (CC-BY 4.0).")
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("الإصدار ${BuildConfigVersion.NAME} · من برامج «الما»", textAlign = TextAlign.Center)
+                CreditsCard()
+                Text("يعمل بدون إنترنت (عدا قياس السرعة).\nرسوم الإيموجي في الشعار من Twemoji (CC-BY 4.0).", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+            }
         },
         confirmButton = { TextButton(onClick = { about = false }) { Text("حسناً") } }
     )
 }
 
-object BuildConfigVersion { const val NAME = "1.0" }
+object BuildConfigVersion { const val NAME = "1.1" }
+
+@Composable
+fun CreditsCard() {
+    val ctx = LocalContext.current
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(Credits.DESIGNER, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
+            Text(Credits.PHONE, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyLarge.copy(textDirection = androidx.compose.ui.text.style.TextDirection.Ltr))
+            Text(Credits.DUA, textAlign = TextAlign.Center)
+            Text("«${Credits.SLOGAN}»", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = {
+                    runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://wa.me/" + Credits.PHONE.removePrefix("00")))) }
+                }) { Text("واتساب") }
+                TextButton(onClick = {
+                    runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:+" + Credits.PHONE.removePrefix("00")))) }
+                }) { Text("اتصال") }
+            }
+        }
+    }
+}
