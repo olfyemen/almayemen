@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.Alma" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">#FFF7F8FC</item>
+    </style>
+    <style name="Theme.Alma.Alarm" parent="Theme.Alma">
+        <item name="android:showWhenLocked">true</item>
+        <item name="android:turnScreenOn">true</item>
+    </style>
+</resources>

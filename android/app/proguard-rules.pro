@@ -1,0 +1,5 @@
+-keepattributes *Annotation*, InnerClasses
+-keep class com.alma.toolbox.**$$serializer { *; }
+-keepclassmembers class com.alma.toolbox.** { *** Companion; }
+-keepclasseswithmembers class com.alma.toolbox.** { kotlinx.serialization.KSerializer serializer(...); }
+-dontwarn com.google.zxing.**
