@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جارٍ التحويل</title>
+<script>
+// الروابط القديمة قبل ترتيب الأدوات في مجلدات: نحوّلها للمكان الجديد
+(function(){
+  var base = '/almayemen/';
+  var p = location.pathname, rest = p.indexOf(base) === 0 ? p.slice(base.length) : '';
+  var map = {
+    'pdf.html': 'alma/pdf.html',
+    'sahifa.html': 'sahifa/',
+    'invoices.html': 'invoices/',
+    'manifest.webmanifest': 'alma/manifest.webmanifest'
+  };
+  var to = map[rest];
+  if (to) location.replace(base + to + location.search + location.hash);
+})();
+</script>
+<style>
+body{font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;background:#f4f6fb;color:#1e2240;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px;text-align:center}
+@media (prefers-color-scheme: dark){body{background:#12142a;color:#e8eaff}}
+a{color:#6c5ce7;font-weight:600}
+</style>
+</head>
+<body>
+<p>الصفحة غير موجودة.<br><a href="/almayemen/">ارجع لقائمة الأدوات</a></p>
+</body>
+</html>
