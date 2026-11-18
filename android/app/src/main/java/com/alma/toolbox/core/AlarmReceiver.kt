@@ -20,6 +20,8 @@ class AlarmReceiver : BroadcastReceiver() {
             "reminderpre" -> ReminderScheduler.fire(ctx, id, pre = true, snooze = false)
             "snooze" -> ReminderScheduler.fire(ctx, id, pre = false, snooze = true)
             "pomodoro" -> PomoEngine.phaseEnded(ctx)
+            "adhan" -> com.alma.toolbox.prayer.AdhanScheduler.fire(ctx, pre = false)
+            "adhanpre" -> com.alma.toolbox.prayer.AdhanScheduler.fire(ctx, pre = true)
             // notification actions
             "action" -> {
                 when (uri.pathSegments.getOrNull(0)) {

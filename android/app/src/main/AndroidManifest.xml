@@ -80,6 +80,11 @@
             android:foregroundServiceType="dataSync" />
 
         <service
+            android:name=".prayer.AdhanService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <service
             android:name=".core.ChimeService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />

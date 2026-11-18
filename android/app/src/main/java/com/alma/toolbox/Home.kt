@@ -41,8 +41,9 @@ fun AppNav(act: MainActivity) {
     val pending by act.pendingTool
     LaunchedEffect(pending) {
         val t = Tool.of(pending)
-        if (t != null) {
-            nav.navigate(t.id) { popUpTo("home"); launchSingleTop = true }
+        val route = t?.id ?: pending?.takeIf { it.startsWith("adhkar/") } // e.g. adhkar/hisn/15 from the adhan notice
+        if (route != null) {
+            nav.navigate(route) { popUpTo("home"); launchSingleTop = true }
             act.pendingTool.value = null
         }
     }
@@ -52,6 +53,11 @@ fun AppNav(act: MainActivity) {
         composable(Tool.PERIODIC.id) { PeriodicScreen(back) }
         composable(Tool.SILENT.id) { SilentScreen(back) }
         composable(Tool.REMINDER.id) { ReminderScreen(back) }
+        composable(Tool.PRAYER.id) { com.alma.toolbox.prayer.PrayerScreen(back) }
+        composable(Tool.ADHKAR.id) { com.alma.toolbox.adhkar.AdhkarScreen(nav, back) }
+        composable("adhkar/sahifaList") { com.alma.toolbox.ui.ToolScaffold("فهرس الصحيفة السجادية", { nav.popBackStack() }) { p -> Box(Modifier.padding(p)) { com.alma.toolbox.adhkar.SahifaIndex(nav) } } }
+        composable("adhkar/sahifa/{n}") { com.alma.toolbox.adhkar.SahifaReader(nav, it.arguments?.getString("n")?.toIntOrNull() ?: 1) }
+        composable("adhkar/hisn/{id}") { com.alma.toolbox.adhkar.HisnReader(nav, it.arguments?.getString("id")?.toIntOrNull() ?: 27) }
         composable(Tool.POMODORO.id) { PomodoroScreen(back) }
         composable(Tool.LEDGER.id) { LedgerGate(back) { LedgerHome(nav, back) } }
         composable("ledger/group/{id}", listOf(navArgument("id") { type = NavType.LongType })) {
@@ -172,14 +178,14 @@ fun HomeScreen(nav: NavHostController) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("الإصدار ${BuildConfigVersion.NAME} · من برامج «الما»", textAlign = TextAlign.Center)
                 CreditsCard()
-                Text("يعمل بدون إنترنت (عدا قياس السرعة).\nرسوم الإيموجي في الشعار من Twemoji (CC-BY 4.0).", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                Text("يعمل بدون إنترنت (عدا قياس السرعة).\nرسوم الإيموجي في الشعار من Twemoji (CC-BY 4.0).\nأذان المسجد النبوي: ejaz215 (CC BY 3.0)، والأذان العام (CC0)، من ويكيميديا كومنز.\nحصن المسلم: الشيخ سعيد القحطاني، النص من hisnmuslim.com.\nنص الصحيفة السجادية: ويكي مصدر (CC BY-SA).", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
         },
         confirmButton = { TextButton(onClick = { about = false }) { Text("حسناً") } }
     )
 }
 
-object BuildConfigVersion { const val NAME = "1.3" }
+object BuildConfigVersion { const val NAME = "1.4" }
 
 @Composable
 fun CreditsCard() {

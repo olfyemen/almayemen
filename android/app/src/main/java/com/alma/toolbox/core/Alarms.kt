@@ -52,5 +52,6 @@ object Alarms {
         com.alma.toolbox.silent.SilentEngine.apply(ctx)
         com.alma.toolbox.reminder.ReminderScheduler.scheduleAll(ctx)
         com.alma.toolbox.pomodoro.PomoEngine.restore(ctx)
+        com.alma.toolbox.prayer.AdhanScheduler.schedule(ctx)
     }
 }
