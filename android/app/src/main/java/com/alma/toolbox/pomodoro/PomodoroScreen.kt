@@ -1,6 +1,7 @@
 package com.alma.toolbox.pomodoro
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -73,6 +74,7 @@ fun PomodoroScreen(onBack: () -> Unit) {
                 }
                 if (todayCount > 0) Text("🍅".repeat(todayCount.coerceAtMost(20)), fontSize = 22.sp)
             }
+            PomoHistory(d)
         }
     }
     if (settings) PomoSettings(d, { settings = false })
@@ -87,6 +89,7 @@ private fun Stat(v: String, l: String) {
 
 @Composable
 private fun PomoSettings(initial: PomoData, onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
     var d by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -109,9 +112,52 @@ private fun PomoSettings(initial: PomoData, onDismiss: () -> Unit) {
                     val x = cur.copy(work = d.work, short = d.short, long = d.long, cycles = d.cycles, autoBreak = d.autoBreak, autoWork = d.autoWork, sound = d.sound, vibrate = d.vibrate)
                     if (!x.running) x.copy(remaining = x.duration()) else x
                 }
+                PomoWidget.refresh(ctx)
                 onDismiss()
             }) { Text("حفظ") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } }
     )
+}
+
+@Composable
+private fun PomoHistory(d: PomoData) {
+    val today = LocalDate.now()
+    val days = (13 downTo 0).map { today.minusDays(it.toLong()) }
+    val counts = days.map { d.log[it.toString()]?.count ?: 0 }
+    val week = (0..6).sumOf { d.log[today.minusDays(it.toLong()).toString()]?.minutes ?: 0 }
+    val month = d.log.filterKeys { it.startsWith(today.toString().substring(0, 7)) }.values.sumOf { it.minutes }
+    var streak = 0
+    while ((d.log[today.minusDays(streak.toLong()).toString()]?.count ?: 0) > 0) streak++
+    var open by remember { mutableStateOf<String?>(null) }
+    SectionCard(title = "📅 سجل الأيام") {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Stat("${week / 60}س ${week % 60}د", "هذا الأسبوع"); Stat("${month / 60}س", "هذا الشهر"); Stat("$streak 🔥", "أيام متتالية")
+        }
+        val bar = MaterialTheme.colorScheme.primary; val track = MaterialTheme.colorScheme.surfaceVariant
+        val max = (counts.maxOrNull() ?: 0).coerceAtLeast(4)
+        Row(Modifier.fillMaxWidth().height(110.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+            days.forEachIndexed { i, day ->
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (counts[i] > 0) Text("${counts[i]}", fontSize = 10.sp)
+                    Canvas(Modifier.fillMaxWidth().height((80f * counts[i] / max).coerceAtLeast(3f).dp)) { drawRect(if (counts[i] > 0) bar else track) }
+                    Text(DayShort[day.dayOfWeek.value]!!, fontSize = 10.sp, color = if (day == today) bar else MaterialTheme.colorScheme.outline)
+                }
+            }
+        }
+        val list = d.log.entries.sortedByDescending { it.key }.take(30)
+        if (list.isEmpty()) Text("أكمل أول جلسة تركيز ليبدأ السجل.", style = MaterialTheme.typography.bodySmall)
+        list.forEach { (date, day) ->
+            val dt = LocalDate.parse(date)
+            Column(Modifier.fillMaxWidth().clickable { open = if (open == date) null else date }.padding(vertical = 6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("${if (dt == today) "اليوم" else DayNames[dt.dayOfWeek.value]} ${dt.format(dateFmt)}", Modifier.weight(1f))
+                    Text("${day.count} 🍅 · ${day.minutes} د", fontWeight = FontWeight.Bold)
+                }
+                if (open == date) day.sessions.forEach { ss ->
+                    Text("• ${ss.at} — ${ss.minutes} د" + if (ss.task.isNotBlank()) " · ${ss.task}" else "", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
 }

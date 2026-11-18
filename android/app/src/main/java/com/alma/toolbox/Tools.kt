@@ -26,6 +26,28 @@ enum class Tool(val id: String, val title: String, val emoji: String, val desc: 
     companion object { fun of(id: String?) = entries.firstOrNull { it.id == id } }
 }
 
+/** User-customisable order & visibility of tools on the home screen. */
+object ToolOrder {
+    /** Default order shown until the user changes it (edit this list to change the default). */
+    val DEFAULT: List<Tool> = Tool.entries.toList()
+
+    private fun prefs(ctx: Context) = ctx.getSharedPreferences("home", 0)
+
+    fun isCustom(ctx: Context) = prefs(ctx).contains("order") || prefs(ctx).contains("hidden")
+
+    fun order(ctx: Context): List<Tool> {
+        val saved = prefs(ctx).getString("order", null)?.split(",")?.mapNotNull { Tool.of(it) } ?: return DEFAULT
+        return saved + DEFAULT.filter { it !in saved } // tools added in later versions go at the end
+    }
+
+    fun hidden(ctx: Context): Set<Tool> = prefs(ctx).getString("hidden", "")!!.split(",").mapNotNull { Tool.of(it) }.toSet()
+
+    fun save(ctx: Context, order: List<Tool>, hidden: Set<Tool>) = prefs(ctx).edit()
+        .putString("order", order.joinToString(",") { it.id }).putString("hidden", hidden.joinToString(",") { it.id }).apply()
+
+    fun reset(ctx: Context) = prefs(ctx).edit().clear().apply()
+}
+
 object Credits {
     const val DESIGNER = "تصميم م/ماهر العلفي"
     const val PHONE = "00967777408089"

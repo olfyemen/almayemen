@@ -69,6 +69,18 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
+        <service
+            android:name=".core.ChimeService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <receiver android:name=".pomodoro.PomoWidget" android:exported="false" android:label="بومودورو 🍅">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_pomo_info" />
+        </receiver>
+
         <receiver android:name=".core.AlarmReceiver" android:exported="false" />
         <receiver android:name=".core.BootReceiver" android:exported="true">
             <intent-filter>

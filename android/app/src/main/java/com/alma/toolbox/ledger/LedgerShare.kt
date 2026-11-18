@@ -43,6 +43,20 @@ object LedgerShare {
         }.trim()
     }
 
+    fun reminderText(d: LedgerData, a: LAccount): String {
+        val due = d.balance(a.id).filterValues { it > 0 }
+        return buildString {
+            append("السلام عليكم ${a.name}\n")
+            if (due.isEmpty()) append("نشكركم، لا يوجد عليكم أي مبلغ مستحق ✓\n")
+            else {
+                append("نود تذكيركم بأن المبلغ المستحق عليكم:\n")
+                due.forEach { (c, v) -> append("• ${fmtNum(v)} $c\n") }
+                append("\nنرجو التكرم بالسداد في أقرب وقت، وشكراً لتعاملكم 🌹\n")
+            }
+            if (d.owner.isNotBlank()) append("\n${d.owner}")
+        }.trim()
+    }
+
     // ---------------- PDF ----------------
     private const val W = 595
     private const val H = 842
@@ -61,7 +75,7 @@ object LedgerShare {
         return l.height.toFloat()
     }
 
-    fun buildPdf(ctx: Context, d: LedgerData, a: LAccount): File {
+    fun buildPdf(ctx: Context, d: LedgerData, a: LAccount, from: LocalDate? = null, to: LocalDate? = null): File {
         val doc = PdfDocument()
         var pageNo = 0
         lateinit var page: PdfDocument.Page
@@ -90,7 +104,8 @@ object LedgerShare {
                 c.cell("الهاتف: ${a.phone.ifBlank { "—" }}", W / 2f, y, inner / 2 - 0f, tp(11f)); y += 18
                 val now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.US)) + " " +
                     LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm", Locale.US))
-                c.cell("تاريخ الكشف: $now", M, y, inner, tp(9.5f, color = Color.DKGRAY)); y += 22
+                val period = if (from == null && to == null) "كل العمليات" else "من ${from?.let { fmtDate(it.toString()) } ?: "البداية"} إلى ${fmtDate((to ?: LocalDate.now()).toString())}"
+                c.cell("تاريخ الكشف: $now · الفترة: $period", M, y, inner, tp(9.5f, color = Color.DKGRAY)); y += 22
             }
         }
 
@@ -105,8 +120,13 @@ object LedgerShare {
         }
 
         newPage()
-        val txs = d.txs.filter { it.accountId == a.id }.sortedWith(compareBy({ it.date }, { it.created }))
-        val byCur = txs.groupBy { it.currency }
+        val all = d.txs.filter { it.accountId == a.id }.sortedWith(compareBy({ it.date }, { it.created }))
+        val fromS = from?.toString(); val toS = to?.toString()
+        val opening = HashMap<String, Double>()
+        all.filter { fromS != null && it.date < fromS }.forEach { opening[it.currency] = (opening[it.currency] ?: 0.0) + if (it.onHim) it.amount else -it.amount }
+        val txs = all.filter { (fromS == null || it.date >= fromS) && (toS == null || it.date <= toS) }
+        val byCur = LinkedHashMap<String, List<LTx>>()
+        (opening.filterValues { Math.abs(it) > 0.0001 }.keys + txs.map { it.currency }).distinct().forEach { cur -> byCur[cur] = txs.filter { it.currency == cur } }
         if (byCur.isEmpty()) { c.cell("لا توجد عمليات", M, y + 20, inner, tp(12f), center) }
         val line = Paint().apply { color = Color.rgb(220, 222, 232); strokeWidth = 0.7f }
         val alt = Paint().apply { color = Color.rgb(246, 246, 252) }
@@ -116,7 +136,13 @@ object LedgerShare {
             y += 6
             c.cell("العملة: $cur", M, y, inner, tp(12f, true, Color.rgb(42, 33, 96))); y += 20
             header()
-            var bal = 0.0; var sumOn = 0.0; var sumFor = 0.0
+            var bal = opening[cur] ?: 0.0; var sumOn = 0.0; var sumFor = 0.0
+            if (Math.abs(bal) > 0.0001) {
+                c.drawRect(M, y, W - M, y + 18, Paint().apply { color = Color.rgb(255, 248, 225) })
+                c.cell("رصيد سابق (منقول)", colX[1] + 4, y + 4, colW[1] - 8, tp(9.5f, true), Layout.Alignment.ALIGN_NORMAL, 1)
+                c.cell(fmtNum(Math.abs(bal)) + if (bal > 0) " عليه" else " له", colX[4], y + 4, colW[4], tp(9.5f, true), center, 1)
+                y += 18
+            }
             list.forEachIndexed { idx, t ->
                 bal += if (t.onHim) t.amount else -t.amount
                 if (t.onHim) sumOn += t.amount else sumFor += t.amount

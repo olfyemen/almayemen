@@ -33,10 +33,19 @@ fun PeriodicScreen(onBack: () -> Unit) {
     }
 
     ToolScaffold("التنبيه الدوري ⏰", onBack, fab = {
-        ExtendedFloatingActionButton(onClick = { editing = PeriodicAlert(newId()) }, icon = { Icon(Icons.Default.Add, null) }, text = { Text("تنبيه جديد") })
+        ExtendedFloatingActionButton(onClick = { editing = PeriodicAlert(newId(), chime = true) }, icon = { Icon(Icons.Default.Add, null) }, text = { Text("تنبيه جديد") })
     }) { pad ->
         LazyColumn(Modifier.padding(pad).fillMaxSize(), contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { ExactAlarmBanner() }
+            if (data.alerts.none { it.chime }) item {
+                SectionCard(title = "🕰️ ساعة بيج بن") {
+                    Text("تنبيه كل ساعة بلحن ساعة وستمنستر، والدقات بعدد الساعة: 3 دقات الساعة 3، و12 دقة الساعة 12.", style = MaterialTheme.typography.bodySmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { save(PeriodicAlert(newId(), "ساعة بيج بن 🕰️", startMin = 7 * 60, endMin = 22 * 60, intervalMin = 60, chime = true)) }) { Text("تفعيل كل ساعة") }
+                        OutlinedButton(onClick = { ChimePreview.play(ctx) }) { Text("▶ استماع") }
+                    }
+                }
+            }
             if (data.alerts.isEmpty()) item { EmptyState("⏰", "لا توجد تنبيهات دورية", "مثال: تنبيه كل 60 دقيقة من 8 ص إلى 10 م من السبت للخميس") }
             items(data.alerts.sortedBy { it.startMin }, key = { it.id }) { a ->
                 val next = remember(a, data) { PeriodicScheduler.nextFire(a) }
@@ -44,7 +53,7 @@ fun PeriodicScreen(onBack: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(a.name, fontWeight = FontWeight.Bold)
-                            Text("كل ${a.intervalMin} دقيقة · ${fmtTime(a.startMin)} ← ${fmtTime(a.endMin)}")
+                            Text("كل ${a.intervalMin} دقيقة · ${fmtTime(a.startMin)} ← ${fmtTime(a.endMin)}" + if (a.chime) " · 🕰️ بيج بن" else "")
                             Text(daysLabel(a.days), style = MaterialTheme.typography.bodySmall)
                             Text(
                                 if (a.enabled && next != null) "التنبيه القادم: ${DayNames[next.dayOfWeek.value]} ${fmtTime(next.hour * 60 + next.minute)}" else "متوقف",
@@ -83,12 +92,28 @@ fun PeriodicEditor(initial: PeriodicAlert, onDismiss: () -> Unit, onSave: (Perio
                 TimeField("من الساعة", a.startMin) { a = a.copy(startMin = it) }
                 TimeField("إلى الساعة", a.endMin) { a = a.copy(endMin = it) }
                 Stepper("التكرار كل", a.intervalMin, 1..720, 5, "د", listOf(15, 30, 45, 60, 90, 120)) { a = a.copy(intervalMin = it) }
-                SoundPicker(a.sound) { a = a.copy(sound = it) }
-                SwitchRow("اهتزاز", a.vibrate) { a = a.copy(vibrate = it) }
+                SwitchRow("🕰️ دقات ساعة بيج بن", a.chime, "لحن الربع والنصف، وعلى رأس الساعة دقات بعددها") { a = a.copy(chime = it) }
+                if (a.chime) {
+                    val ctx = LocalContext.current
+                    TextButton(onClick = { ChimePreview.play(ctx) }) { Text("▶ استماع لدقات الساعة الآن") }
+                    Text("لا يرن إن كان الهاتف على الصامت أو الاهتزاز.", style = MaterialTheme.typography.bodySmall)
+                } else {
+                    SoundPicker(a.sound) { a = a.copy(sound = it) }
+                    SwitchRow("اهتزاز", a.vibrate) { a = a.copy(vibrate = it) }
+                }
                 SwitchRow("إظهار الوقت في الإشعار", a.showTime) { a = a.copy(showTime = it) }
             }
         },
         confirmButton = { Button(onClick = { onSave(a.copy(enabled = true)) }, enabled = a.days.isNotEmpty()) { Text("حفظ") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } }
     )
+}
+
+object ChimePreview {
+    private var t: Thread? = null
+    fun play(ctx: android.content.Context) {
+        t?.interrupt()
+        val now = java.time.LocalTime.now()
+        t = Thread { runCatching { com.alma.toolbox.core.Chime.play(com.alma.toolbox.core.Chime.render(0, com.alma.toolbox.core.Chime.strikesFor(now.hour, 0)), android.media.AudioAttributes.USAGE_MEDIA) } }.also { it.start() }
+    }
 }

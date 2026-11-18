@@ -70,6 +70,8 @@ fun LedgerHome(nav: NavHostController, onBack: () -> Unit) {
     var newAccount by remember { mutableStateOf(false) }
 
     ToolScaffold("سجل الحسابات 📒", onBack, actions = {
+        TextButton(onClick = { nav.navigate("ledger/report") }) { Text("📊 تقارير") }
+        if (d.pinHash.isNotEmpty()) IconButton(onClick = { LedgerLock.lock() }) { Text("🔒") }
         IconButton(onClick = { nav.navigate("ledger/settings") }) { Icon(Icons.Default.Settings, "الإعدادات") }
     }, fab = {
         ExtendedFloatingActionButton(onClick = { newAccount = true }, icon = { Icon(Icons.Default.Add, null) }, text = { Text("حساب جديد") })
@@ -269,6 +271,8 @@ fun LedgerAccountScreen(nav: NavHostController, accountId: Long) {
     var del by remember { mutableStateOf(false) }
     var send by remember { mutableStateOf(false) }
     var editTx by remember { mutableStateOf<LTx?>(null) }
+    var q by remember { mutableStateOf<String?>(null) }
+    var kind by remember { mutableIntStateOf(0) } // 0 all, 1 عليه, 2 له
     if (a == null) { LaunchedEffect(Unit) { nav.popBackStack() }; return }
 
     val txs = d.txs.filter { it.accountId == accountId }.sortedWith(compareBy({ it.date }, { it.created }))
@@ -278,6 +282,7 @@ fun LedgerAccountScreen(nav: NavHostController, accountId: Long) {
     }
 
     ToolScaffold(a.name, { nav.popBackStack() }, snackbar = snack, actions = {
+        IconButton(onClick = { q = if (q == null) "" else null }) { Icon(Icons.Default.Search, "بحث في العمليات") }
         IconButton(onClick = { send = true }) { Icon(Icons.Default.Send, "إرسال الحساب") }
         IconButton(onClick = { edit = true }) { Icon(Icons.Default.Edit, "تعديل") }
         IconButton(onClick = { del = true }) { Icon(Icons.Default.Delete, "حذف") }
@@ -307,7 +312,25 @@ fun LedgerAccountScreen(nav: NavHostController, accountId: Long) {
                 }
             }
             if (txs.isEmpty()) item { EmptyState("✍️", "لا توجد عمليات بعد", "اكتب المبلغ في الأسفل ثم اضغط «عليه» أو «له»") }
-            items(running, key = { it.first.id }) { (t, bal) ->
+            if (q != null) item {
+                OutlinedTextField(q!!, { q = it }, placeholder = { Text("بحث بالبيان أو المبلغ أو التاريخ") }, singleLine = true,
+                    leadingIcon = { Icon(Icons.Default.Search, null) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("الكل", "عليه", "له").forEachIndexed { i, l -> FilterChip(kind == i, { kind = i }, label = { Text(l) }) }
+                }
+            }
+            val shown = running.filter { (t, _) ->
+                val qq = q?.trim().orEmpty()
+                (kind == 0 || (kind == 1) == t.onHim) &&
+                    (qq.isEmpty() || t.note.contains(qq, true) || fmtNum(t.amount).replace(",", "").contains(qq.replace(",", "")) || fmtDate(t.date).contains(qq) || t.currency.contains(qq))
+            }
+            if (q != null) item {
+                val on = shown.filter { it.first.onHim }.groupBy { it.first.currency }.mapValues { e -> e.value.sumOf { it.first.amount } }
+                val fo = shown.filter { !it.first.onHim }.groupBy { it.first.currency }.mapValues { e -> e.value.sumOf { it.first.amount } }
+                Text("${shown.size} عملية" + on.entries.joinToString("") { " · عليه ${fmtNum(it.value)} ${it.key}" } + fo.entries.joinToString("") { " · له ${fmtNum(it.value)} ${it.key}" },
+                    style = MaterialTheme.typography.bodySmall)
+            }
+            items(shown, key = { it.first.id }) { (t, bal) ->
                 Card(shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { editTx = t }) {
                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -430,7 +453,18 @@ private fun SendDialog(d: LedgerData, a: LAccount, onDismiss: () -> Unit) {
     val pick = rememberContactPicker { _, p -> other = p; useOwn = false }
     val raw = if (useOwn) a.phone else other
     val phone = if (raw.isBlank()) "" else Ledger.normalizePhone(raw, d.countryCode)
-    val text = remember(d, a) { LedgerShare.lastAndBalanceText(d, a) }
+    var remind by remember { mutableStateOf(false) }
+    var period by remember { mutableIntStateOf(0) } // 0 all, 1 this month, 2 last month, 3 custom
+    var from by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
+    var to by remember { mutableStateOf(LocalDate.now()) }
+    val range: Pair<LocalDate?, LocalDate?> = when (period) {
+        1 -> LocalDate.now().withDayOfMonth(1) to LocalDate.now()
+        2 -> LocalDate.now().minusMonths(1).withDayOfMonth(1).let { it to it.plusMonths(1).minusDays(1) }
+        3 -> from to to
+        else -> null to null
+    }
+    val text = remember(d, a, remind) { if (remind) LedgerShare.reminderText(d, a) else LedgerShare.lastAndBalanceText(d, a) }
+    val pdfFile = { LedgerShare.buildPdf(ctx, d, a, range.first, range.second) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -438,9 +472,20 @@ private fun SendDialog(d: LedgerData, a: LAccount, onDismiss: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("ماذا تريد أن ترسل؟", fontWeight = FontWeight.Bold)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedPick("آخر عملية والرصيد", !pdf, { pdf = false }, Modifier.weight(1f))
-                    OutlinedPick("كشف كامل PDF", pdf, { pdf = true }, Modifier.weight(1f))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    OutlinedPick("آخر عملية والرصيد", !pdf && !remind, { pdf = false; remind = false }, Modifier.weight(1f))
+                    OutlinedPick("تذكير بالسداد", !pdf && remind, { pdf = false; remind = true }, Modifier.weight(1f))
+                }
+                OutlinedPick("كشف حساب PDF", pdf, { pdf = true }, Modifier.fillMaxWidth())
+                if (pdf) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("كل العمليات", "هذا الشهر", "الشهر الماضي", "فترة محددة").forEachIndexed { i, l -> FilterChip(period == i, { period = i }, label = { Text(l) }) }
+                    }
+                    if (period == 3) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        AssistChip(onClick = { pickDate(ctx, from) { from = it } }, label = { Text("من ${from.format(dateFmt)}") })
+                        AssistChip(onClick = { pickDate(ctx, to) { to = it } }, label = { Text("إلى ${to.format(dateFmt)}") })
+                    }
+                    if (period != 0) Text("يُضاف «رصيد سابق» بما قبل الفترة.", style = MaterialTheme.typography.bodySmall)
                 }
                 if (!pdf) Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Text(text, Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall)
@@ -462,14 +507,14 @@ private fun SendDialog(d: LedgerData, a: LAccount, onDismiss: () -> Unit) {
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Button(onClick = {
-                        if (pdf) LedgerShare.sendPdf(ctx, LedgerShare.buildPdf(ctx, d, a), phone.ifBlank { null }, whatsapp = true)
+                        if (pdf) LedgerShare.sendPdf(ctx, pdfFile(), phone.ifBlank { null }, whatsapp = true)
                         else if (phone.isBlank()) LedgerShare.shareText(ctx, text) else LedgerShare.sendTextWhatsApp(ctx, phone, text)
                         onDismiss()
                     }, colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF25D366))) { Text("واتساب") }
                     if (!pdf) OutlinedButton(onClick = { if (phone.isNotBlank()) LedgerShare.sendSms(ctx, phone, text); onDismiss() }, enabled = phone.isNotBlank()) { Text("SMS") }
                 }
                 TextButton(onClick = {
-                    if (pdf) LedgerShare.sendPdf(ctx, LedgerShare.buildPdf(ctx, d, a), null, whatsapp = false) else LedgerShare.shareText(ctx, text)
+                    if (pdf) LedgerShare.sendPdf(ctx, pdfFile(), null, whatsapp = false) else LedgerShare.shareText(ctx, text)
                     onDismiss()
                 }) { Text("مشاركة بتطبيق آخر…") }
             }
@@ -524,6 +569,13 @@ fun LedgerSettingsScreen(nav: NavHostController) {
                     OutlinedTextField(newCur, { newCur = it }, placeholder = { Text("عملة جديدة") }, singleLine = true, modifier = Modifier.weight(1f))
                     TextButton(onClick = { val c = newCur.trim(); if (c.isNotEmpty() && c !in d.currencies) Stores.ledger.update { it.copy(currencies = it.currencies + c) }; newCur = "" }) { Text("إضافة") }
                 }
+            }
+            SectionCard(title = "🔒 القفل (اختياري)") {
+                var pinDlg by remember { mutableStateOf(false) }
+                Text(if (d.pinHash.isEmpty()) "سجل الحسابات مفتوح بدون رمز." else "مقفل برمز من ${d.pinLength} أرقام، ويُقفل تلقائياً بعد دقيقة من الخروج.", style = MaterialTheme.typography.bodySmall)
+                Button(onClick = { pinDlg = true }) { Text(if (d.pinHash.isEmpty()) "تفعيل القفل برمز" else "تغيير الرمز أو إزالته") }
+                if (d.pinHash.isNotEmpty() && bioAvailable(ctx)) SwitchRow("الفتح بالبصمة أيضاً", d.lockBio) { v -> Stores.ledger.update { it.copy(lockBio = v) } }
+                if (pinDlg) PinSetupDialog(d) { pinDlg = false }
             }
             SectionCard(title = "النسخ الاحتياطي") {
                 Text("احفظ نسخة من كل الحسابات في ملف، واسترجعها على هاتف آخر.", style = MaterialTheme.typography.bodySmall)

@@ -24,6 +24,8 @@ data class PeriodicAlert(
     val vibrate: Boolean = true,
     val enabled: Boolean = true,
     val showTime: Boolean = true,
+    /** Westminster («Big Ben») chimes instead of a ringtone; strikes = the hour. */
+    val chime: Boolean = false,
 )
 
 @Serializable
@@ -66,6 +68,12 @@ object PeriodicScheduler {
         if (!a.enabled) return
         val now = LocalDateTime.now()
         val nowMin = now.hour * 60 + now.minute
+        if (a.chime) {
+            // round to the nearest minute so 7:59:58 still counts as 8:00
+            val r = now.plusSeconds(30)
+            com.alma.toolbox.core.Chime.start(ctx, a.name, r.hour, r.minute)
+            schedule(ctx, a); return
+        }
         val ch = Notify.channelFor(ctx, a.sound, a.vibrate)
         val next = nextFire(a, now.plusSeconds(30))
         val text = buildString {

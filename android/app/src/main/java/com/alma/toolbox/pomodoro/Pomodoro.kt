@@ -11,6 +11,12 @@ import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
 @Serializable
+data class PomoSession(val at: String, val minutes: Int, val task: String = "")
+
+@Serializable
+data class PomoDay(val count: Int = 0, val minutes: Int = 0, val sessions: List<PomoSession> = emptyList())
+
+@Serializable
 data class PomoData(
     val work: Int = 25, val short: Int = 5, val long: Int = 15, val cycles: Int = 4,
     val autoBreak: Boolean = true, val autoWork: Boolean = false,
@@ -19,6 +25,8 @@ data class PomoData(
     val endAt: Long = 0, val remaining: Long = 25 * 60_000L, val cycle: Int = 0,
     val today: String = "", val todayCount: Int = 0, val todayMinutes: Int = 0, val totalCount: Int = 0,
     val task: String = "",
+    /** date (yyyy-MM-dd) -> what was done that day */
+    val log: Map<String, PomoDay> = emptyMap(),
 )
 
 fun PomoData.duration(p: String = phase) = when (p) { "short" -> short; "long" -> long; else -> work } * 60_000L
@@ -47,26 +55,33 @@ object PomoEngine {
         val d = Stores.pomodoro.update { val rem = if (it.remaining <= 0) it.duration() else it.remaining
             it.copy(running = true, endAt = System.currentTimeMillis() + rem, remaining = rem) }
         Alarms.set(ctx, URI, d.endAt, alarmClock = false)
-        ongoing(ctx, d)
+        ongoing(ctx, d); PomoWidget.refresh(ctx)
     }
 
     fun pause(ctx: Context) {
         val d = Stores.pomodoro.update { if (!it.running) it else it.copy(running = false, remaining = it.left()) }
-        Alarms.cancel(ctx, URI); ongoing(ctx, d)
+        Alarms.cancel(ctx, URI); ongoing(ctx, d); PomoWidget.refresh(ctx)
     }
 
     fun toggle(ctx: Context) = if (Stores.pomodoro.value.running) pause(ctx) else start(ctx)
 
     fun reset(ctx: Context) {
         Stores.pomodoro.update { it.copy(running = false, phase = "work", remaining = it.duration("work"), cycle = 0) }
-        Alarms.cancel(ctx, URI); Notify.nm(ctx).cancel(ONGOING)
+        Alarms.cancel(ctx, URI); Notify.nm(ctx).cancel(ONGOING); PomoWidget.refresh(ctx)
     }
 
     private fun nextPhase(d: PomoData, countIt: Boolean): PomoData {
         val todayStr = LocalDate.now().toString()
         var x = if (d.today != todayStr) d.copy(today = todayStr, todayCount = 0, todayMinutes = 0) else d
         return if (x.phase == "work") {
-            if (countIt) x = x.copy(todayCount = x.todayCount + 1, todayMinutes = x.todayMinutes + x.work, totalCount = x.totalCount + 1)
+            if (countIt) {
+                val day = x.log[todayStr] ?: PomoDay()
+                val t = java.time.LocalTime.now()
+                val entry = PomoSession(String.format(java.util.Locale.US, "%02d:%02d", t.hour, t.minute), x.work, x.task.trim())
+                val log = (x.log + (todayStr to day.copy(count = day.count + 1, minutes = day.minutes + x.work, sessions = day.sessions + entry)))
+                    .toSortedMap().let { m -> m.entries.toList().takeLast(400).associate { it.key to it.value } }
+                x = x.copy(todayCount = x.todayCount + 1, todayMinutes = x.todayMinutes + x.work, totalCount = x.totalCount + 1, log = log)
+            }
             val c = x.cycle + 1
             val p = if (c >= x.cycles) "long" else "short"
             x.copy(phase = p, cycle = if (p == "long") 0 else c, remaining = x.duration(p), running = false)
@@ -78,6 +93,7 @@ object PomoEngine {
         Stores.pomodoro.update { nextPhase(it, countIt = false) }
         Alarms.cancel(ctx, URI)
         if (was) start(ctx) else Notify.nm(ctx).cancel(ONGOING)
+        PomoWidget.refresh(ctx)
     }
 
     fun phaseEnded(ctx: Context) {
@@ -92,6 +108,7 @@ object PomoEngine {
         if (Notify.canPost(ctx)) Notify.nm(ctx).notify(DONE, n)
         val auto = if (d.phase == "work") d.autoWork else d.autoBreak
         if (auto) start(ctx) else Notify.nm(ctx).cancel(ONGOING)
+        PomoWidget.refresh(ctx)
     }
 
     fun restore(ctx: Context) {

@@ -53,14 +53,15 @@ fun AppNav(act: MainActivity) {
         composable(Tool.SILENT.id) { SilentScreen(back) }
         composable(Tool.REMINDER.id) { ReminderScreen(back) }
         composable(Tool.POMODORO.id) { PomodoroScreen(back) }
-        composable(Tool.LEDGER.id) { LedgerHome(nav, back) }
+        composable(Tool.LEDGER.id) { LedgerGate(back) { LedgerHome(nav, back) } }
         composable("ledger/group/{id}", listOf(navArgument("id") { type = NavType.LongType })) {
-            LedgerGroupScreen(nav, it.arguments!!.getLong("id"))
+            LedgerGate(back) { LedgerGroupScreen(nav, it.arguments!!.getLong("id")) }
         }
         composable("ledger/account/{id}", listOf(navArgument("id") { type = NavType.LongType })) {
-            LedgerAccountScreen(nav, it.arguments!!.getLong("id"))
+            LedgerGate(back) { LedgerAccountScreen(nav, it.arguments!!.getLong("id")) }
         }
-        composable("ledger/settings") { LedgerSettingsScreen(nav) }
+        composable("ledger/settings") { LedgerGate(back) { LedgerSettingsScreen(nav) } }
+        composable("ledger/report") { LedgerGate(back) { LedgerReportScreen(nav) } }
         composable(Tool.CHECK.id) { PhoneCheckScreen(back) }
         composable(Tool.SPEED.id) { SpeedTestScreen(back) }
         composable(Tool.SIGNAL.id) { SignalScreen(back) }
@@ -76,6 +77,11 @@ fun HomeScreen(nav: NavHostController) {
     val ctx = LocalContext.current
     var menuFor by remember { mutableStateOf<Tool?>(null) }
     var about by remember { mutableStateOf(false) }
+    var arrange by remember { mutableStateOf(false) }
+    var version by remember { mutableIntStateOf(0) }
+    val order = remember(version) { ToolOrder.order(ctx) }
+    val hidden = remember(version) { ToolOrder.hidden(ctx) }
+    val custom = remember(version) { ToolOrder.isCustom(ctx) }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(150.dp),
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
@@ -92,10 +98,14 @@ fun HomeScreen(nav: NavHostController) {
                     Text("أدواتك اليومية في مكان واحد", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = .6f))
                     Text("«${Credits.SLOGAN}»", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
+                TextButton(onClick = { arrange = true }) { Text("ترتيب") }
                 TextButton(onClick = { about = true }) { Text("حول") }
             }
         }
-        Tool.entries.groupBy { it.group }.forEach { (group, tools) ->
+        val visible = order.filter { it !in hidden }
+        // default order keeps the category headings; a custom order is shown as one list
+        val sections = if (custom) listOf("أدواتي" to visible) else visible.groupBy { it.group }.toList()
+        sections.forEach { (group, tools) ->
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Text(group, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
             }
@@ -132,6 +142,9 @@ fun HomeScreen(nav: NavHostController) {
         }
         item(span = { GridItemSpan(maxLineSpan) }) { CreditsCard() }
     }
+    if (arrange) ArrangeDialog(order, hidden, onDismiss = { arrange = false }, onReset = { ToolOrder.reset(ctx); version++; arrange = false }) { o, h ->
+        ToolOrder.save(ctx, o, h); version++; arrange = false
+    }
     menuFor?.let { t ->
         AlertDialog(
             onDismissRequest = { menuFor = null },
@@ -163,7 +176,7 @@ fun HomeScreen(nav: NavHostController) {
     )
 }
 
-object BuildConfigVersion { const val NAME = "1.1" }
+object BuildConfigVersion { const val NAME = "1.2" }
 
 @Composable
 fun CreditsCard() {
@@ -189,4 +202,32 @@ fun CreditsCard() {
             }
         }
     }
+}
+
+@Composable
+fun ArrangeDialog(initial: List<Tool>, initialHidden: Set<Tool>, onDismiss: () -> Unit, onReset: () -> Unit, onSave: (List<Tool>, Set<Tool>) -> Unit) {
+    val list = remember { initial.toMutableStateList() }
+    val hidden = remember { initialHidden.toMutableStateList() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("ترتيب الأدوات") },
+        text = {
+            androidx.compose.foundation.lazy.LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                item { Text("حرّك الأدوات بالأسهم، وأزل علامة ✓ لإخفاء أداة.", style = MaterialTheme.typography.bodySmall) }
+                items(list.size, key = { list[it].id }) { i ->
+                    val t = list[i]
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Checkbox(checked = t !in hidden, onCheckedChange = { if (it) hidden.remove(t) else hidden.add(t) })
+                        Text(t.emoji, fontSize = 20.sp)
+                        Spacer(Modifier.width(6.dp))
+                        Text(t.title, Modifier.weight(1f), color = if (t in hidden) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface)
+                        IconButton(onClick = { if (i > 0) { list.removeAt(i); list.add(i - 1, t) } }, enabled = i > 0) { Text("▲") }
+                        IconButton(onClick = { if (i < list.size - 1) { list.removeAt(i); list.add(i + 1, t) } }, enabled = i < list.size - 1) { Text("▼") }
+                    }
+                }
+            }
+        },
+        confirmButton = { Button(onClick = { onSave(list.toList(), hidden.toSet()) }) { Text("حفظ") } },
+        dismissButton = { TextButton(onClick = onReset) { Text("الترتيب الافتراضي") } }
+    )
 }

@@ -107,4 +107,23 @@ class LogicTest {
         assertEquals(".- .-.. / -- .-", Morse.encode("أل ما").let { it })
         assertEquals("ال ما", Morse.decode(".- .-.. / -- .-", ar = true))
     }
+
+    @Test fun bigBenChime() {
+        assertEquals(12, com.alma.toolbox.core.Chime.strikesFor(0, 0))
+        assertEquals(3, com.alma.toolbox.core.Chime.strikesFor(15, 0))
+        assertEquals(0, com.alma.toolbox.core.Chime.strikesFor(15, 30))
+        val quarter = com.alma.toolbox.core.Chime.render(15, 0)
+        val twelve = com.alma.toolbox.core.Chime.render(0, 12)
+        val three = com.alma.toolbox.core.Chime.render(0, 3)
+        println("chime seconds: quarter=${quarter.size / 22050.0} 3h=${three.size / 22050.0} 12h=${twelve.size / 22050.0}")
+        assertTrue(quarter.size < three.size && three.size < twelve.size)
+        assertTrue(twelve.size / 22050.0 < 60)
+        assertTrue(twelve.any { Math.abs(it.toInt()) > 20000 }) // audible, normalised
+    }
+
+    @Test fun paymentReminder() {
+        val d = LedgerData(accounts = listOf(com.alma.toolbox.ledger.LAccount(9, 1, "سالم")), txs = listOf(LTx(1, 9, 3000.0, true, "ريال يمني")), owner = "محل الما")
+        val t = com.alma.toolbox.ledger.LedgerShare.reminderText(d, d.accounts[0])
+        assertTrue(t.contains("3,000 ريال يمني") && t.contains("سالم") && t.endsWith("محل الما"))
+    }
 }

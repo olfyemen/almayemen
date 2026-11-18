@@ -31,6 +31,10 @@ data class LedgerData(
     val countryCode: String = "967",
     /** ask | last | pdf */
     val sendMode: String = "ask",
+    /** optional lock: SHA-256 of the PIN, empty = no lock */
+    val pinHash: String = "",
+    val pinLength: Int = 4,
+    val lockBio: Boolean = true,
 )
 
 /** currency -> balance (positive = عليه) */

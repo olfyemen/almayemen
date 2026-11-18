@@ -32,6 +32,20 @@ class MainActivity : FragmentActivity() {
         setContent { AlmaTheme { AppNav(this) } }
     }
 
+    private var leftAt = 0L
+
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) leftAt = System.currentTimeMillis()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // re-lock the ledger after a minute away (short trips to WhatsApp / contacts keep it open)
+        if (leftAt > 0 && System.currentTimeMillis() - leftAt > 60_000) com.alma.toolbox.ledger.LedgerLock.lock()
+        leftAt = 0
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
