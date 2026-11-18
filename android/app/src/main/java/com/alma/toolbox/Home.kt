@@ -62,6 +62,9 @@ fun AppNav(act: MainActivity) {
         }
         composable("ledger/settings") { LedgerGate(back) { LedgerSettingsScreen(nav) } }
         composable("ledger/report") { LedgerGate(back) { LedgerReportScreen(nav) } }
+        composable(Tool.TRANSFER.id) { com.alma.toolbox.transfer.TransferScreen(nav, back) }
+        composable("transfer/room") { com.alma.toolbox.transfer.RoomScreen(nav) }
+        composable("transfer/history/{id}") { com.alma.toolbox.transfer.RoomHistoryScreen(nav, it.arguments?.getString("id") ?: "") }
         composable(Tool.CHECK.id) { PhoneCheckScreen(back) }
         composable(Tool.SPEED.id) { SpeedTestScreen(back) }
         composable(Tool.SIGNAL.id) { SignalScreen(back) }
@@ -176,7 +179,7 @@ fun HomeScreen(nav: NavHostController) {
     )
 }
 
-object BuildConfigVersion { const val NAME = "1.2" }
+object BuildConfigVersion { const val NAME = "1.3" }
 
 @Composable
 fun CreditsCard() {

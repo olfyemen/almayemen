@@ -9,5 +9,7 @@ class App : Application() {
         super.onCreate()
         Stores.init(this)
         Notify.createBaseChannels(this)
+        // a new process means any hosted room is gone: drop its temporary files
+        com.alma.toolbox.transfer.TransferHub.cleanTemp(this)
     }
 }

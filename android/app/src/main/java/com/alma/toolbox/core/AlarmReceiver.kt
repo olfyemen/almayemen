@@ -38,5 +38,6 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         Stores.init(ctx)
         Alarms.rescheduleAll(ctx)
+        com.alma.toolbox.transfer.TransferHub.cleanTemp(ctx)
     }
 }

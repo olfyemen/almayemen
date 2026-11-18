@@ -50,6 +50,7 @@ object Stores {
     lateinit var reminders: JsonStore<ReminderData>
     lateinit var pomodoro: JsonStore<PomoData>
     lateinit var ledger: JsonStore<LedgerData>
+    lateinit var transfer: JsonStore<com.alma.toolbox.transfer.TransferData>
     private var ready = false
 
     @Synchronized
@@ -61,6 +62,7 @@ object Stores {
         reminders = JsonStore(File(d, "reminders.json"), ReminderData.serializer()) { ReminderData() }
         pomodoro = JsonStore(File(d, "pomodoro.json"), PomoData.serializer()) { PomoData() }
         ledger = JsonStore(File(d, "ledger.json"), LedgerData.serializer()) { LedgerData() }
+        transfer = JsonStore(File(d, "transfer.json"), com.alma.toolbox.transfer.TransferData.serializer()) { com.alma.toolbox.transfer.TransferData() }
         ready = true
     }
 }
