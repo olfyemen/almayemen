@@ -35,7 +35,27 @@ data class LedgerData(
     val pinHash: String = "",
     val pinLength: Int = 4,
     val lockBio: Boolean = true,
+    /** optional single currency for totals; empty = off. rates[c] = value of 1 c in baseCurrency */
+    val baseCurrency: String = "",
+    val rates: Map<String, Double> = emptyMap(),
+    /** optional weekly reminder about balances with no movement */
+    val remindOverdue: Boolean = false,
+    val overdueDays: Int = 30,
 )
+
+/** Sum of a multi-currency balance in the base currency; null when off or a rate is missing. */
+fun LedgerData.toBase(bal: Map<String, Double>): Double? {
+    if (baseCurrency.isEmpty()) return null
+    var sum = 0.0
+    bal.forEach { (c, v) -> sum += v * (if (c == baseCurrency) 1.0 else rates[c]?.takeIf { it > 0 } ?: return null) }
+    return sum
+}
+
+/** Accounts that owe money and have had no movement for [LedgerData.overdueDays]. */
+fun LedgerData.overdue(today: java.time.LocalDate = java.time.LocalDate.now()): List<LAccount> {
+    val cutoff = today.minusDays(overdueDays.toLong()).toString()
+    return accounts.filter { a -> balance(a.id).values.any { it > 0 } && (txs.filter { it.accountId == a.id }.maxOfOrNull { it.date } ?: "") < cutoff }
+}
 
 /** currency -> balance (positive = عليه) */
 fun LedgerData.balances(accountIds: Collection<Long>): Map<String, Double> {
@@ -87,6 +107,21 @@ object Ledger {
             val st = i; while (i < s.length && (s[i].isDigit() || s[i] == '.')) i++
             return s.substring(st, i).toDouble()
         }
+    }
+
+    /** Adds what [other] has and this phone doesn't (by id). Nothing is deleted or overwritten. */
+    fun merge(other: LedgerData): Triple<Int, Int, Int> {
+        var g = 0; var a = 0; var t = 0
+        Stores.ledger.update { d ->
+            val gIds = d.groups.map { it.id }.toHashSet(); val aIds = d.accounts.map { it.id }.toHashSet(); val tIds = d.txs.map { it.id }.toHashSet()
+            val ng = other.groups.filter { it.id !in gIds }; val na = other.accounts.filter { it.id !in aIds }; val nt = other.txs.filter { it.id !in tIds }
+            g = ng.size; a = na.size; t = nt.size
+            // accounts whose group doesn't exist here go to the first group
+            val allGroups = d.groups + ng
+            val fixed = na.map { if (allGroups.any { gr -> gr.id == it.groupId }) it else it.copy(groupId = allGroups.first().id) }
+            d.copy(groups = allGroups, accounts = d.accounts + fixed, txs = d.txs + nt, currencies = (d.currencies + other.currencies).distinct())
+        }
+        return Triple(g, a, t)
     }
 
     fun normalizePhone(raw: String, cc: String): String {

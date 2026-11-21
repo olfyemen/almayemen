@@ -96,6 +96,12 @@ fun LedgerHome(nav: NavHostController, onBack: () -> Unit) {
                         if (all.isEmpty()) Text("لا توجد أرصدة")
                         onThem.forEach { (c, v) -> Text("لكم عند الآخرين: ${fmtNum(v)} $c", color = Bad, fontWeight = FontWeight.Bold) }
                         forThem.forEach { (c, v) -> Text("عليكم للآخرين: ${fmtNum(-v)} $c", color = Good, fontWeight = FontWeight.Bold) }
+                        val bOn = d.toBase(onThem); val bFor = d.toBase(forThem)
+                        if (bOn != null && bFor != null && (onThem.size + forThem.size) > 1) {
+                            HorizontalDivider()
+                            Text("بـ${d.baseCurrency}: لكم ${fmtNum(Math.round(bOn).toDouble())} · عليكم ${fmtNum(Math.round(-bFor).toDouble())} · الصافي ${balanceText(Math.round(bOn + bFor).toDouble(), d.baseCurrency).replace("عليه", "لكم").replace("له", "عليكم")}",
+                                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
                 items(d.groups, key = { it.id }) { g ->
@@ -304,6 +310,9 @@ fun LedgerAccountScreen(nav: NavHostController, accountId: Long) {
                         Column(Modifier.weight(1f)) {
                             Text("الرصيد", style = MaterialTheme.typography.bodySmall)
                             BalanceChips(d.balance(accountId), big = true)
+                            d.balance(accountId).takeIf { it.size > 1 || (it.isNotEmpty() && it.keys.first() != d.baseCurrency) }?.let { b ->
+                                d.toBase(b)?.let { Text("≈ " + balanceText(Math.round(it).toDouble(), d.baseCurrency), style = MaterialTheme.typography.bodySmall) }
+                            }
                         }
                         FilledTonalButton(onClick = { send = true }) { Text("📤 إرسال") }
                     }
@@ -536,6 +545,13 @@ fun LedgerSettingsScreen(nav: NavHostController) {
         }.onFailure { Toast.makeText(ctx, "فشل الحفظ", Toast.LENGTH_SHORT).show() }
     }
     var pendingImport by remember { mutableStateOf<String?>(null) }
+    val merger = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            val other = com.alma.toolbox.core.AppJson.decodeFromString(LedgerData.serializer(), ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() })
+            Ledger.merge(other)
+        }.onSuccess { (g, a, t) -> Toast.makeText(ctx, "أُضيف: $a حساب، $t عملية، $g مجموعة ✓", Toast.LENGTH_LONG).show() }
+            .onFailure { Toast.makeText(ctx, "الملف ليس ملف حسابات صالحاً", Toast.LENGTH_SHORT).show() }
+    }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching { ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() } }
             .onSuccess { pendingImport = it }.onFailure { Toast.makeText(ctx, "تعذرت قراءة الملف", Toast.LENGTH_SHORT).show() }
@@ -576,6 +592,38 @@ fun LedgerSettingsScreen(nav: NavHostController) {
                 Button(onClick = { pinDlg = true }) { Text(if (d.pinHash.isEmpty()) "تفعيل القفل برمز" else "تغيير الرمز أو إزالته") }
                 if (d.pinHash.isNotEmpty() && bioAvailable(ctx)) SwitchRow("الفتح بالبصمة أيضاً", d.lockBio) { v -> Stores.ledger.update { it.copy(lockBio = v) } }
                 if (pinDlg) PinSetupDialog(d) { pinDlg = false }
+            }
+            SectionCard(title = "💱 عملة موحّدة للإجمالي (اختياري)") {
+                SwitchRow("إظهار الأرصدة بعملة واحدة", d.baseCurrency.isNotEmpty(), "بأسعار صرف تُدخلها أنت") { on ->
+                    Stores.ledger.update { it.copy(baseCurrency = if (on) it.currencies.firstOrNull() ?: "" else "") }
+                }
+                if (d.baseCurrency.isNotEmpty()) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        d.currencies.forEach { c -> FilterChip(d.baseCurrency == c, { Stores.ledger.update { it.copy(baseCurrency = c) } }, label = { Text(c) }) }
+                    }
+                    d.currencies.filter { it != d.baseCurrency }.forEach { c ->
+                        var txt by remember(c, d.baseCurrency) { mutableStateOf(d.rates[c]?.let { fmtNum(it).replace(",", "") } ?: "") }
+                        OutlinedTextField(txt, { v -> txt = v; Ledger.parseAmount(v)?.let { r -> Stores.ledger.update { it.copy(rates = it.rates + (c to r)) } } },
+                            label = { Text("1 $c = ؟ ${d.baseCurrency}") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            }
+            SectionCard(title = "⏰ تذكير بالمتأخرين (اختياري)") {
+                SwitchRow("تنبيه أسبوعي بمن عليه رصيد بلا حركة", d.remindOverdue) { v -> Stores.ledger.update { it.copy(remindOverdue = v) }; LedgerRemind.schedule(ctx) }
+                if (d.remindOverdue) Stepper("بلا حركة منذ", d.overdueDays, 7..180, 7, "يوم", listOf(15, 30, 60, 90)) { v -> Stores.ledger.update { it.copy(overdueDays = v) } }
+            }
+            SectionCard(title = "📲 الحسابات على هاتف آخر") {
+                Text("أرسل نسخة من الحسابات لهاتف آخر (عبر «نقل الملفات» أو واتساب)، ثم افتحها هناك بـ«استيراد ودمج»: تُضاف الحسابات والعمليات الجديدة فقط دون حذف شيء.", style = MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = {
+                        val f = java.io.File(java.io.File(ctx.cacheDir, "shared").apply { mkdirs() }, "حسابات-الما-${LocalDate.now()}.json")
+                        f.writeText(Stores.ledger.exportText())
+                        val u = androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", f)
+                        ctx.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("application/json")
+                            .putExtra(android.content.Intent.EXTRA_STREAM, u).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION), "إرسال الحسابات"))
+                    }) { Text("إرسال نسخة") }
+                    OutlinedButton(onClick = { merger.launch(arrayOf("application/json", "text/plain", "*/*")) }) { Text("استيراد ودمج") }
+                }
             }
             SectionCard(title = "النسخ الاحتياطي") {
                 Text("احفظ نسخة من كل الحسابات في ملف، واسترجعها على هاتف آخر.", style = MaterialTheme.typography.bodySmall)

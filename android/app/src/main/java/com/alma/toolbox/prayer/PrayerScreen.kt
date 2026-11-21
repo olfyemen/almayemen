@@ -9,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,6 +45,7 @@ fun PrayerScreen(onBack: () -> Unit) {
     LaunchedEffect(Unit) { while (true) { now = LocalDateTime.now(); delay(1000) } }
     var settings by remember { mutableStateOf(false) }
     var month by remember { mutableStateOf(false) }
+    var muteGrid by remember { mutableStateOf(false) }
     var pickFor by remember { mutableStateOf<Pair<Boolean, String>?>(null) } // (fajr?, key)
     DisposableEffect(Unit) { onDispose { AdhanService.previewStop() } }
 
@@ -134,6 +137,23 @@ fun PrayerScreen(onBack: () -> Unit) {
                     Text("مستوى صوت الأذان: ${d.volume}%")
                     Slider(d.volume.toFloat(), { v -> Stores.adhan.update { it.copy(volume = v.toInt()) } }, valueRange = 20f..100f)
                     SwitchRow("لا يؤذّن إذا جعلتُ الهاتف صامتاً بنفسي", d.respectSilent, "الصامت المجدول من حقيبة الما لا يمنع الأذان") { v -> save { it.copy(respectSilent = v) } }
+                    HorizontalDivider()
+                    Text("مدة الأذان", fontWeight = FontWeight.Bold)
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(0 to "كاملاً", 10 to "10 ث", 20 to "20 ث", 30 to "30 ث", 60 to "دقيقة").forEach { (v, l) ->
+                            FilterChip(d.maxSec == v, { save { it.copy(maxSec = v) } }, label = { Text(l) })
+                        }
+                    }
+                    SwitchRow("رفع الصوت تدريجياً", d.fadeIn, "يبدأ هادئاً ثم يرتفع خلال 8 ثوانٍ") { v -> save { it.copy(fadeIn = v) } }
+                    Stepper("تنبيه الإقامة بعد الأذان", d.iqamaMin, 0..60, 5, "د", listOf(0, 10, 15, 20)) { v -> save { it.copy(iqamaMin = v) } }
+                    HorizontalDivider()
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("كتم أذان صلوات في أيام معيّنة", fontWeight = FontWeight.Bold)
+                            Text(if (d.muted.isEmpty()) "لا شيء مكتوم" else "${d.muted.size} مكتوم أسبوعياً", style = MaterialTheme.typography.bodySmall)
+                        }
+                        TextButton(onClick = { muteGrid = true }) { Text("تحديد") }
+                    }
                 }
             }
             item {
@@ -141,6 +161,7 @@ fun PrayerScreen(onBack: () -> Unit) {
             }
         }
     }
+    if (muteGrid) MuteGridDialog(d.muted, { muteGrid = false }) { m -> save { it.copy(muted = m) }; muteGrid = false }
     if (settings) PrayerSettingsDialog(silent.prayer, { settings = false }) { p ->
         Stores.silent.update { it.copy(prayer = p) }; SilentEngine.apply(ctx); AdhanScheduler.schedule(ctx); settings = false
     }
@@ -162,4 +183,36 @@ private fun AdhanPicker(label: String, key: String, fileName: String, onPlay: ()
             IconButton(onClick = onPlay, enabled = key != "beep") { Text("▶", fontSize = 20.sp) }
         }
     }
+}
+
+@Composable
+private fun MuteGridDialog(initial: Set<String>, onDismiss: () -> Unit, onSave: (Set<String>) -> Unit) {
+    val m = remember { initial.toMutableStateList() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("كتم الأذان أسبوعياً") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("اضغط على الخانة لكتم أذان تلك الصلاة في ذلك اليوم (🔇). مثال: ظهر الجمعة.", style = MaterialTheme.typography.bodySmall)
+                Row {
+                    Spacer(Modifier.width(56.dp))
+                    WeekOrder.forEach { dw -> Text(DayShort[dw]!!, Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold) }
+                }
+                AdhanPrayers.forEach { p ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(PrayerCalc.names[p], Modifier.width(56.dp), style = MaterialTheme.typography.bodySmall)
+                        WeekOrder.forEach { dw ->
+                            val k = "$dw-$p"; val off = k in m
+                            Box(Modifier.weight(1f).padding(2.dp).height(34.dp).clip(RoundedCornerShape(8.dp))
+                                .background(if (off) Bad.copy(alpha = .18f) else Good.copy(alpha = .12f))
+                                .clickable { if (off) m.remove(k) else m.add(k) }, contentAlignment = Alignment.Center) { Text(if (off) "🔇" else "🔊", fontSize = 14.sp) }
+                        }
+                    }
+                }
+                TextButton(onClick = { m.clear() }) { Text("إلغاء كل الكتم") }
+            }
+        },
+        confirmButton = { Button(onClick = { onSave(m.toSet()) }) { Text("حفظ") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } }
+    )
 }

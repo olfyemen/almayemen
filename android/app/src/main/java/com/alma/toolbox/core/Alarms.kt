@@ -53,5 +53,8 @@ object Alarms {
         com.alma.toolbox.reminder.ReminderScheduler.scheduleAll(ctx)
         com.alma.toolbox.pomodoro.PomoEngine.restore(ctx)
         com.alma.toolbox.prayer.AdhanScheduler.schedule(ctx)
+        com.alma.toolbox.daily.Occasions.schedule(ctx)
+        com.alma.toolbox.ledger.LedgerRemind.schedule(ctx)
+        Backup.schedule(ctx)
     }
 }

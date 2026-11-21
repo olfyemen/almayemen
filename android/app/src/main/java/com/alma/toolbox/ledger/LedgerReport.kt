@@ -65,3 +65,25 @@ fun LedgerReportScreen(nav: NavHostController) {
         }
     }
 }
+
+/** Optional weekly reminder about accounts that owe money and haven't moved. */
+object LedgerRemind {
+    fun schedule(ctx: android.content.Context) {
+        if (!Stores.ledger.value.remindOverdue) { com.alma.toolbox.core.Alarms.cancel(ctx, "alma://ledgerremind/0"); return }
+        val at = LocalDate.now().plusDays(7).atTime(10, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        com.alma.toolbox.core.Alarms.set(ctx, "alma://ledgerremind/0", at)
+    }
+
+    fun fire(ctx: android.content.Context) {
+        val d = Stores.ledger.value
+        val l = d.overdue()
+        if (l.isNotEmpty() && com.alma.toolbox.core.Notify.canPost(ctx)) {
+            val n = androidx.core.app.NotificationCompat.Builder(ctx, com.alma.toolbox.core.Notify.CH_INFO).setSmallIcon(com.alma.toolbox.R.drawable.ic_notify)
+                .setContentTitle("📒 ${l.size} حساب عليه رصيد بلا حركة منذ ${d.overdueDays} يوماً")
+                .setContentText(l.take(4).joinToString("، ") { it.name })
+                .setAutoCancel(true).setContentIntent(com.alma.toolbox.core.Notify.openApp(ctx, "ledger/report", 51)).build()
+            com.alma.toolbox.core.Notify.nm(ctx).notify(5101, n)
+        }
+        schedule(ctx)
+    }
+}

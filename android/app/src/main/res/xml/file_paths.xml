@@ -2,4 +2,5 @@
 <paths>
     <cache-path name="shared" path="shared/"/>
     <external-path name="downloads" path="Download/"/>
+    <files-path name="recordings" path="recordings/"/>
 </paths>

@@ -41,7 +41,7 @@ fun AppNav(act: MainActivity) {
     val pending by act.pendingTool
     LaunchedEffect(pending) {
         val t = Tool.of(pending)
-        val route = t?.id ?: pending?.takeIf { it.startsWith("adhkar/") } // e.g. adhkar/hisn/15 from the adhan notice
+        val route = t?.id ?: pending?.takeIf { it.startsWith("adhkar/") || it == "ledger/report" } // e.g. adhkar/hisn/15 from the adhan notice
         if (route != null) {
             nav.navigate(route) { popUpTo("home"); launchSingleTop = true }
             act.pendingTool.value = null
@@ -58,6 +58,10 @@ fun AppNav(act: MainActivity) {
         composable("adhkar/sahifaList") { com.alma.toolbox.ui.ToolScaffold("فهرس الصحيفة السجادية", { nav.popBackStack() }) { p -> Box(Modifier.padding(p)) { com.alma.toolbox.adhkar.SahifaIndex(nav) } } }
         composable("adhkar/sahifa/{n}") { com.alma.toolbox.adhkar.SahifaReader(nav, it.arguments?.getString("n")?.toIntOrNull() ?: 1) }
         composable("adhkar/hisn/{id}") { com.alma.toolbox.adhkar.HisnReader(nav, it.arguments?.getString("id")?.toIntOrNull() ?: 27) }
+        composable(Tool.NOTES.id) { com.alma.toolbox.daily.NotesScreen(back) }
+        composable(Tool.OCCASIONS.id) { com.alma.toolbox.daily.OccasionsScreen(back) }
+        composable(Tool.ZAKAT.id) { com.alma.toolbox.daily.ZakatScreen(back) }
+        composable(Tool.RECORDER.id) { com.alma.toolbox.daily.RecorderScreen(back) }
         composable(Tool.POMODORO.id) { PomodoroScreen(back) }
         composable(Tool.LEDGER.id) { LedgerGate(back) { LedgerHome(nav, back) } }
         composable("ledger/group/{id}", listOf(navArgument("id") { type = NavType.LongType })) {
@@ -87,6 +91,7 @@ fun HomeScreen(nav: NavHostController) {
     var menuFor by remember { mutableStateOf<Tool?>(null) }
     var about by remember { mutableStateOf(false) }
     var arrange by remember { mutableStateOf(false) }
+    var backup by remember { mutableStateOf(false) }
     var version by remember { mutableIntStateOf(0) }
     val order = remember(version) { ToolOrder.order(ctx) }
     val hidden = remember(version) { ToolOrder.hidden(ctx) }
@@ -107,6 +112,7 @@ fun HomeScreen(nav: NavHostController) {
                     Text("أدواتك اليومية في مكان واحد", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = .6f))
                     Text("«${Credits.SLOGAN}»", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
+                TextButton(onClick = { backup = true }) { Text("نسخ") }
                 TextButton(onClick = { arrange = true }) { Text("ترتيب") }
                 TextButton(onClick = { about = true }) { Text("حول") }
             }
@@ -151,6 +157,7 @@ fun HomeScreen(nav: NavHostController) {
         }
         item(span = { GridItemSpan(maxLineSpan) }) { CreditsCard() }
     }
+    if (backup) BackupDialog { backup = false }
     if (arrange) ArrangeDialog(order, hidden, onDismiss = { arrange = false }, onReset = { ToolOrder.reset(ctx); version++; arrange = false }) { o, h ->
         ToolOrder.save(ctx, o, h); version++; arrange = false
     }
@@ -185,7 +192,7 @@ fun HomeScreen(nav: NavHostController) {
     )
 }
 
-object BuildConfigVersion { const val NAME = "1.4" }
+object BuildConfigVersion { const val NAME = "1.5" }
 
 @Composable
 fun CreditsCard() {
@@ -239,4 +246,35 @@ fun ArrangeDialog(initial: List<Tool>, initialHidden: Set<Tool>, onDismiss: () -
         confirmButton = { Button(onClick = { onSave(list.toList(), hidden.toSet()) }) { Text("حفظ") } },
         dismissButton = { TextButton(onClick = onReset) { Text("الترتيب الافتراضي") } }
     )
+}
+
+@Composable
+fun BackupDialog(onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    var auto by remember { mutableStateOf(com.alma.toolbox.core.Backup.autoEnabled(ctx)) }
+    var confirm by remember { mutableStateOf<String?>(null) }
+    val saver = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { u ->
+        if (u != null) Toast.makeText(ctx, if (runCatching { com.alma.toolbox.core.Backup.writeTo(ctx, u) }.isSuccess) "تم حفظ النسخة ✓" else "تعذر الحفظ", Toast.LENGTH_SHORT).show()
+    }
+    val opener = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { u ->
+        if (u != null) confirm = runCatching { ctx.contentResolver.openInputStream(u)!!.use { it.readBytes().decodeToString() } }.getOrNull()
+    }
+    AlertDialog(onDismissRequest = onDismiss, icon = { Text("💾", fontSize = 32.sp) }, title = { Text("النسخ الاحتياطي الشامل") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("ملف واحد فيه كل بياناتك: الحسابات، التنبيهات، الصامت، التذكيرات، بومودورو، الملاحظات، المناسبات، الأذان، غرف الدردشة والإعدادات.", style = MaterialTheme.typography.bodySmall)
+                Button(onClick = { saver.launch("حقيبة-الما-${java.time.LocalDate.now()}.json") }, modifier = Modifier.fillMaxWidth()) { Text("حفظ نسخة الآن") }
+                OutlinedButton(onClick = { opener.launch(arrayOf("application/json", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("استرجاع نسخة") }
+                com.alma.toolbox.ui.SwitchRow("نسخ تلقائي أسبوعي (اختياري)", auto, "يُحفظ في التنزيلات/حقيبة الما/نسخ احتياطية" +
+                    com.alma.toolbox.core.Backup.lastAuto(ctx).let { if (it.isNotEmpty()) " · آخر نسخة $it" else "" }) { v -> auto = v; Thread { com.alma.toolbox.core.Backup.setAuto(ctx, v) }.start() }
+                Text("⚠ الملف غير مشفّر: احفظه في مكان آمن، فهو يحتوي حساباتك.", style = MaterialTheme.typography.bodySmall, color = com.alma.toolbox.ui.Warn)
+            }
+        }, confirmButton = { TextButton(onClick = onDismiss) { Text("إغلاق") } })
+    confirm?.let { txt ->
+        com.alma.toolbox.ui.ConfirmDialog("استرجاع النسخة", "ستُستبدل كل بيانات التطبيق الحالية بمحتوى النسخة. متابعة؟", confirm = "استرجاع", onDismiss = { confirm = null }) {
+            runCatching { com.alma.toolbox.core.Backup.import(ctx, txt) }
+                .onSuccess { Toast.makeText(ctx, "تم استرجاع $it قسماً ✓", Toast.LENGTH_LONG).show() }
+                .onFailure { Toast.makeText(ctx, it.message ?: "الملف غير صالح", Toast.LENGTH_LONG).show() }
+        }
+    }
 }

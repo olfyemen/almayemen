@@ -42,7 +42,17 @@ data class AdhanData(
     val preMin: Int = 0,
     val respectSilent: Boolean = true,
     val volume: Int = 80,
+    /** optional: "dow-prayer" pairs to keep silent, e.g. "5-2" = Friday dhuhr */
+    val muted: Set<String> = emptySet(),
+    /** optional: play only the first N seconds (0 = full adhan) */
+    val maxSec: Int = 0,
+    /** optional: start quietly and rise */
+    val fadeIn: Boolean = false,
+    /** optional: iqama reminder N minutes after the adhan (0 = off) */
+    val iqamaMin: Int = 0,
 )
+
+fun AdhanData.isMuted(dow: Int, prayer: Int) = "$dow-$prayer" in muted
 
 data class AdhanChoice(val key: String, val title: String, val needsFile: Boolean)
 
@@ -65,7 +75,7 @@ object AdhanScheduler {
         for (off in 0L..2L) {
             val date = now.toLocalDate().plusDays(off)
             val t = PrayerCalc.times(date, ps)
-            for (p in AdhanPrayers.filter { it in d.enabled }.sortedBy { t[it] }) {
+            for (p in AdhanPrayers.filter { it in d.enabled && !d.isMuted(date.dayOfWeek.value, it) }.sortedBy { t[it] }) {
                 val at = date.atStartOfDay().plusSeconds((t[p] * 3600).toLong()).withSecond(0)
                 if (at.isAfter(now)) return p to at
             }
@@ -83,6 +93,15 @@ object AdhanScheduler {
         if (d.preMin > 0 && pre > System.currentTimeMillis()) Alarms.set(ctx, PRE, pre) else Alarms.cancel(ctx, PRE)
     }
 
+    fun iqama(ctx: Context) {
+        val p = ctx.getSharedPreferences("adhan", 0).getInt("iqamaPrayer", 2)
+        val n = NotificationCompat.Builder(ctx, Notify.channelFor(ctx, null, true)).setSmallIcon(R.drawable.ic_notify)
+            .setContentTitle("🕌 حان وقت إقامة صلاة ${PrayerCalc.names[p]}").setContentText("قد قامت الصلاة")
+            .setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true)
+            .setContentIntent(Notify.openApp(ctx, Tool.PRAYER.id, 23)).build()
+        if (Notify.canPost(ctx)) Notify.nm(ctx).notify(7302, n)
+    }
+
     fun fire(ctx: Context, pre: Boolean) {
         val d = Stores.adhan.value
         val n = next(d, LocalDateTime.now().minusMinutes(if (pre) 0 else 2)) // the prayer that is due now
@@ -95,6 +114,10 @@ object AdhanScheduler {
             }
         } else if (n != null) {
             runCatching { ContextCompat.startForegroundService(ctx, Intent(ctx, AdhanService::class.java).putExtra("p", n.first)) }
+            if (d.iqamaMin > 0) {
+                ctx.getSharedPreferences("adhan", 0).edit().putInt("iqamaPrayer", n.first).apply()
+                Alarms.set(ctx, "alma://iqama/0", System.currentTimeMillis() + d.iqamaMin * 60_000L)
+            }
         }
         // look a minute ahead so the prayer that is firing now isn't picked again
         if (!pre) schedule(ctx, LocalDateTime.now().plusMinutes(1))
@@ -104,6 +127,7 @@ object AdhanScheduler {
 /** Plays the adhan once; stopped from the notification or when the recording ends. */
 class AdhanService : Service() {
     private var player: MediaPlayer? = null
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun source(ctx: Context, key: String, uri: String): Pair<String?, String?> = when (key) {
@@ -144,21 +168,33 @@ class AdhanService : Service() {
                 setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
                 if (asset != null) assets.openFd(asset).use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
                 else setDataSource(this@AdhanService, Uri.parse(file))
-                val v = d.volume / 100f; setVolume(v, v)
+                val v = d.volume / 100f
+                setVolume(if (d.fadeIn) v * 0.15f else v, if (d.fadeIn) v * 0.15f else v)
                 setOnCompletionListener { finishKeepNotice() }
                 prepare(); start()
             }
         } catch (e: Exception) { finishKeepNotice(); null }
+        if (player == null) return START_NOT_STICKY
+        val v = d.volume / 100f
+        if (d.fadeIn) for (i in 1..16) handler.postDelayed({ player?.runCatching { val x = v * (0.15f + 0.85f * i / 16f); setVolume(x, x) } }, i * 500L)
+        if (d.maxSec > 0) {
+            // fade out over the last 2 seconds, then stop
+            for (i in 1..8) handler.postDelayed({ player?.runCatching { val x = v * (1f - i / 8f); setVolume(x, x) } }, d.maxSec * 1000L - 2000 + i * 250L)
+            handler.postDelayed({ finishKeepNotice() }, d.maxSec * 1000L + 100)
+        }
         return START_NOT_STICKY
     }
 
+
     private fun finishKeepNotice() {
+        handler.removeCallbacksAndMessages(null)
         player?.runCatching { release() }; player = null
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
         stopSelf()
     }
 
     private fun stopAll() {
+        handler.removeCallbacksAndMessages(null)
         player?.runCatching { stop(); release() }; player = null
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()

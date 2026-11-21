@@ -21,6 +21,10 @@ class AlarmReceiver : BroadcastReceiver() {
             "snooze" -> ReminderScheduler.fire(ctx, id, pre = false, snooze = true)
             "pomodoro" -> PomoEngine.phaseEnded(ctx)
             "adhan" -> com.alma.toolbox.prayer.AdhanScheduler.fire(ctx, pre = false)
+            "occasions" -> com.alma.toolbox.daily.Occasions.check(ctx)
+            "backup" -> Thread { com.alma.toolbox.core.Backup.runAuto(ctx) }.start()
+            "ledgerremind" -> com.alma.toolbox.ledger.LedgerRemind.fire(ctx)
+            "iqama" -> com.alma.toolbox.prayer.AdhanScheduler.iqama(ctx)
             "adhanpre" -> com.alma.toolbox.prayer.AdhanScheduler.fire(ctx, pre = true)
             // notification actions
             "action" -> {
