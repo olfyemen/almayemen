@@ -1,6 +1,7 @@
+sanaa.mp3 — أذان الجامع الكبير بصنعاء، تسجيل زوّد به مصمم التطبيق (silence trimmed, loudness-normalised, mono MP3)
 madinah.mp3 — "Islamic call to prayer from the prophet mosque" by ejaz215
   https://freesound.org/people/ejaz215/sounds/33937/ — CC BY 3.0
   via Wikimedia Commons: File:33937 ejaz215 call-to-prayer-from-the-prophet-s-mo.ogg
-  (converted to mono MP3)
+  (loudness-normalised mono MP3)
 general.mp3 — "Beautiful adhan" by Adam-synagda — CC0 (public domain)
-  via Wikimedia Commons: File:Beautiful adhan.ogg (converted to mono MP3)
+  via Wikimedia Commons: File:Beautiful adhan.ogg (loudness-normalised mono MP3)

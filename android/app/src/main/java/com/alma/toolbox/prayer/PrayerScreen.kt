@@ -128,7 +128,7 @@ fun PrayerScreen(onBack: () -> Unit) {
                         if (c.needsFile) { pickFor = true to c.key; picker.launch(arrayOf("audio/*")) } else save { it.copy(fajrSound = c.key) }
                     }
                     TextButton(onClick = { AdhanService.previewStop() }) { Text("⏹ إيقاف الاستماع") }
-                    Text("أذان الجامع الكبير بصنعاء: ضع ملف التسجيل (MP3) على هاتفك ثم اختره هنا، ويمكن اختيار ملف مختلف للفجر.", style = MaterialTheme.typography.bodySmall)
+                    Text("الأذانات الثلاثة مدمجة وتعمل بدون إنترنت، ويمكنك اختيار أي ملف أذان آخر من هاتفك، ولكل من الفجر وبقية الصلوات اختيار مستقل.", style = MaterialTheme.typography.bodySmall)
                 }
             }
             item {
@@ -157,7 +157,7 @@ fun PrayerScreen(onBack: () -> Unit) {
                 }
             }
             item {
-                Text("الأذان المدمج: المسجد النبوي (ejaz215، CC BY 3.0) وأذان عام (CC0)، من ويكيميديا كومنز.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                Text("الأذان المدمج: الجامع الكبير بصنعاء (تسجيل من المصمم)، والمسجد النبوي (ejaz215، CC BY 3.0) وأذان عام (CC0) من ويكيميديا كومنز.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             }
         }
     }

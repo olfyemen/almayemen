@@ -58,6 +58,7 @@ fun AppNav(act: MainActivity) {
         composable("adhkar/sahifaList") { com.alma.toolbox.ui.ToolScaffold("فهرس الصحيفة السجادية", { nav.popBackStack() }) { p -> Box(Modifier.padding(p)) { com.alma.toolbox.adhkar.SahifaIndex(nav) } } }
         composable("adhkar/sahifa/{n}") { com.alma.toolbox.adhkar.SahifaReader(nav, it.arguments?.getString("n")?.toIntOrNull() ?: 1) }
         composable("adhkar/hisn/{id}") { com.alma.toolbox.adhkar.HisnReader(nav, it.arguments?.getString("id")?.toIntOrNull() ?: 27) }
+        composable(Tool.ROZNAMA.id) { com.alma.toolbox.roznama.RoznamaScreen(back) }
         composable(Tool.NOTES.id) { com.alma.toolbox.daily.NotesScreen(back) }
         composable(Tool.OCCASIONS.id) { com.alma.toolbox.daily.OccasionsScreen(back) }
         composable(Tool.ZAKAT.id) { com.alma.toolbox.daily.ZakatScreen(back) }
@@ -185,14 +186,14 @@ fun HomeScreen(nav: NavHostController) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("الإصدار ${BuildConfigVersion.NAME} · من برامج «الما»", textAlign = TextAlign.Center)
                 CreditsCard()
-                Text("يعمل بدون إنترنت (عدا قياس السرعة).\nرسوم الإيموجي في الشعار من Twemoji (CC-BY 4.0).\nأذان المسجد النبوي: ejaz215 (CC BY 3.0)، والأذان العام (CC0)، من ويكيميديا كومنز.\nحصن المسلم: الشيخ سعيد القحطاني، النص من hisnmuslim.com.\nنص الصحيفة السجادية: ويكي مصدر (CC BY-SA).", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                Text("يعمل بدون إنترنت (عدا قياس السرعة).\nرسوم الإيموجي في الشعار من Twemoji (CC-BY 4.0).\nأذان الجامع الكبير بصنعاء: تسجيل من المصمم. أذان المسجد النبوي: ejaz215 (CC BY 3.0)، والأذان العام (CC0)، من ويكيميديا كومنز.\nحصن المسلم: الشيخ سعيد القحطاني، النص من hisnmuslim.com.\nنص الصحيفة السجادية: ويكي مصدر (CC BY-SA).", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
         },
         confirmButton = { TextButton(onClick = { about = false }) { Text("حسناً") } }
     )
 }
 
-object BuildConfigVersion { const val NAME = "1.5" }
+object BuildConfigVersion { const val NAME = "1.6" }
 
 @Composable
 fun CreditsCard() {

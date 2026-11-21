@@ -59,7 +59,7 @@ data class AdhanChoice(val key: String, val title: String, val needsFile: Boolea
 val AdhanChoices = listOf(
     AdhanChoice("madinah", "🕌 المسجد النبوي – المدينة المنورة", false),
     AdhanChoice("general", "📢 أذان عام", false),
-    AdhanChoice("sanaa", "🕌 الجامع الكبير – صنعاء (اختر ملفه)", true),
+    AdhanChoice("sanaa", "🕌 الجامع الكبير – صنعاء", false),
     AdhanChoice("custom", "📁 ملف آخر من الهاتف", true),
     AdhanChoice("beep", "🔔 تنبيه قصير فقط", false),
 )
@@ -133,7 +133,8 @@ class AdhanService : Service() {
     private fun source(ctx: Context, key: String, uri: String): Pair<String?, String?> = when (key) {
         "madinah" -> "adhan/madinah.mp3" to null
         "general" -> "adhan/general.mp3" to null
-        "sanaa", "custom" -> if (uri.isNotEmpty()) null to uri else "adhan/madinah.mp3" to null
+        "sanaa" -> "adhan/sanaa.mp3" to null
+        "custom" -> if (uri.isNotEmpty()) null to uri else "adhan/madinah.mp3" to null
         else -> null to null
     }
 
@@ -208,7 +209,7 @@ class AdhanService : Service() {
         fun previewStop() { preview?.runCatching { stop(); release() }; preview = null }
         fun preview(ctx: Context, key: String, uri: String) {
             previewStop()
-            val src = when (key) { "madinah" -> "adhan/madinah.mp3"; "general" -> "adhan/general.mp3"; else -> null }
+            val src = when (key) { "madinah" -> "adhan/madinah.mp3"; "general" -> "adhan/general.mp3"; "sanaa" -> "adhan/sanaa.mp3"; else -> null }
             preview = runCatching {
                 MediaPlayer().apply {
                     setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build())

@@ -22,7 +22,7 @@ data class BackupFile(
 
 /** One file with everything the app keeps: accounts, alerts, rooms, settings… */
 object Backup {
-    private val prefFiles = listOf("home", "hijri", "adhkar", "zakat")
+    private val prefFiles = listOf("home", "hijri", "adhkar", "zakat", "roznama")
 
     private fun stores(): Map<String, JsonStore<*>> = mapOf(
         "periodic" to Stores.periodic, "silent" to Stores.silent, "reminders" to Stores.reminders,
@@ -49,6 +49,7 @@ object Backup {
             m.forEach { (k, v) -> v.toIntOrNull()?.let { e.putInt(k, it) } ?: v.toBooleanStrictOrNull()?.let { e.putBoolean(k, it) } ?: e.putString(k, v) }
             e.apply()
         }
+        if (b.prefs.containsKey("roznama")) ctx.getSharedPreferences("roznama", 0).edit().putBoolean("restore", true).apply()
         Alarms.rescheduleAll(ctx)
         return n
     }
