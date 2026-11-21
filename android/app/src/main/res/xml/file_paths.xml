@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="shared" path="shared/"/>
+    <cache-path name="update" path="update/"/>
     <external-path name="downloads" path="Download/"/>
     <files-path name="recordings" path="recordings/"/>
 </paths>

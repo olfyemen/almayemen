@@ -58,6 +58,14 @@ fun AppNav(act: MainActivity) {
         composable("adhkar/sahifaList") { com.alma.toolbox.ui.ToolScaffold("فهرس الصحيفة السجادية", { nav.popBackStack() }) { p -> Box(Modifier.padding(p)) { com.alma.toolbox.adhkar.SahifaIndex(nav) } } }
         composable("adhkar/sahifa/{n}") { com.alma.toolbox.adhkar.SahifaReader(nav, it.arguments?.getString("n")?.toIntOrNull() ?: 1) }
         composable("adhkar/hisn/{id}") { com.alma.toolbox.adhkar.HisnReader(nav, it.arguments?.getString("id")?.toIntOrNull() ?: 27) }
+        composable(Tool.MEMORIES.id) { com.alma.toolbox.memories.MemoriesScreen(nav, back) }
+        composable("memories/view/{id}", listOf(navArgument("id") { type = NavType.LongType })) { com.alma.toolbox.memories.MemoryViewScreen(nav, it.arguments!!.getLong("id")) }
+        composable("memories/edit/{id}?prompt={prompt}&date={date}", listOf(
+            navArgument("id") { type = NavType.LongType },
+            navArgument("prompt") { type = NavType.StringType; nullable = true; defaultValue = null },
+            navArgument("date") { type = NavType.StringType; nullable = true; defaultValue = null },
+        )) { com.alma.toolbox.memories.MemoryEditScreen(nav, it.arguments!!.getLong("id"), it.arguments?.getString("prompt") == "1", it.arguments?.getString("date")) }
+        composable("about") { com.alma.toolbox.about.AboutScreen(back) }
         composable(Tool.ROZNAMA.id) { com.alma.toolbox.roznama.RoznamaScreen(back) }
         composable(Tool.NOTES.id) { com.alma.toolbox.daily.NotesScreen(back) }
         composable(Tool.OCCASIONS.id) { com.alma.toolbox.daily.OccasionsScreen(back) }
@@ -115,7 +123,7 @@ fun HomeScreen(nav: NavHostController) {
                 }
                 TextButton(onClick = { backup = true }) { Text("نسخ") }
                 TextButton(onClick = { arrange = true }) { Text("ترتيب") }
-                TextButton(onClick = { about = true }) { Text("حول") }
+                TextButton(onClick = { nav.navigate("about") }) { Text("حول") }
             }
         }
         val visible = order.filter { it !in hidden }
@@ -193,7 +201,7 @@ fun HomeScreen(nav: NavHostController) {
     )
 }
 
-object BuildConfigVersion { const val NAME = "1.6" }
+object BuildConfigVersion { const val NAME = "1.7" }
 
 @Composable
 fun CreditsCard() {

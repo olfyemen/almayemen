@@ -50,6 +50,7 @@ object Stores {
     lateinit var reminders: JsonStore<ReminderData>
     lateinit var pomodoro: JsonStore<PomoData>
     lateinit var ledger: JsonStore<LedgerData>
+    lateinit var memories: JsonStore<com.alma.toolbox.memories.MemoriesData>
     lateinit var notes: JsonStore<com.alma.toolbox.daily.NotesData>
     lateinit var occasions: JsonStore<com.alma.toolbox.daily.OccasionsData>
     lateinit var adhan: JsonStore<com.alma.toolbox.prayer.AdhanData>
@@ -65,6 +66,7 @@ object Stores {
         reminders = JsonStore(File(d, "reminders.json"), ReminderData.serializer()) { ReminderData() }
         pomodoro = JsonStore(File(d, "pomodoro.json"), PomoData.serializer()) { PomoData() }
         ledger = JsonStore(File(d, "ledger.json"), LedgerData.serializer()) { LedgerData() }
+        memories = JsonStore(File(d, "memories.json"), com.alma.toolbox.memories.MemoriesData.serializer()) { com.alma.toolbox.memories.MemoriesData() }
         notes = JsonStore(File(d, "notes.json"), com.alma.toolbox.daily.NotesData.serializer()) { com.alma.toolbox.daily.NotesData() }
         occasions = JsonStore(File(d, "occasions.json"), com.alma.toolbox.daily.OccasionsData.serializer()) { com.alma.toolbox.daily.OccasionsData() }
         adhan = JsonStore(File(d, "adhan.json"), com.alma.toolbox.prayer.AdhanData.serializer()) { com.alma.toolbox.prayer.AdhanData() }

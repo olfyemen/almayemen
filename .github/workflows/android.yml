@@ -5,6 +5,9 @@ on:
     paths: ["android/**", ".github/workflows/android.yml"]
   workflow_dispatch:
 
+permissions:
+  contents: write   # needed to publish the release on main
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,7 +25,28 @@ jobs:
         run: ./gradlew :app:testDebugUnitTest --no-daemon
       - name: Build release APK
         run: ./gradlew :app:assembleRelease --no-daemon
+      - name: Read version
+        id: ver
+        run: |
+          echo "name=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)" >> "$GITHUB_OUTPUT"
+          echo "code=$(grep -oP 'versionCode = \K[0-9]+' app/build.gradle.kts)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: hqibat-alma-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+
+      # Only merges into main become updates for the app (Settings ← حول ← البحث عن تحديث).
+      - name: Publish release (main only, once per version)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ steps.ver.outputs.name }}
+          CODE: ${{ steps.ver.outputs.code }}
+        run: |
+          if gh release view "v$NAME" >/dev/null 2>&1; then
+            echo "Release v$NAME already exists; bump versionCode/versionName to publish an update."
+            exit 0
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "alma-$CODE.apk"
+          NOTES=$(awk -v v="$NAME" '$0 ~ "^## " v"$" {f=1; next} /^## / {f=0} f' CHANGELOG.md 2>/dev/null)
+          gh release create "v$NAME" "alma-$CODE.apk" --title "حقيبة الما $NAME" --notes "${NOTES:-الإصدار $NAME}"

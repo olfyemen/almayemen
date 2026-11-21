@@ -42,7 +42,7 @@ class MainActivity : FragmentActivity() {
     override fun onStart() {
         super.onStart()
         // re-lock the ledger after a minute away (short trips to WhatsApp / contacts keep it open)
-        if (leftAt > 0 && System.currentTimeMillis() - leftAt > 60_000) com.alma.toolbox.ledger.LedgerLock.lock()
+        if (leftAt > 0 && System.currentTimeMillis() - leftAt > 60_000) { com.alma.toolbox.ledger.LedgerLock.lock(); com.alma.toolbox.memories.MemLock.lock() }
         leftAt = 0
     }
 

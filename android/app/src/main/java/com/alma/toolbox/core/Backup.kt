@@ -27,7 +27,7 @@ object Backup {
     private fun stores(): Map<String, JsonStore<*>> = mapOf(
         "periodic" to Stores.periodic, "silent" to Stores.silent, "reminders" to Stores.reminders,
         "pomodoro" to Stores.pomodoro, "ledger" to Stores.ledger, "transfer" to Stores.transfer,
-        "adhan" to Stores.adhan, "notes" to Stores.notes, "occasions" to Stores.occasions,
+        "adhan" to Stores.adhan, "notes" to Stores.notes, "memories" to Stores.memories, "occasions" to Stores.occasions,
     )
 
     fun export(ctx: Context): String {
