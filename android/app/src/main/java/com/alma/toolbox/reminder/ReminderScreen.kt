@@ -166,7 +166,12 @@ fun ReminderEditor(initial: Reminder, onDismiss: () -> Unit, onSave: (Reminder) 
                     if (r.endType == "until") ValueRow("حتى تاريخ", ldt(r.until).format(dtFmt)) {
                         pickDate(ctx, ldt(r.until).toLocalDate()) { d -> r = r.copy(until = ms(d.atTime(23, 59))) }
                     }
-                    if (r.endType == "count") Stepper("عدد المرات", r.count, 1..999, 1) { r = r.copy(count = it) }
+                    if (r.endType == "count") {
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(3, 5, 7, 10, 30).forEach { n -> FilterChip(r.count == n, { r = r.copy(count = n) }, label = { Text("$n مرات") }) }
+                        }
+                        Stepper("عدد مخصص", r.count, 1..999, 1) { r = r.copy(count = it) }
+                    }
                 }
 
                 Text("التنبيه", fontWeight = FontWeight.Bold)
@@ -175,6 +180,13 @@ fun ReminderEditor(initial: Reminder, onDismiss: () -> Unit, onSave: (Reminder) 
                 SwitchRow("اهتزاز", r.vibrate) { r = r.copy(vibrate = it) }
                 Stepper("تذكير مسبق قبل", r.preMin, 0..1440, 5, "د", listOf(0, 5, 10, 15, 30, 60)) { r = r.copy(preMin = it) }
                 Stepper("مدة الغفوة", r.snoozeMin, 1..120, 5, "د", listOf(5, 10, 15, 30)) { r = r.copy(snoozeMin = it) }
+                if (!r.alarm) {
+                    Text("إعادة التنبيه حتى أضغط «تم»", fontWeight = FontWeight.Bold)
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(0 to "لا", 2 to "مرتان", 3 to "3 مرات", 5 to "5 مرات").forEach { (n, l) -> FilterChip(r.nagTimes == n, { r = r.copy(nagTimes = n) }, label = { Text(l) }) }
+                    }
+                    if (r.nagTimes > 0) Stepper("كل", r.nagEvery, 1..60, 1, "د", listOf(2, 5, 10)) { r = r.copy(nagEvery = it) }
+                }
             }
         },
         confirmButton = {

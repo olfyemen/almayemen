@@ -104,6 +104,10 @@ object Http {
 class RoomClient(private val ctx: Context, val base: String, val roomId: String, val roomName: String, val mine: Boolean) {
     val messages = MutableStateFlow<List<Msg>>(Stores.transfer.value.rooms.firstOrNull { it.id == roomId }?.messages ?: emptyList())
     val members = MutableStateFlow<List<String>>(emptyList())
+    val people = MutableStateFlow<List<Person>>(emptyList())
+    val allowFiles = MutableStateFlow(true)
+    val locked = MutableStateFlow(false)
+    val isAdmin = MutableStateFlow(false)
     val status = MutableStateFlow("connecting") // connecting | ok | error | closed
     val error = MutableStateFlow("")
     private var token = ""
@@ -125,6 +129,7 @@ class RoomClient(private val ctx: Context, val base: String, val roomId: String,
             try {
                 val ev = Http.get("$base/api/room/$roomId/events?since=$since&t=$token", Events.serializer(), 40_000)
                 since = ev.next; members.value = ev.members; status.value = "ok"
+                people.value = ev.people; allowFiles.value = ev.allowFiles; locked.value = ev.locked; isAdmin.value = ev.admin
                 val known = messages.value.map { it.id }.toHashSet()
                 val fresh = ev.events.filter { it.id !in known }
                 if (fresh.isNotEmpty()) {
@@ -158,6 +163,11 @@ class RoomClient(private val ctx: Context, val base: String, val roomId: String,
             items.forEach { it2 -> Http.upload(ctx, "$base/api/room/$roomId/upload?t=$token&group=$group&path=${Http.enc(it2.path)}", it2, prog) }
         }
     }
+
+    fun admin(action: String, target: String = "", value: Boolean = false) = Thread {
+        runCatching { Http.post("$base/api/room/$roomId/admin?t=$token", AppJson.encodeToString(AdminReq.serializer(), AdminReq(action, target, value)), serializer<Map<String, String>>()) }
+            .onFailure { error.value = it.message ?: "تعذر التنفيذ" }
+    }.start()
 
     fun fileUrl(m: Msg) = "$base/api/room/$roomId/file/${m.fid}?t=$token"
 
@@ -249,7 +259,7 @@ object TransferHub {
         var waited = 0
         while (server == null && waited < 5000) { Thread.sleep(100); waited += 100 }
         val s = server ?: error("تعذر تشغيل خادم النقل")
-        s.openRoom(id, name, pass)
+        s.openRoom(id, name, pass, Stores.transfer.value.myId)
         Stores.transfer.update { d ->
             val old = d.rooms.firstOrNull { it.id == id }
             d.copy(rooms = listOf((old ?: SavedRoom(id, name, true)).copy(name = name, mine = true, password = pass, updated = System.currentTimeMillis())) + d.rooms.filter { it.id != id })

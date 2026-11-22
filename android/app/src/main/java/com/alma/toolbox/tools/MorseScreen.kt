@@ -7,6 +7,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -100,8 +101,15 @@ fun MorseScreen(onBack: () -> Unit) {
     }
     val playing = job?.isActive == true
 
-    ToolScaffold("شفرة مورس 📡", onBack) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    var tab by remember { mutableIntStateOf(0) }
+    ToolScaffold("الشفرات 📡", onBack) { pad ->
+      Column(Modifier.padding(pad).fillMaxSize()) {
+        TabRow(tab, containerColor = MaterialTheme.colorScheme.background) {
+            listOf("مورس", "شفرات أخرى", "🎮 لعبة").forEachIndexed { i, t -> Tab(tab == i, { tab = i; if (i != 0) { job?.cancel(); lit = false; setTorch(false) } }, text = { Text(t) }) }
+        }
+        if (tab == 1) { CiphersTab(); return@Column }
+        if (tab == 2) { MorseGame(wpm); return@Column }
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionCard(title = "من نص إلى مورس") {
                 OutlinedTextField(text, { text = it; code = Morse.encode(it) }, label = { Text("اكتب نصاً (عربي أو إنجليزي)") }, modifier = Modifier.fillMaxWidth())
             }
@@ -150,5 +158,116 @@ fun MorseScreen(onBack: () -> Unit) {
                 }
             }
         }
+      }
+    }
+}
+
+object Ciphers {
+    private const val AR = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي"
+    private const val EN = "abcdefghijklmnopqrstuvwxyz"
+
+    private fun shiftIn(c: Char, alpha: String, k: Int): Char? {
+        val lower = c.lowercaseChar(); val i = alpha.indexOf(lower); if (i < 0) return null
+        val r = alpha[((i + k) % alpha.length + alpha.length) % alpha.length]
+        return if (c.isUpperCase()) r.uppercaseChar() else r
+    }
+
+    fun caesar(t: String, k: Int) = t.map { c -> shiftIn(c, AR, k) ?: shiftIn(c, EN, k) ?: c }.joinToString("")
+
+    fun atbash(t: String) = t.map { c ->
+        val lower = c.lowercaseChar()
+        when {
+            AR.indexOf(lower) >= 0 -> AR[AR.length - 1 - AR.indexOf(lower)]
+            EN.indexOf(lower) >= 0 -> EN[EN.length - 1 - EN.indexOf(lower)].let { if (c.isUpperCase()) it.uppercaseChar() else it }
+            else -> c
+        }
+    }.joinToString("")
+
+    fun toBinary(t: String) = t.toByteArray(Charsets.UTF_8).joinToString(" ") { String.format("%8s", Integer.toBinaryString(it.toInt() and 0xff)).replace(' ', '0') }
+    fun fromBinary(b: String): String? = runCatching {
+        b.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.map { it.toInt(2).toByte() }.toByteArray().toString(Charsets.UTF_8)
+    }.getOrNull()
+}
+
+@Composable
+private fun CiphersTab() {
+    val ctx = LocalContext.current
+    var kind by remember { mutableIntStateOf(0) }
+    var text by remember { mutableStateOf("") }
+    var shift by remember { mutableIntStateOf(3) }
+    var decode by remember { mutableStateOf(false) }
+    val out = when (kind) {
+        0 -> Ciphers.caesar(text, if (decode) -shift else shift)
+        1 -> Ciphers.atbash(text)
+        2 -> if (decode) Ciphers.fromBinary(text) ?: "⚠ صيغة ثنائية غير صحيحة" else Ciphers.toBinary(text)
+        else -> text.reversed()
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("🏛️ قيصر", "🔁 أتباش", "💻 ثنائي", "↩️ معكوس").forEachIndexed { i, l -> FilterChip(kind == i, { kind = i }, label = { Text(l) }) }
+        }
+        Text(when (kind) {
+            0 -> "شفرة يوليوس قيصر: يُزاح كل حرف عدداً من المواقع في الأبجدية. تعمل بالعربي والإنجليزي."
+            1 -> "أتباش: أول حرف يصبح آخر حرف (أ↔ي، a↔z). التشفير وفكه بنفس الطريقة."
+            2 -> "كل حرف يتحول إلى أصفار وآحاد كما يخزنه الحاسوب."
+            else -> "يكتب النص من آخره إلى أوله."
+        }, style = MaterialTheme.typography.bodySmall)
+        if (kind == 0 || kind == 2) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(!decode, { decode = false }, label = { Text("تشفير") }); FilterChip(decode, { decode = true }, label = { Text("فك") })
+        }
+        if (kind == 0) Stepper("مقدار الإزاحة", shift, 1..27, 1) { shift = it }
+        OutlinedTextField(text, { text = it }, label = { Text(if (decode) "النص المشفّر" else "النص") }, modifier = Modifier.fillMaxWidth())
+        SectionCard(title = "النتيجة") {
+            androidx.compose.foundation.text.selection.SelectionContainer { Text(out, fontSize = 18.sp, fontFamily = if (kind == 2) FontFamily.Monospace else FontFamily.Default) }
+            TextButton(onClick = {
+                ctx.getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("cipher", out))
+                android.widget.Toast.makeText(ctx, "تم النسخ", android.widget.Toast.LENGTH_SHORT).show()
+            }, enabled = text.isNotEmpty()) { Text("نسخ") }
+        }
+    }
+}
+
+/** Learn Morse: hear a letter, pick the answer. */
+@Composable
+private fun MorseGame(wpm: Int) {
+    val scope = rememberCoroutineScope()
+    var arabic by remember { mutableStateOf(true) }
+    val pool = if (arabic) Morse.arabic.entries.toList() else Morse.latin.entries.filter { it.key.isLetter() }
+    var current by remember(arabic) { mutableStateOf(pool.random()) }
+    var options by remember(current) { mutableStateOf((pool.filter { it != current }.shuffled().take(3) + current).shuffled()) }
+    var score by remember { mutableIntStateOf(0) }
+    var tries by remember { mutableIntStateOf(0) }
+    var streak by remember { mutableIntStateOf(0) }
+    var feedback by remember { mutableStateOf("") }
+    var showCode by remember { mutableStateOf(true) }
+    fun play(code: String) = scope.launch(Dispatchers.IO) {
+        val unit = 1200L / wpm
+        code.forEach { ch -> if (ch == '.' || ch == '-') { playTone(700.0, (if (ch == '.') unit else unit * 3).toInt()); Thread.sleep(unit) } }
+    }
+    LaunchedEffect(current) { play(current.value) }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(arabic, { arabic = true }, label = { Text("حروف عربية") }); FilterChip(!arabic, { arabic = false }, label = { Text("English") })
+        }
+        Text("النقاط: $score من $tries" + if (streak >= 3) "  🔥 $streak متتالية" else "", fontWeight = FontWeight.Bold)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("ما هذا الحرف؟", style = MaterialTheme.typography.bodySmall)
+                Text(if (showCode) current.value.replace(".", "•").replace("-", "—") else "؟ ؟ ؟", fontSize = 40.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Row { TextButton(onClick = { play(current.value) }) { Text("🔊 أعد الصوت") }; TextButton(onClick = { showCode = !showCode }) { Text(if (showCode) "🙈 بالسمع فقط" else "👁️ أظهر الرموز") } }
+            }
+        }
+        options.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { o ->
+                    Button(onClick = {
+                        tries++
+                        if (o == current) { score++; streak++; feedback = "✓ صحيح!" } else { streak = 0; feedback = "✗ الصحيح «${current.key}»" }
+                        current = pool.filter { it != current }.random()
+                    }, modifier = Modifier.weight(1f).height(64.dp)) { Text(o.key.toString(), fontSize = 28.sp) }
+                }
+            }
+        }
+        if (feedback.isNotEmpty()) Text(feedback, fontSize = 18.sp, color = if (feedback.startsWith("✓")) Good else Bad, fontWeight = FontWeight.Bold)
     }
 }

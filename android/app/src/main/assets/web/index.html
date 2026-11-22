@@ -150,6 +150,8 @@ async function poll() {
       const atBottom = main.scrollHeight - main.scrollTop - main.clientHeight < 80;
       ev.events.forEach(render); since = ev.next;
       $('#sub').textContent = '👥 ' + ev.members.length + ' متصل: ' + ev.members.join('، ');
+      $('#attachBtn').disabled = ev.allowFiles === false;
+      $('#attachBtn').title = ev.allowFiles === false ? 'أوقف صاحب الغرفة إرسال الملفات' : 'إرفاق';
       if (ev.events.length && atBottom) main.scrollTop = main.scrollHeight;
       if (ev.closed) { banner('أُغلقت الغرفة من صاحبها'); token = ''; break; }
     } catch (e) {

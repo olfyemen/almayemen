@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -43,6 +44,7 @@ fun AppNav(act: MainActivity) {
         val t = Tool.of(pending)
         val route = t?.id ?: pending?.takeIf { it.startsWith("adhkar/") || it == "ledger/report" } // e.g. adhkar/hisn/15 from the adhan notice
         if (route != null) {
+            t?.let { ToolOrder.used(act, it) }
             nav.navigate(route) { popUpTo("home"); launchSingleTop = true }
             act.pendingTool.value = null
         }
@@ -65,7 +67,7 @@ fun AppNav(act: MainActivity) {
             navArgument("prompt") { type = NavType.StringType; nullable = true; defaultValue = null },
             navArgument("date") { type = NavType.StringType; nullable = true; defaultValue = null },
         )) { com.alma.toolbox.memories.MemoryEditScreen(nav, it.arguments!!.getLong("id"), it.arguments?.getString("prompt") == "1", it.arguments?.getString("date")) }
-        composable("about") { com.alma.toolbox.about.AboutScreen(back) }
+        composable("about") { com.alma.toolbox.about.AboutScreen(back) { nav.navigate(Tool.ROZNAMA.id) } }
         composable(Tool.ROZNAMA.id) { com.alma.toolbox.roznama.RoznamaScreen(back) }
         composable(Tool.NOTES.id) { com.alma.toolbox.daily.NotesScreen(back) }
         composable(Tool.OCCASIONS.id) { com.alma.toolbox.daily.OccasionsScreen(back) }
@@ -98,84 +100,111 @@ fun AppNav(act: MainActivity) {
 fun HomeScreen(nav: NavHostController) {
     val ctx = LocalContext.current
     var menuFor by remember { mutableStateOf<Tool?>(null) }
-    var about by remember { mutableStateOf(false) }
     var arrange by remember { mutableStateOf(false) }
     var backup by remember { mutableStateOf(false) }
     var version by remember { mutableIntStateOf(0) }
     val order = remember(version) { ToolOrder.order(ctx) }
+    val groups = remember(version) { ToolOrder.groups(ctx) }
     val hidden = remember(version) { ToolOrder.hidden(ctx) }
-    val custom = remember(version) { ToolOrder.isCustom(ctx) }
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(150.dp),
-        modifier = Modifier.fillMaxSize().statusBarsPadding(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 4.dp)) {
-                Text("🧰", fontSize = 40.sp)
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("حقيبة الما", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("أدواتك اليومية في مكان واحد", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = .6f))
-                    Text("«${Credits.SLOGAN}»", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+    val top = remember(version) { ToolOrder.top(ctx) }
+    val topTools = remember(version) {
+        when (top) { ToolOrder.Top.AUTO -> ToolOrder.mostUsed(ctx); ToolOrder.Top.FAV -> ToolOrder.favorites(ctx); else -> emptyList() }.filter { it !in hidden }
+    }
+    fun open(t: Tool) { ToolOrder.used(ctx, t); nav.navigate(t.id) }
+
+    @Composable
+    fun ToolCard(t: Tool) {
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(1.dp),
+            modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(20.dp))
+                .combinedClickable(onClick = { open(t) }, onLongClick = { menuFor = t })
+        ) {
+            Column(Modifier.padding(12.dp).fillMaxSize()) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Box(Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(Color(t.color)), contentAlignment = Alignment.Center) { Text(t.emoji, fontSize = 25.sp) }
+                    Spacer(Modifier.weight(1f))
+                    Text("📌", fontSize = 16.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).combinedClickable(onClick = { menuFor = t }).padding(4.dp))
                 }
-                TextButton(onClick = { backup = true }) { Text("نسخ") }
-                TextButton(onClick = { arrange = true }) { Text("ترتيب") }
-                TextButton(onClick = { nav.navigate("about") }) { Text("حول") }
+                Spacer(Modifier.height(6.dp))
+                Text(t.title, fontWeight = FontWeight.Bold)
+                Text(t.desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f), maxLines = 2)
             }
         }
-        val visible = order.filter { it !in hidden }
-        // default order keeps the category headings; a custom order is shown as one list
-        val sections = if (custom) listOf("أدواتي" to visible) else visible.groupBy { it.group }.toList()
-        sections.forEach { (group, tools) ->
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Text(group, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
-            }
-            items(tools, key = { it.id }) { t ->
-                Box {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(1.dp),
-                        modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(20.dp))
-                            .combinedClickable(onClick = { nav.navigate(t.id) }, onLongClick = { menuFor = t })
-                    ) {
-                        Column(Modifier.padding(12.dp).fillMaxSize()) {
-                            Row(verticalAlignment = Alignment.Top) {
-                                Box(
-                                    Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(Color(t.color)),
-                                    contentAlignment = Alignment.Center
-                                ) { Text(t.emoji, fontSize = 26.sp) }
-                                Spacer(Modifier.weight(1f))
-                                Text("📌", fontSize = 18.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                    .combinedClickable(onClick = { menuFor = t }).padding(4.dp))
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            Text(t.title, fontWeight = FontWeight.Bold)
-                            Text(t.desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f), maxLines = 2)
+    }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            Surface(tonalElevation = 2.dp, shadowElevation = 6.dp) {
+                Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    listOf(Triple("💾", "نسخ احتياطي") { backup = true }, Triple("🗂️", "ترتيب") { arrange = true }, Triple("ℹ️", "حول") { nav.navigate("about") }).forEach { (e, l, a) ->
+                        Column(Modifier.clip(RoundedCornerShape(14.dp)).clickable(onClick = a).padding(horizontal = 18.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(e, fontSize = 20.sp); Text(l, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
             }
         }
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Text("اضغط مطولاً على أي أداة أو على 📌 لإضافتها اختصاراً إلى الشاشة الرئيسية", style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(8.dp), color = MaterialTheme.colorScheme.onBackground.copy(alpha = .5f))
+    ) { pad ->
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(150.dp),
+            modifier = Modifier.fillMaxSize().padding(pad).statusBarsPadding(),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 4.dp)) {
+                    Text("🧰", fontSize = 40.sp)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("حقيبة الما", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("«${Credits.SLOGAN}»", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+            if (topTools.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Text(if (top == ToolOrder.Top.FAV) "⭐ مفضلتي" else "🔥 الأكثر استخداماً", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                }
+                items(topTools, key = { "top-" + it.id }) { t -> ToolCard(t) }
+            }
+            groups.forEach { group ->
+                val tools = order.filter { it.group == group && it !in hidden && it !in topTools }
+                if (tools.isNotEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Text(group, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
+                    }
+                    items(tools, key = { it.id }) { t -> ToolCard(t) }
+                }
+            }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text("اضغط مطولاً على أي أداة أو على 📌 لإضافتها اختصاراً إلى الشاشة الرئيسية", style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(8.dp), color = MaterialTheme.colorScheme.onBackground.copy(alpha = .5f))
+            }
+            item(span = { GridItemSpan(maxLineSpan) }) { CreditsCard() }
         }
-        item(span = { GridItemSpan(maxLineSpan) }) { CreditsCard() }
     }
     if (backup) BackupDialog { backup = false }
-    if (arrange) ArrangeDialog(order, hidden, onDismiss = { arrange = false }, onReset = { ToolOrder.reset(ctx); version++; arrange = false }) { o, h ->
-        ToolOrder.save(ctx, o, h); version++; arrange = false
-    }
+    if (arrange) ArrangeDialog(onDismiss = { arrange = false }, onReset = { ToolOrder.reset(ctx); version++; arrange = false }) { version++; arrange = false }
     menuFor?.let { t ->
+        val favs = remember(version) { ToolOrder.favorites(ctx) }
         AlertDialog(
             onDismissRequest = { menuFor = null },
             icon = { Text(t.emoji, fontSize = 34.sp) },
             title = { Text(t.title) },
-            text = { Text("إضافة «${t.title}» كاختصار على الشاشة الرئيسية لفتحها مباشرة؟") },
+            text = {
+                Column {
+                    Text("إضافة «${t.title}» كاختصار على الشاشة الرئيسية لفتحها مباشرة؟")
+                    TextButton(onClick = {
+                        val f = if (t in favs) favs - t else favs + t
+                        ToolOrder.save(ctx, ToolOrder.order(ctx), ToolOrder.groups(ctx), ToolOrder.hidden(ctx), f, if (t !in favs) ToolOrder.Top.FAV else ToolOrder.top(ctx))
+                        version++; menuFor = null
+                    }) { Text(if (t in favs) "إزالة من مفضلتي" else "⭐ إضافة إلى مفضلتي (أعلى الشاشة)") }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     val ok = Shortcuts.pin(ctx, t)
@@ -183,25 +212,12 @@ fun HomeScreen(nav: NavHostController) {
                     menuFor = null
                 }) { Text("إضافة للشاشة الرئيسية") }
             },
-            dismissButton = { TextButton(onClick = { nav.navigate(t.id); menuFor = null }) { Text("فتح") } }
+            dismissButton = { TextButton(onClick = { open(t); menuFor = null }) { Text("فتح") } }
         )
     }
-    if (about) AlertDialog(
-        onDismissRequest = { about = false },
-        icon = { Text("🧰", fontSize = 40.sp) },
-        title = { Text("حقيبة الما") },
-        text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("الإصدار ${BuildConfigVersion.NAME} · من برامج «الما»", textAlign = TextAlign.Center)
-                CreditsCard()
-                Text("يعمل بدون إنترنت (عدا قياس السرعة).\nرسوم الإيموجي في الشعار من Twemoji (CC-BY 4.0).\nأذان الجامع الكبير بصنعاء: تسجيل من المصمم. أذان المسجد النبوي: ejaz215 (CC BY 3.0)، والأذان العام (CC0)، من ويكيميديا كومنز.\nحصن المسلم: الشيخ سعيد القحطاني، النص من hisnmuslim.com.\nنص الصحيفة السجادية: ويكي مصدر (CC BY-SA).", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-            }
-        },
-        confirmButton = { TextButton(onClick = { about = false }) { Text("حسناً") } }
-    )
 }
 
-object BuildConfigVersion { const val NAME = "1.7" }
+object BuildConfigVersion { const val NAME = "1.8" }
 
 @Composable
 fun CreditsCard() {
@@ -230,30 +246,53 @@ fun CreditsCard() {
 }
 
 @Composable
-fun ArrangeDialog(initial: List<Tool>, initialHidden: Set<Tool>, onDismiss: () -> Unit, onReset: () -> Unit, onSave: (List<Tool>, Set<Tool>) -> Unit) {
-    val list = remember { initial.toMutableStateList() }
-    val hidden = remember { initialHidden.toMutableStateList() }
+fun ArrangeDialog(onDismiss: () -> Unit, onReset: () -> Unit, onSaved: () -> Unit) {
+    val ctx = LocalContext.current
+    val tools = remember { ToolOrder.order(ctx).toMutableStateList() }
+    val groups = remember { ToolOrder.groups(ctx).toMutableStateList() }
+    val hidden = remember { ToolOrder.hidden(ctx).toMutableStateList() }
+    val fav = remember { ToolOrder.favorites(ctx).toMutableStateList() }
+    var top by remember { mutableStateOf(ToolOrder.top(ctx)) }
+    fun <T> MutableList<T>.move(i: Int, d: Int) { val j = i + d; if (j in indices) { val x = removeAt(i); add(j, x) } }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("ترتيب الأدوات") },
+        title = { Text("ترتيب الشاشة") },
         text = {
             androidx.compose.foundation.lazy.LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                item { Text("حرّك الأدوات بالأسهم، وأزل علامة ✓ لإخفاء أداة.", style = MaterialTheme.typography.bodySmall) }
-                items(list.size, key = { list[it].id }) { i ->
-                    val t = list[i]
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        Checkbox(checked = t !in hidden, onCheckedChange = { if (it) hidden.remove(t) else hidden.add(t) })
-                        Text(t.emoji, fontSize = 20.sp)
-                        Spacer(Modifier.width(6.dp))
-                        Text(t.title, Modifier.weight(1f), color = if (t in hidden) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface)
-                        IconButton(onClick = { if (i > 0) { list.removeAt(i); list.add(i - 1, t) } }, enabled = i > 0) { Text("▲") }
-                        IconButton(onClick = { if (i < list.size - 1) { list.removeAt(i); list.add(i + 1, t) } }, enabled = i < list.size - 1) { Text("▼") }
+                item {
+                    Text("أعلى الشاشة", fontWeight = FontWeight.Bold)
+                    listOf(ToolOrder.Top.AUTO to "🔥 الأكثر استخداماً (تلقائي)", ToolOrder.Top.FAV to "⭐ مفضلتي (أختارها بالنجمة)", ToolOrder.Top.OFF to "بدون").forEach { (k, l) ->
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { top = k }) { RadioButton(top == k, { top = k }); Text(l) }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("ترتيب المجموعات", fontWeight = FontWeight.Bold)
+                }
+                items(groups.size, key = { "g" + groups[it] }) { i ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(groups[i], Modifier.weight(1f))
+                        IconButton(onClick = { groups.move(i, -1) }, enabled = i > 0) { Text("▲") }
+                        IconButton(onClick = { groups.move(i, 1) }, enabled = i < groups.size - 1) { Text("▼") }
+                    }
+                }
+                groups.forEach { g ->
+                    item(key = "h$g") { Text(g, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 10.dp)) }
+                    val inGroup = tools.filter { it.group == g }
+                    items(inGroup.size, key = { "t" + inGroup[it].id }) { k ->
+                        val t = inGroup[k]
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            Checkbox(checked = t !in hidden, onCheckedChange = { if (it) hidden.remove(t) else hidden.add(t) })
+                            Text(t.emoji + " " + t.title, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+                                color = if (t in hidden) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface)
+                            IconButton(onClick = { if (t in fav) fav.remove(t) else fav.add(t) }) { Text(if (t in fav) "⭐" else "☆") }
+                            IconButton(onClick = { if (k > 0) { val a = tools.indexOf(t); val b = tools.indexOf(inGroup[k - 1]); tools[a] = inGroup[k - 1]; tools[b] = t } }, enabled = k > 0) { Text("▲") }
+                            IconButton(onClick = { if (k < inGroup.size - 1) { val a = tools.indexOf(t); val b = tools.indexOf(inGroup[k + 1]); tools[a] = inGroup[k + 1]; tools[b] = t } }, enabled = k < inGroup.size - 1) { Text("▼") }
+                        }
                     }
                 }
             }
         },
-        confirmButton = { Button(onClick = { onSave(list.toList(), hidden.toSet()) }) { Text("حفظ") } },
-        dismissButton = { TextButton(onClick = onReset) { Text("الترتيب الافتراضي") } }
+        confirmButton = { Button(onClick = { ToolOrder.save(ctx, tools.toList(), groups.toList(), hidden.toSet(), fav.toList(), top); onSaved() }) { Text("حفظ") } },
+        dismissButton = { TextButton(onClick = onReset) { Text("الافتراضي") } }
     )
 }
 

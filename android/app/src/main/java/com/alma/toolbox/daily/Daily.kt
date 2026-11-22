@@ -29,6 +29,40 @@ data class Note(
 
 @Serializable data class NotesData(val notes: List<Note> = emptyList())
 
+/** Importing notes from other apps (Android gives no shared «notes» store, so: shared text and exported files). */
+object NotesImport {
+    fun addText(text: String, title: String = ""): Note? {
+        val body = text.trim(); if (body.isEmpty()) return null
+        val n = Note(com.alma.toolbox.core.newId(), if (title.isNotBlank() && !body.startsWith(title)) "$title\n$body" else body)
+        Stores.notes.update { it.copy(notes = it.notes + n) }
+        return n
+    }
+
+    /** Google Keep (Takeout) JSON, or any text / markdown / html file. Returns how many notes were added. */
+    fun importFile(name: String, content: String): Int {
+        val trimmed = content.trim()
+        if (name.endsWith(".json", true) && trimmed.startsWith("{")) runCatching {
+            val o = com.alma.toolbox.core.AppJson.parseToJsonElement(trimmed) as kotlinx.serialization.json.JsonObject
+            fun str(k: String) = (o[k] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: ""
+            if (str("isTrashed") == "true") return 0
+            val list = (o["listContent"] as? kotlinx.serialization.json.JsonArray)?.joinToString("\n") { item ->
+                val io = item as kotlinx.serialization.json.JsonObject
+                (if ((io["isChecked"] as? kotlinx.serialization.json.JsonPrimitive)?.content == "true") "☑ " else "☐ ") + ((io["text"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: "")
+            } ?: ""
+            val body = listOf(str("textContent"), list).filter { it.isNotBlank() }.joinToString("\n")
+            val created = str("createdTimestampUsec").toLongOrNull()?.div(1000) ?: System.currentTimeMillis()
+            val text = (if (str("title").isNotBlank()) str("title") + "\n" else "") + body
+            if (text.isBlank()) return 0
+            val n = Note(com.alma.toolbox.core.newId(), text.trim(), task = list.isNotEmpty() && body == list, pinned = str("isPinned") == "true", created = created)
+            Stores.notes.update { it.copy(notes = it.notes + n) }
+            return 1
+        }
+        val plain = if (name.endsWith(".html", true) || name.endsWith(".htm", true))
+            android.text.Html.fromHtml(content, android.text.Html.FROM_HTML_MODE_LEGACY).toString() else content
+        return if (addText(plain, name.substringBeforeLast('.')) != null) 1 else 0
+    }
+}
+
 // ---------------- occasions ----------------
 @Serializable
 data class Occasion(
@@ -40,33 +74,56 @@ data class Occasion(
     val hijri: Boolean = false,
     val yearly: Boolean = true,
     val notifyDays: Int = 1,
+    /** once | days | weekly | monthly | yearly ("" = old data: yearly flag decides) */
+    val repeat: String = "",
+    /** every N units of [repeat] */
+    val every: Int = 1,
 )
+
+fun Occasion.repeatKind() = repeat.ifEmpty { if (yearly) "yearly" else "once" }
+
+val RepeatKinds = linkedMapOf("once" to "مرة واحدة", "days" to "كل عدد أيام", "weekly" to "أسبوعياً", "monthly" to "شهرياً", "yearly" to "سنوياً")
+
+fun Occasion.repeatLabel(): String { val n = every.coerceAtLeast(1); return when (repeatKind()) {
+    "once" -> "مرة واحدة"; "days" -> if (n == 1) "كل يوم" else "كل $n أيام"
+    "weekly" -> if (n == 1) "كل أسبوع" else "كل $n أسابيع"; "monthly" -> if (n == 1) "كل شهر" else "كل $n أشهر"
+    else -> if (n == 1) "كل سنة" else "كل $n سنوات" } }
 
 @Serializable data class OccasionsData(val items: List<Occasion> = emptyList(), val notify: Boolean = true)
 
 object Occasions {
-    /** Next gregorian date this occasion falls on, from [today]. */
+    /** Next gregorian date this occasion falls on (today counts), for every repeat kind. */
     fun next(o: Occasion, today: LocalDate = LocalDate.now()): LocalDate? = runCatching {
+        val n = o.every.coerceAtLeast(1).toLong()
         if (!o.hijri) {
             val d = LocalDate.parse(o.date)
-            if (!o.yearly) return@runCatching d
-            var n = d.withYear(today.year)
-            if (n.isBefore(today)) n = n.plusYears(1)
-            n
+            when (o.repeatKind()) {
+                "once" -> d
+                "days" -> if (!d.isBefore(today)) d else d.plusDays(((ChronoUnit.DAYS.between(d, today) + n - 1) / n) * n)
+                "weekly" -> if (!d.isBefore(today)) d else d.plusDays(((ChronoUnit.DAYS.between(d, today) + 7 * n - 1) / (7 * n)) * 7 * n)
+                "monthly" -> { var k = 0L; var x = d; while (x.isBefore(today)) { k += n; x = d.plusMonths(k) }; x }
+                else -> { var k = 0L; var x = d; while (x.isBefore(today)) { k += n; x = d.plusYears(k) }; x }
+            }
         } else {
             val (y, m, dd) = o.date.split("-").map { it.toInt() }
-            if (!o.yearly) return@runCatching Hijri.toGregorian(HDate(y, m, dd))
-            val hy = Hijri.fromGregorian(today).y
-            var n = Hijri.toGregorian(HDate(hy, m, dd.coerceAtMost(Hijri.monthLength(hy, m))))
-            if (n.isBefore(today)) n = Hijri.toGregorian(HDate(hy + 1, m, dd.coerceAtMost(Hijri.monthLength(hy + 1, m))))
-            n
+            fun at(hy: Int, hm: Int) = Hijri.toGregorian(HDate(hy, hm, dd.coerceAtMost(Hijri.monthLength(hy, hm))))
+            val first = at(y, m)
+            when (o.repeatKind()) {
+                "once" -> first
+                "days" -> if (!first.isBefore(today)) first else first.plusDays(((ChronoUnit.DAYS.between(first, today) + n - 1) / n) * n)
+                "weekly" -> if (!first.isBefore(today)) first else first.plusDays(((ChronoUnit.DAYS.between(first, today) + 7 * n - 1) / (7 * n)) * 7 * n)
+                "monthly" -> { var hy = y; var hm = m; var x = first; var guard = 0
+                    while (x.isBefore(today) && guard++ < 2000) { hm += n.toInt(); while (hm > 11) { hm -= 12; hy++ }; x = at(hy, hm) }; x }
+                else -> { var hy = y; var x = first; var guard = 0
+                    while (x.isBefore(today) && guard++ < 500) { hy += n.toInt(); x = at(hy, m) }; x }
+            }
         }
     }.getOrNull()
 
     fun daysLeft(o: Occasion, today: LocalDate = LocalDate.now()) = next(o, today)?.let { ChronoUnit.DAYS.between(today, it) }
 
     /** Years since the first date (ages, anniversaries). */
-    fun years(o: Occasion, today: LocalDate = LocalDate.now()): Int? = runCatching {
+    fun years(o: Occasion, today: LocalDate = LocalDate.now()): Int? = if (o.repeatKind() != "yearly") null else runCatching {
         if (o.hijri) { val y = o.date.substringBefore('-').toInt(); val n = next(o, today) ?: return@runCatching null; Hijri.fromGregorian(n).y - y }
         else { val d = LocalDate.parse(o.date); (next(o, today) ?: return@runCatching null).year - d.year }
     }.getOrNull()?.takeIf { it > 0 }

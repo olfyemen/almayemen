@@ -26,6 +26,8 @@ data class PeriodicAlert(
     val showTime: Boolean = true,
     /** Westminster («Big Ben») chimes instead of a ringtone; strikes = the hour. */
     val chime: Boolean = false,
+    /** hours (0..23) in which this alert stays quiet, e.g. night hours */
+    val mutedHours: Set<Int> = emptySet(),
 )
 
 @Serializable
@@ -46,6 +48,8 @@ object PeriodicScheduler {
                 val k = Duration.between(start, now).toMinutes() / a.intervalMin + 1
                 t = start.plusMinutes(k * a.intervalMin)
             }
+            // skip muted hours inside the window
+            while (!t.isAfter(end) && t.hour in a.mutedHours) t = t.plusMinutes(a.intervalMin.toLong())
             if (!t.isAfter(end) && t.isAfter(now)) return t
         }
         return null
@@ -74,6 +78,7 @@ object PeriodicScheduler {
             com.alma.toolbox.core.Chime.start(ctx, a.name, r.hour, r.minute)
             schedule(ctx, a); return
         }
+        // one sound only: the channel carries exactly the ringtone chosen for this alert
         val ch = Notify.channelFor(ctx, a.sound, a.vibrate)
         val next = nextFire(a, now.plusSeconds(30))
         val text = buildString {

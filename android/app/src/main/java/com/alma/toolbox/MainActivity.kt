@@ -26,10 +26,23 @@ class MainActivity : FragmentActivity() {
         Stores.init(this)
         enableEdgeToEdge()
         pendingTool.value = intent?.getStringExtra(EXTRA_TOOL)
+        handleShare(intent)
         if (Build.VERSION.SDK_INT >= 33) notifPerm.launch(Manifest.permission.POST_NOTIFICATIONS)
         Shortcuts.publishDynamic(this)
         Alarms.rescheduleAll(this)
         setContent { AlmaTheme { AppNav(this) } }
+    }
+
+    /** Text shared from another app (e.g. a notes app) becomes a note. */
+    private fun handleShare(i: Intent?) {
+        if (i?.action != Intent.ACTION_SEND || i.type?.startsWith("text/") != true) return
+        val text = i.getStringExtra(Intent.EXTRA_TEXT) ?: return
+        val n = com.alma.toolbox.daily.NotesImport.addText(text, i.getStringExtra(Intent.EXTRA_SUBJECT) ?: "")
+        if (n != null) {
+            android.widget.Toast.makeText(this, "أُضيفت إلى الملاحظات ✓", android.widget.Toast.LENGTH_SHORT).show()
+            pendingTool.value = Tool.NOTES.id
+        }
+        i.action = null
     }
 
     private var leftAt = 0L
@@ -50,5 +63,6 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         intent.getStringExtra(EXTRA_TOOL)?.let { pendingTool.value = it }
+        handleShare(intent)
     }
 }

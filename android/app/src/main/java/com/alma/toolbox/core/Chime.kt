@@ -107,6 +107,7 @@ class ChimeService : Service() {
             .setSmallIcon(R.drawable.ic_notify)
             .setContentTitle("🕰️ $title")
             .setContentText("الساعة " + com.alma.toolbox.ui.fmtTime(h * 60 + m))
+            .setSilent(true)
             .setContentIntent(Notify.openApp(this, Tool.PERIODIC.id))
             .addAction(0, "إيقاف", android.app.PendingIntent.getService(this, 3, Intent(this, ChimeService::class.java).setAction("stop"), android.app.PendingIntent.FLAG_IMMUTABLE))
             .build()

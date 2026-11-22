@@ -41,7 +41,12 @@ data class Msg(
     val savedUri: String = "",
 )
 
-@Serializable data class Events(val events: List<Msg>, val next: Long, val members: List<String> = emptyList(), val closed: Boolean = false)
+@Serializable data class Person(val id: String, val name: String, val admin: Boolean = false)
+@Serializable data class Events(
+    val events: List<Msg>, val next: Long, val members: List<String> = emptyList(), val closed: Boolean = false,
+    val allowFiles: Boolean = true, val locked: Boolean = false, val people: List<Person> = emptyList(), val admin: Boolean = false,
+)
+@Serializable data class AdminReq(val action: String, val target: String = "", val value: Boolean = false)
 @Serializable data class JoinReq(val name: String, val pass: String = "", val clientId: String = "")
 @Serializable data class JoinRes(val token: String, val room: RoomBrief)
 @Serializable data class OfferItem(val path: String, val size: Long)
@@ -66,6 +71,8 @@ data class TransferData(
     val myId: String = java.util.UUID.randomUUID().toString().take(12),
     val myName: String = (Build.MANUFACTURER.replaceFirstChar { it.uppercase() } + " " + Build.MODEL).take(30),
     val autoAccept: Boolean = false,
+    /** keep receiving in the background after leaving the tool (uses more battery) */
+    val keepAlive: Boolean = false,
     val rooms: List<SavedRoom> = emptyList(),
 )
 

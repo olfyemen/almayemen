@@ -53,7 +53,7 @@ fun PeriodicScreen(onBack: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(a.name, fontWeight = FontWeight.Bold)
-                            Text("كل ${a.intervalMin} دقيقة · ${fmtTime(a.startMin)} ← ${fmtTime(a.endMin)}" + if (a.chime) " · 🕰️ بيج بن" else "")
+                            Text("كل ${a.intervalMin} دقيقة · ${fmtTime(a.startMin)} ← ${fmtTime(a.endMin)}" + (if (a.chime) " · 🕰️ بيج بن" else "") + (if (a.mutedHours.isNotEmpty()) " · 🔇 ${a.mutedHours.size} ساعة" else ""))
                             Text(daysLabel(a.days), style = MaterialTheme.typography.bodySmall)
                             Text(
                                 if (a.enabled && next != null) "التنبيه القادم: ${DayNames[next.dayOfWeek.value]} ${fmtTime(next.hour * 60 + next.minute)}" else "متوقف",
@@ -92,6 +92,8 @@ fun PeriodicEditor(initial: PeriodicAlert, onDismiss: () -> Unit, onSave: (Perio
                 TimeField("من الساعة", a.startMin) { a = a.copy(startMin = it) }
                 TimeField("إلى الساعة", a.endMin) { a = a.copy(endMin = it) }
                 Stepper("التكرار كل", a.intervalMin, 1..720, 5, "د", listOf(15, 30, 45, 60, 90, 120)) { a = a.copy(intervalMin = it) }
+                Text("ساعات بلا تنبيه (اضغط لكتمها)", fontWeight = FontWeight.Bold)
+                MutedHoursGrid(a.mutedHours) { a = a.copy(mutedHours = it) }
                 SwitchRow("🕰️ دقات ساعة بيج بن", a.chime, "لحن الربع والنصف، وعلى رأس الساعة دقات بعددها") { a = a.copy(chime = it) }
                 if (a.chime) {
                     val ctx = LocalContext.current
@@ -115,5 +117,26 @@ object ChimePreview {
         t?.interrupt()
         val now = java.time.LocalTime.now()
         t = Thread { runCatching { com.alma.toolbox.core.Chime.play(com.alma.toolbox.core.Chime.render(0, com.alma.toolbox.core.Chime.strikesFor(now.hour, 0)), android.media.AudioAttributes.USAGE_MEDIA) } }.also { it.start() }
+    }
+}
+
+/** 24 small cells; muted hours are dimmed with 🔇. */
+@Composable
+fun MutedHoursGrid(muted: Set<Int>, onChange: (Set<Int>) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        (0 until 24).chunked(6).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                row.forEach { h ->
+                    val off = h in muted
+                    FilterChip(selected = off, onClick = { onChange(if (off) muted - h else muted + h) },
+                        label = { Text((if (off) "🔇" else "") + fmtTime(h * 60).replace(":00", ""), style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            AssistChip(onClick = { onChange((0..5).toSet() + 23) }, label = { Text("كتم الليل (11م–6ص)") })
+            AssistChip(onClick = { onChange(emptySet()) }, label = { Text("بدون كتم") })
+        }
     }
 }

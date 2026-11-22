@@ -146,6 +146,7 @@ fun SignalScreen(onBack: () -> Unit) {
                     if (ch.size > 1) LineChart(listOf(ch.toList()), colors = listOf(Accent2), fixedMin = -130f, fixedMax = -50f)
                 }
             }
+            SignalDirectionCard(wifi?.rssi, cell?.dbm)
             if (nearby.isNotEmpty()) SectionCard(title = "الشبكات القريبة") {
                 nearby.forEach { r ->
                     @Suppress("DEPRECATION") val name = r.SSID.ifBlank { "(مخفية)" }

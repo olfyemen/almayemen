@@ -110,6 +110,17 @@ fun NotesScreen(onBack: () -> Unit) {
     var filter by remember { mutableIntStateOf(0) }
     var edit by remember { mutableStateOf<Note?>(null) }
     var q by remember { mutableStateOf("") }
+    var importHelp by remember { mutableStateOf(false) }
+    val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        var added = 0
+        uris.forEach { u ->
+            val name = ctx.contentResolver.query(u, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else null } ?: "ملاحظة.txt"
+            val text = runCatching { ctx.contentResolver.openInputStream(u)!!.use { it.readBytes().decodeToString() } }.getOrNull() ?: return@forEach
+            added += NotesImport.importFile(name, text)
+        }
+        importHelp = false
+        Toast.makeText(ctx, if (added > 0) "استُوردت $added ملاحظة ✓" else "لم يُعثر على ملاحظات في الملفات", Toast.LENGTH_LONG).show()
+    }
     fun save(n: Note) {
         Stores.notes.update { x -> x.copy(notes = x.notes.filter { it.id != n.id } + n) }
         if (n.remindAt > System.currentTimeMillis() && !n.done) ReminderScheduler.save(ctx, Reminder(n.id, title = "📝 " + n.text.take(60), startAt = n.remindAt))
@@ -122,8 +133,10 @@ fun NotesScreen(onBack: () -> Unit) {
     }) { pad ->
         LazyColumn(Modifier.padding(pad).fillMaxSize(), contentPadding = PaddingValues(16.dp, 4.dp, 16.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     listOf("الكل", "ملاحظات", "مهام").forEachIndexed { i, l -> FilterChip(filter == i, { filter = i }, label = { Text(l) }) }
+                    Spacer(Modifier.weight(1f))
+                    TextButton(onClick = { importHelp = true }) { Text("📥 استيراد") }
                 }
                 OutlinedTextField(q, { q = it }, placeholder = { Text("بحث") }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), shape = RoundedCornerShape(16.dp))
             }
@@ -145,6 +158,16 @@ fun NotesScreen(onBack: () -> Unit) {
             }
         }
     }
+    if (importHelp) AlertDialog(onDismissRequest = { importHelp = false }, title = { Text("استيراد ملاحظات الهاتف") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("أندرويد لا يسمح لأي تطبيق بقراءة ملاحظات التطبيقات الأخرى مباشرة، فاختر إحدى الطريقتين:", style = MaterialTheme.typography.bodySmall)
+                Text("① من تطبيق الملاحظات (Samsung Notes، Keep، ColorNote…) افتح الملاحظة ← مشاركة ← «حقيبة الما»، فتُضاف هنا مباشرة.", style = MaterialTheme.typography.bodyMedium)
+                Text("② صدّر ملاحظاتك كملفات نصية (TXT)، أو من Google Takeout لملاحظات Keep (ملفات JSON)، ثم اخترها كلها هنا دفعة واحدة.", style = MaterialTheme.typography.bodyMedium)
+            }
+        },
+        confirmButton = { Button(onClick = { importer.launch(arrayOf("text/*", "application/json", "application/octet-stream")) }) { Text("اختيار ملفات") } },
+        dismissButton = { TextButton(onClick = { importHelp = false }) { Text("إغلاق") } })
     edit?.let { e ->
         var text by remember(e.id) { mutableStateOf(e.text) }
         var task by remember(e.id) { mutableStateOf(e.task) }
@@ -196,7 +219,7 @@ fun OccasionsScreen(onBack: () -> Unit) {
                         Text(o.emoji, fontSize = 30.sp); Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text(o.name, fontWeight = FontWeight.Bold)
-                            Text((next?.let { "${DayNames[it.dayOfWeek.value]} ${it.format(dateFmt)}" } ?: "—") + (if (o.hijri) " · هجري" else "") + (yrs?.let { " · يُتم $it" } ?: ""), style = MaterialTheme.typography.bodySmall)
+                            Text((next?.let { "${DayNames[it.dayOfWeek.value]} ${it.format(dateFmt)}" } ?: "—") + (if (o.hijri) " · هجري" else "") + " · " + o.repeatLabel() + (yrs?.let { " · يُتم $it" } ?: ""), style = MaterialTheme.typography.bodySmall)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(when (left) { null -> "—"; 0L -> "اليوم 🎉"; else -> "$left" }, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = MaterialTheme.colorScheme.primary)
@@ -211,7 +234,8 @@ fun OccasionsScreen(onBack: () -> Unit) {
         var name by remember(e.id) { mutableStateOf(e.name) }
         var emoji by remember(e.id) { mutableStateOf(e.emoji) }
         var hijri by remember(e.id) { mutableStateOf(e.hijri) }
-        var yearly by remember(e.id) { mutableStateOf(e.yearly) }
+        var repeat by remember(e.id) { mutableStateOf(e.repeatKind()) }
+        var every by remember(e.id) { mutableIntStateOf(e.every.coerceAtLeast(1)) }
         var notifyDays by remember(e.id) { mutableIntStateOf(e.notifyDays) }
         var g by remember(e.id) { mutableStateOf(if (e.hijri) LocalDate.now() else runCatching { LocalDate.parse(e.date) }.getOrDefault(LocalDate.now())) }
         val h0 = remember(e.id) { if (e.hijri) e.date.split("-").map { it.toInt() } else Hijri.fromGregorian(LocalDate.now()).let { listOf(it.y, it.m, it.d) } }
@@ -238,7 +262,11 @@ fun OccasionsScreen(onBack: () -> Unit) {
                         }
                         OutlinedTextField(hy, { hy = it.filter(Char::isDigit).take(4) }, label = { Text("سنة") }, singleLine = true, modifier = Modifier.width(84.dp))
                     }
-                    SwitchRow("تتكرر كل سنة", yearly) { yearly = it }
+                    Text("التكرار", fontWeight = FontWeight.Bold)
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        RepeatKinds.forEach { (k, l) -> FilterChip(repeat == k, { repeat = k }, label = { Text(l) }) }
+                    }
+                    if (repeat != "once") Stepper("كل", every, 1..365, 1, when (repeat) { "days" -> "يوم"; "weekly" -> "أسبوع"; "monthly" -> "شهر"; else -> "سنة" }) { every = it }
                     Stepper("ذكّرني قبل", notifyDays, 0..30, 1, "يوم", listOf(0, 1, 3, 7)) { notifyDays = it }
                     if (e.name.isNotEmpty()) TextButton(onClick = { persist { x -> x.copy(items = x.items.filter { it.id != e.id }) }; edit = null }) { Text("حذف", color = Bad) }
                 }
@@ -246,7 +274,7 @@ fun OccasionsScreen(onBack: () -> Unit) {
             confirmButton = {
                 Button(onClick = {
                     val date = if (hijri) "${hy.toIntOrNull() ?: 1446}-$hm-${(hd.toIntOrNull() ?: 1).coerceIn(1, 30)}" else g.toString()
-                    val o = e.copy(name = name.trim(), emoji = emoji, hijri = hijri, yearly = yearly, notifyDays = notifyDays, date = date)
+                    val o = e.copy(name = name.trim(), emoji = emoji, hijri = hijri, yearly = repeat == "yearly", repeat = repeat, every = every, notifyDays = notifyDays, date = date)
                     persist { x -> x.copy(items = x.items.filter { it.id != e.id } + o) }; edit = null
                 }, enabled = name.isNotBlank()) { Text("حفظ") }
             }, dismissButton = { TextButton(onClick = { edit = null }) { Text("إلغاء") } })

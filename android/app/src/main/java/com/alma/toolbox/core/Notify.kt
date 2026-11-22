@@ -17,7 +17,7 @@ object Notify {
 
     fun createBaseChannels(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel(CH_INFO, "إشعارات عامة", NotificationManager.IMPORTANCE_LOW))
+        nm.createNotificationChannel(NotificationChannel(CH_INFO, "إشعارات عامة", NotificationManager.IMPORTANCE_LOW).apply { setSound(null, null); enableVibration(false) })
         nm.createNotificationChannel(NotificationChannel(CH_ONGOING, "المؤقتات الجارية", NotificationManager.IMPORTANCE_LOW).apply { setSound(null, null) })
         nm.createNotificationChannel(NotificationChannel(CH_ALARM, "المنبه (ملء الشاشة)", NotificationManager.IMPORTANCE_HIGH).apply {
             setSound(null, null); enableVibration(false)

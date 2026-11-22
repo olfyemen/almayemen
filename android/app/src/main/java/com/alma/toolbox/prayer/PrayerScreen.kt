@@ -118,6 +118,7 @@ fun PrayerScreen(onBack: () -> Unit) {
                     }
                 }
             }
+            item { PrayerSilentLink() }
             item {
                 SectionCard(title = "صوت الأذان") {
                     AdhanPicker("الظهر والعصر والمغرب والعشاء", d.sound, d.soundName, onPlay = { AdhanService.preview(ctx, d.sound, d.soundUri) }) { c ->
@@ -215,4 +216,37 @@ private fun MuteGridDialog(initial: Set<String>, onDismiss: () -> Unit, onSave: 
         confirmButton = { Button(onClick = { onSave(m.toSet()) }) { Text("حفظ") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } }
     )
+}
+
+/** Rule id used for the silent rule that the prayer screen manages. */
+const val PRAYER_SILENT_RULE = 7_000_000_001L
+
+@Composable
+private fun PrayerSilentLink() {
+    val ctx = LocalContext.current
+    val sd by Stores.silent.state.collectAsStateWithLifecycle()
+    val rule = sd.rules.firstOrNull { it.id == PRAYER_SILENT_RULE }
+    fun put(r: com.alma.toolbox.silent.SilentRule?) {
+        Stores.silent.update { d -> d.copy(rules = d.rules.filter { it.id != PRAYER_SILENT_RULE } + listOfNotNull(r)) }
+        SilentEngine.apply(ctx)
+    }
+    val base = rule ?: com.alma.toolbox.silent.SilentRule(PRAYER_SILENT_RULE, "الصلاة (من مواقيت الصلاة)", kind = "prayer",
+        prayers = setOf(0, 2, 3, 4, 5, com.alma.toolbox.silent.JUMUAH), beforeMin = 0, afterMin = 20, vibrate = true, enabled = false)
+    SectionCard(title = "🔕 الصامت أثناء الصلاة") {
+        SwitchRow("اجعل الهاتف صامتاً عند كل صلاة", rule?.enabled == true, "يُضبط تلقائياً مع المواقيت، ويظهر أيضاً في «الصامت المجدول»") { on -> put(base.copy(enabled = on)) }
+        if (rule?.enabled == true) {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                (AdhanPrayers + com.alma.toolbox.silent.JUMUAH).forEach { p ->
+                    val on = p in rule.prayers
+                    FilterChip(on, { put(rule.copy(prayers = if (on) rule.prayers - p else rule.prayers + p)) },
+                        label = { Text(if (p == com.alma.toolbox.silent.JUMUAH) "الجمعة" else PrayerCalc.names[p]) })
+                }
+            }
+            Stepper("قبل الأذان", rule.beforeMin, 0..60, 5, "د", listOf(0, 5, 10)) { v -> put(rule.copy(beforeMin = v)) }
+            Stepper("بعد الأذان", rule.afterMin, 5..120, 5, "د", listOf(15, 20, 30, 45)) { v -> put(rule.copy(afterMin = v)) }
+            SwitchRow("اهتزاز بدل الصامت التام", rule.vibrate) { v -> put(rule.copy(vibrate = v)) }
+            if (!SilentEngine.hasPolicyAccess(ctx)) Text("للصامت التام اسمح بـ«الوصول إلى عدم الإزعاج» من شاشة «الصامت المجدول».", style = MaterialTheme.typography.bodySmall, color = Warn)
+            if (!sd.enabled) Text("⚠ «الصامت المجدول» متوقف كلياً، شغّله من شاشته.", style = MaterialTheme.typography.bodySmall, color = Warn)
+        }
+    }
 }

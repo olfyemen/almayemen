@@ -71,16 +71,19 @@ fun HijriScreen(onBack: () -> Unit) {
                 }
                 Stepper("تعديل يوم (حسب رؤية بلدك)", adj, -2..2) { adj = it; Hijri.setAdjust(ctx, it) }
             }
-            SectionCard(title = "مناسبات قادمة") {
-                val events = listOf("رمضان" to (8 to 1), "عيد الفطر" to (9 to 1), "يوم عرفة" to (11 to 9), "عيد الأضحى" to (11 to 10), "رأس السنة الهجرية" to (0 to 1), "عاشوراء" to (0 to 10), "المولد النبوي" to (2 to 12))
-                events.map { (n, md) ->
-                    var y = h.y
-                    var gd = Hijri.toGregorian(HDate(y, md.first, md.second), adj)
-                    if (gd.isBefore(today)) { y++; gd = Hijri.toGregorian(HDate(y, md.first, md.second), adj) }
-                    Triple(n, gd, ChronoUnit.DAYS.between(today, gd))
-                }.sortedBy { it.third }.forEach { (n, gd, days) ->
-                    ValueRow(n, if (days == 0L) "اليوم 🎉" else "بعد $days يوم · ${gd.format(dateFmt)}")
+            val upcoming = remember(adj, today) { IslamicEvents.upcoming(today, adj) }
+            upcoming.firstOrNull()?.let { (name, emoji, gd, days) -> CountdownCard(name, emoji, gd, days) }
+            SectionCard(title = "⏳ كم بقي على المناسبات الإسلامية") {
+                upcoming.forEach { (n, e, gd, days) ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("$e $n", Modifier.weight(1f))
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(if (days == 0L) "اليوم 🎉" else "$days يوم", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            Text(gd.format(dateFmt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                        }
+                    }
                 }
+                Text("المواعيد حسب تقويم أم القرى مع تعديلك أعلاه، وقد تختلف يوماً حسب رؤية الهلال.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
             }
             SectionCard(title = "من ميلادي إلى هجري") {
                 ValueRow("التاريخ الميلادي", g.format(dateFmt)) { pickDate(ctx, g) { g = it } }
@@ -102,6 +105,48 @@ fun HijriScreen(onBack: () -> Unit) {
                     val gd = runCatching { Hijri.toGregorian(HDate(yy, hm, dd), adj) }.getOrNull()
                     if (gd != null) Text("= ${DayNames[gd.dayOfWeek.value]} ${gd.format(dateFmt)} م", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.primary)
                 } else Text("أدخل تاريخاً بين 1300 و1600 هـ", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+object IslamicEvents {
+    /** name, emoji, hijri month (0-based), day */
+    val list = listOf(
+        Triple("رمضان", "🌙", 8 to 1), Triple("ليلة القدر (ليلة 27)", "✨", 8 to 27), Triple("عيد الفطر", "🎉", 9 to 1),
+        Triple("العشر من ذي الحجة", "🕋", 11 to 1), Triple("يوم عرفة", "🤲", 11 to 9), Triple("عيد الأضحى", "🐑", 11 to 10),
+        Triple("عيد الغدير", "🌿", 11 to 18), Triple("رأس السنة الهجرية", "📅", 0 to 1), Triple("عاشوراء", "🕯️", 0 to 10),
+        Triple("المولد النبوي", "💚", 2 to 12), Triple("الإسراء والمعراج", "🌌", 6 to 27), Triple("النصف من شعبان", "🌕", 7 to 15),
+    ).map { (n, e, md) -> Triple(n, e, md) }
+
+    data class Up(val name: String, val emoji: String, val date: LocalDate, val days: Long)
+
+    fun upcoming(today: LocalDate, adj: Int): List<Up> {
+        val hy = Hijri.fromGregorian(today, adj).y
+        return list.map { (n, e, md) ->
+            var gd = Hijri.toGregorian(HDate(hy, md.first, md.second), adj)
+            if (gd.isBefore(today)) gd = Hijri.toGregorian(HDate(hy + 1, md.first, md.second), adj)
+            Up(n, e, gd, ChronoUnit.DAYS.between(today, gd))
+        }.sortedBy { it.days }
+    }
+}
+
+@Composable
+private fun CountdownCard(name: String, emoji: String, date: LocalDate, days: Long) {
+    var now by remember { mutableStateOf(java.time.LocalDateTime.now()) }
+    LaunchedEffect(Unit) { while (true) { now = java.time.LocalDateTime.now(); kotlinx.coroutines.delay(1000) } }
+    val left = java.time.Duration.between(now, date.atStartOfDay()).coerceAtLeast(java.time.Duration.ZERO)
+    Card(shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("$emoji $name", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            if (days == 0L) Text("اليوم 🎉 كل عام وأنتم بخير", fontSize = 18.sp)
+            else {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    listOf(left.toDays() to "يوم", left.toHoursPart().toLong() to "ساعة", left.toMinutesPart().toLong() to "دقيقة", left.toSecondsPart().toLong() to "ثانية").forEach { (v, l) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("$v", fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary); Text(l, style = MaterialTheme.typography.labelSmall) }
+                    }
+                }
+                Text("${DayNames[date.dayOfWeek.value]} ${date.format(dateFmt)}", style = MaterialTheme.typography.bodySmall)
             }
         }
     }

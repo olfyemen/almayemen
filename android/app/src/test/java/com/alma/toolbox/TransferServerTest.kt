@@ -108,6 +108,33 @@ class TransferServerTest {
         assertTrue(ev.events.any { it.text == "انضم منى" })
     }
 
+    @Test fun creatorControls() {
+        server.openRoom("r2", "غرفة الإدارة", "", hostId = "host")
+        val host = AppJson.decodeFromString(JoinRes.serializer(), json("POST", "/api/room/r2/join", """{"name":"صاحبها","clientId":"host"}""").second).token
+        val mem = AppJson.decodeFromString(JoinRes.serializer(), json("POST", "/api/room/r2/join", """{"name":"عضو","clientId":"c2"}""").second).token
+        val ev = AppJson.decodeFromString(Events.serializer(), call("GET", "/api/room/r2/events?since=0&t=$host").second.decodeToString())
+        assertTrue(ev.admin); assertTrue(ev.people.any { it.id == "host" && it.admin })
+        assertFalse(AppJson.decodeFromString(Events.serializer(), call("GET", "/api/room/r2/events?since=0&t=$mem").second.decodeToString()).admin)
+        // members can't use admin actions
+        assertEquals(403, json("POST", "/api/room/r2/admin?t=$mem", """{"action":"lock","value":true}""").first)
+        // files off → member upload refused, host still allowed
+        assertEquals(200, json("POST", "/api/room/r2/admin?t=$host", """{"action":"files","value":false}""").first)
+        assertEquals(403, call("POST", "/api/room/r2/upload?t=$mem&path=a.txt", "x".toByteArray()).first)
+        assertEquals(200, call("POST", "/api/room/r2/upload?t=$host&path=a.txt", "x".toByteArray()).first)
+        // kick → token dead and can't come back
+        json("POST", "/api/room/r2/admin?t=$host", """{"action":"kick","target":"c2"}""")
+        assertEquals(401, call("GET", "/api/room/r2/events?since=0&t=$mem").first)
+        assertEquals(403, json("POST", "/api/room/r2/join", """{"name":"عضو","clientId":"c2"}""").first)
+        // lock → nobody new
+        json("POST", "/api/room/r2/admin?t=$host", """{"action":"lock","value":true}""")
+        assertEquals(403, json("POST", "/api/room/r2/join", """{"name":"جديد","clientId":"c3"}""").first)
+        // a remote client pretending to be the host id is not admin unless on this phone: here we are on loopback,
+        // so check the id rule instead — a different id from loopback is a normal member
+        server.closeRoom(); server.openRoom("r3", "x", "", hostId = "host")
+        val other = AppJson.decodeFromString(JoinRes.serializer(), json("POST", "/api/room/r3/join", """{"name":"x","clientId":"zz"}""").second).token
+        assertFalse(AppJson.decodeFromString(Events.serializer(), call("GET", "/api/room/r3/events?since=0&t=$other").second.decodeToString()).admin)
+    }
+
     /** Drives the real web page in Chromium. Run with ALMA_E2E=<path to e2e.js>. */
     @Test fun browserClient() {
         val script = System.getenv("ALMA_E2E"); assumeTrue(script != null)

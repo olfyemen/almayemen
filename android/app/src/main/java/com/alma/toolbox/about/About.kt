@@ -142,7 +142,7 @@ object Feedback {
 }
 
 @Composable
-fun AboutScreen(onBack: () -> Unit) {
+fun AboutScreen(onBack: () -> Unit, openRoznama: () -> Unit = {}) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // update state
@@ -201,6 +201,23 @@ fun AboutScreen(onBack: () -> Unit) {
                 if (upMsg.isNotEmpty()) Text(upMsg, style = MaterialTheme.typography.bodySmall)
             }
 
+            SectionCard(title = "📅 تحديث الروزنامة") {
+                val last = remember { com.alma.toolbox.roznama.RoznamaPrefs.last(ctx) }
+                Text("تتحدث الروزنامة من جدول Google تلقائياً يوم الجمعة (أو أول فتح بعد جمعة فائتة)، ولا تتصل بالإنترنت في غير ذلك.", style = MaterialTheme.typography.bodySmall)
+                Text("آخر تحديث: " + last.ifEmpty { "لم تتحدث بعد" }, fontWeight = FontWeight.Bold)
+                OutlinedButton(onClick = { com.alma.toolbox.roznama.RoznamaPrefs.requestRefresh(ctx); openRoznama() }, modifier = Modifier.fillMaxWidth()) { Text("تحديث الروزنامة الآن") }
+            }
+
+            SectionCard(title = "ℹ️ معلومات التطبيق") {
+                var sizes by remember { mutableStateOf(appSizes(ctx)) }
+                ValueRow("الإصدار", "${BuildConfigVersion.NAME} (${current})")
+                ValueRow("عدد الأدوات", "${com.alma.toolbox.Tool.entries.size}")
+                ValueRow("بياناتك", NetUtil.fmtSize(sizes.first))
+                ValueRow("ملفات مؤقتة", NetUtil.fmtSize(sizes.second))
+                ValueRow("أندرويد", "${Build.VERSION.RELEASE} · ${Build.MANUFACTURER} ${Build.MODEL}")
+                if (sizes.second > 0) TextButton(onClick = { clearCache(ctx); sizes = appSizes(ctx); Toast.makeText(ctx, "تم التنظيف ✓", Toast.LENGTH_SHORT).show() }) { Text("🧹 تنظيف الملفات المؤقتة") }
+            }
+
             SectionCard(title = "✉️ رسالة للمبرمج") {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("اقتراح", "مشكلة", "شكر", "سؤال").forEach { t -> FilterChip(type == t, { type = t }, label = { Text(t) }) }
@@ -231,3 +248,11 @@ fun AboutScreen(onBack: () -> Unit) {
         }
     }
 }
+
+private fun dirSize(f: File): Long = if (!f.exists()) 0 else if (f.isFile) f.length() else (f.listFiles()?.sumOf { dirSize(it) } ?: 0)
+
+/** (data, cache) bytes — data = what the user keeps, cache = safe to delete. */
+fun appSizes(ctx: Context): Pair<Long, Long> = dirSize(ctx.filesDir) + dirSize(File(ctx.filesDir.parentFile, "shared_prefs")) to dirSize(ctx.cacheDir)
+
+/** Removes exported/shared copies, downloaded updates and other temporary files (never user data). */
+fun clearCache(ctx: Context) { ctx.cacheDir.listFiles()?.filter { it.name != "alma-room" }?.forEach { it.deleteRecursively() } }

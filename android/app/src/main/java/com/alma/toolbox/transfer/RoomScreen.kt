@@ -83,6 +83,12 @@ fun RoomScreen(nav: NavHostController) {
     val members by client.members.collectAsStateWithLifecycle()
     val status by client.status.collectAsStateWithLifecycle()
     val error by client.error.collectAsStateWithLifecycle()
+    val people by client.people.collectAsStateWithLifecycle()
+    val allowFiles by client.allowFiles.collectAsStateWithLifecycle()
+    val roomLocked by client.locked.collectAsStateWithLifecycle()
+    val isAdmin by client.isAdmin.collectAsStateWithLifecycle()
+    var manage by remember { mutableStateOf(false) }
+    val canSendFiles = allowFiles || isAdmin
     val myId = Stores.transfer.value.myId
     var text by remember { mutableStateOf("") }
     var attach by remember { mutableStateOf(false) }
@@ -94,13 +100,14 @@ fun RoomScreen(nav: NavHostController) {
     LaunchedEffect(msgs.size) { if (msgs.isNotEmpty()) list.animateScrollToItem(msgs.size - 1) }
 
     ToolScaffold("💬 ${client.roomName}", { nav.popBackStack() }, actions = {
+        if (isAdmin) TextButton(onClick = { manage = true }) { Text("إدارة") }
         TextButton(onClick = { share = true }) { Text("رابط") }
         TextButton(onClick = { leave = true }) { Text(if (client.mine) "إغلاق" else "خروج", color = Bad) }
     }, bottomBar = {
         Surface(tonalElevation = 3.dp, shadowElevation = 6.dp) {
             Row(Modifier.navigationBarsPadding().imePadding().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box {
-                    FilledTonalIconButton(onClick = { attach = true }, enabled = status == "ok") { Icon(Icons.Default.Add, "إرفاق") }
+                    FilledTonalIconButton(onClick = { attach = true }, enabled = status == "ok" && canSendFiles) { Icon(Icons.Default.Add, "إرفاق") }
                     DropdownMenu(attach, { attach = false }) {
                         DropdownMenuItem(text = { Text("📄 ملفات") }, onClick = { attach = false; pickFiles() })
                         DropdownMenuItem(text = { Text("📁 مجلد كامل") }, onClick = { attach = false; pickFolder() })
@@ -112,6 +119,7 @@ fun RoomScreen(nav: NavHostController) {
         }
     }) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
+            if (!canSendFiles) Text("📎 أوقف صاحب الغرفة إرسال الملفات · يمكنك الكتابة فقط", Modifier.fillMaxWidth().padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = Warn)
             Text("👥 ${members.size} متصل: ${members.joinToString("، ")}", Modifier.fillMaxWidth().padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, maxLines = 1)
             when (status) {
                 "error" -> Banner("انقطع الاتصال: $error · يعيد المحاولة…", "", Bad) {}
@@ -134,6 +142,21 @@ fun RoomScreen(nav: NavHostController) {
                 }
             }, confirmButton = { TextButton(onClick = { share = false }) { Text("تم") } })
     }
+    if (manage) AlertDialog(onDismissRequest = { manage = false }, title = { Text("إدارة الغرفة") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                SwitchRow("الأعضاء يرسلون ملفات", allowFiles) { client.admin("files", value = it) }
+                SwitchRow("قفل الغرفة أمام المنضمين الجدد", roomLocked, "المتصلون الآن يبقون") { client.admin("lock", value = it) }
+                Text("المتصلون", fontWeight = FontWeight.Bold)
+                people.forEach { p ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text((if (p.admin) "👑 " else "👤 ") + p.name, Modifier.weight(1f))
+                        if (!p.admin && p.id.isNotEmpty()) TextButton(onClick = { client.admin("kick", p.id) }) { Text("إخراج", color = Bad) }
+                    }
+                }
+                Text("المُخرَج لا يستطيع العودة ما دامت الغرفة مفتوحة.", style = MaterialTheme.typography.bodySmall)
+            }
+        }, confirmButton = { TextButton(onClick = { manage = false }) { Text("تم") } })
     if (leave) ConfirmDialog(if (client.mine) "إغلاق الغرفة" else "الخروج من الغرفة",
         if (client.mine) "ستُغلق الغرفة لكل المتصلين وتُحذف ملفاتها المؤقتة. الرسائل تبقى محفوظة عندك." else "ستبقى الرسائل محفوظة في «غرفي المحفوظة».",
         confirm = if (client.mine) "إغلاق" else "خروج", onDismiss = { leave = false }) { TransferHub.leaveRoom(); nav.popBackStack() }

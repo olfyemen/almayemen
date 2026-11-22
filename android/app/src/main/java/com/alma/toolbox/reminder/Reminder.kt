@@ -40,6 +40,9 @@ data class Reminder(
     val snoozeMin: Int = 10,
     val enabled: Boolean = true,
     val nextAt: Long = 0,
+    /** re-alert until «تم» is pressed: how many extra times (0 = off) and every how many minutes */
+    val nagTimes: Int = 0,
+    val nagEvery: Int = 5,
 )
 
 @Serializable
@@ -134,6 +137,7 @@ object ReminderScheduler {
     }
 
     fun delete(ctx: Context, id: Long) {
+        stopNag(ctx, id)
         Alarms.cancel(ctx, mainUri(id)); Alarms.cancel(ctx, preUri(id)); Alarms.cancel(ctx, snoozeUri(id))
         Stores.reminders.update { d -> d.copy(items = d.items.filter { it.id != id }) }
         Notify.nm(ctx).cancel(notifId(id))
@@ -159,6 +163,7 @@ object ReminderScheduler {
             Stores.reminders.update { d -> d.copy(items = d.items.map { if (it.id == id) updated else it }) }
         }
         show(ctx, r)
+        if (!snooze) startNag(ctx, r)
     }
 
     fun show(ctx: Context, r: Reminder) {
@@ -183,6 +188,26 @@ object ReminderScheduler {
         if (Notify.canPost(ctx)) Notify.nm(ctx).notify(notifId(r.id), n)
     }
 
+    private fun nagPrefs(ctx: Context) = ctx.getSharedPreferences("reminder_nag", 0)
+
+    /** Starts the «until confirmed» re-alerts for a reminder that just fired. */
+    fun startNag(ctx: Context, r: Reminder) {
+        if (r.nagTimes <= 0 || r.alarm) return
+        nagPrefs(ctx).edit().putInt("left_${r.id}", r.nagTimes).apply()
+        Alarms.set(ctx, "alma://nag/${r.id}", System.currentTimeMillis() + r.nagEvery * 60_000L)
+    }
+
+    fun stopNag(ctx: Context, id: Long) { nagPrefs(ctx).edit().remove("left_$id").apply(); Alarms.cancel(ctx, "alma://nag/$id") }
+
+    fun nag(ctx: Context, id: Long) {
+        val left = nagPrefs(ctx).getInt("left_$id", 0)
+        val r = Stores.reminders.value.items.firstOrNull { it.id == id }
+        if (left <= 0 || r == null) { stopNag(ctx, id); return }
+        show(ctx, r)
+        nagPrefs(ctx).edit().putInt("left_$id", left - 1).apply()
+        if (left - 1 > 0) Alarms.set(ctx, "alma://nag/$id", System.currentTimeMillis() + r.nagEvery * 60_000L) else stopNag(ctx, id)
+    }
+
     fun snooze(ctx: Context, id: Long, minutes: Int) {
         Notify.nm(ctx).cancel(notifId(id))
         try { ctx.startService(Intent(ctx, AlarmSoundService::class.java).setAction(AlarmSoundService.ACTION_STOP)) } catch (_: Exception) {}
@@ -190,10 +215,10 @@ object ReminderScheduler {
         Alarms.set(ctx, snoozeUri(id), System.currentTimeMillis() + minutes * 60_000L, alarmClock = r.alarm)
     }
 
-    fun done(ctx: Context, id: Long) { Notify.nm(ctx).cancel(notifId(id)) }
+    fun done(ctx: Context, id: Long) { Notify.nm(ctx).cancel(notifId(id)); stopNag(ctx, id) }
 
     fun disable(ctx: Context, id: Long) {
-        Notify.nm(ctx).cancel(notifId(id))
+        Notify.nm(ctx).cancel(notifId(id)); stopNag(ctx, id)
         val r = Stores.reminders.value.items.firstOrNull { it.id == id } ?: return
         save(ctx, r.copy(enabled = false))
     }

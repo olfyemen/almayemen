@@ -15,8 +15,8 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /** A room hosted on this phone. All state is in memory; files live in a temp folder. */
-class HostedRoom(val id: String, val name: String, val pass: String, val dir: File) {
-    data class Member(val name: String, val clientId: String, var lastSeen: Long)
+class HostedRoom(val id: String, val name: String, val pass: String, val dir: File, val hostId: String = "") {
+    data class Member(val name: String, val clientId: String, var lastSeen: Long, val admin: Boolean = false)
     data class FileEntry(val fid: String, val name: String, val path: String, val size: Long, val file: File, val group: String, val order: Long = System.nanoTime())
 
     val members = ConcurrentHashMap<String, Member>()
@@ -25,6 +25,10 @@ class HostedRoom(val id: String, val name: String, val pass: String, val dir: Fi
     private val lock = Object()
     private var seq = 0L
     @Volatile var closed = false
+    /** creator's controls */
+    @Volatile var allowFiles = true
+    @Volatile var locked = false
+    val banned: MutableSet<String> = java.util.Collections.synchronizedSet(HashSet())
 
     fun brief() = RoomBrief(id, name, pass.isNotEmpty(), activeMembers().size)
     fun activeMembers() = members.values.filter { System.currentTimeMillis() - it.lastSeen < 60_000 }.map { it.name }.distinct()
@@ -35,14 +39,17 @@ class HostedRoom(val id: String, val name: String, val pass: String, val dir: Fi
         lock.notifyAll(); e
     }
 
-    fun since(s: Long, waitMs: Long): Events {
+    fun people() = members.values.filter { System.currentTimeMillis() - it.lastSeen < 60_000 }.distinctBy { it.clientId.ifEmpty { it.name } }
+        .map { Person(it.clientId, it.name, it.admin) }
+
+    fun since(s: Long, waitMs: Long, admin: Boolean = false): Events {
         synchronized(lock) {
             val end = System.currentTimeMillis() + waitMs
             while (!closed && (events.lastOrNull()?.seq ?: 0) <= s) {
                 val left = end - System.currentTimeMillis(); if (left <= 0) break
                 lock.wait(left)
             }
-            return Events(events.filter { it.seq > s }, seq, activeMembers(), closed)
+            return Events(events.filter { it.seq > s }, seq, activeMembers(), closed, allowFiles, locked, people(), admin)
         }
     }
 
@@ -71,10 +78,11 @@ class AlmaServer(
     var onOfferProgress: (Offer) -> Unit = {}
     var info: () -> Pair<String, String> = { "" to "" } // id, name
 
-    fun openRoom(id: String, name: String, pass: String): HostedRoom {
+    /** [hostId] = the creating device's id; only it (connecting from this phone) gets admin rights. */
+    fun openRoom(id: String, name: String, pass: String, hostId: String = ""): HostedRoom {
         room?.close()
         val dir = File(tempRoot, id).apply { deleteRecursively(); mkdirs() }
-        return HostedRoom(id, name, pass, dir).also { room = it; it.post(Msg(kind = "sys", text = "تم فتح الغرفة «$name»")) }
+        return HostedRoom(id, name, pass, dir, hostId).also { room = it; it.post(Msg(kind = "sys", text = "تم فتح الغرفة «$name»")) }
     }
 
     fun closeRoom() { room?.let { it.post(Msg(kind = "sys", text = "أُغلقت الغرفة")); it.close() }; room = null }
@@ -120,20 +128,43 @@ class AlmaServer(
             val action = parts[3]
             if (action == "join") {
                 val j = body<JoinReq>(s)
-                if (r.pass.isNotEmpty() && j.pass != r.pass) return err(Response.Status.FORBIDDEN, "كلمة السر غير صحيحة")
+                // the creator joins from this phone itself (loopback) and becomes the room's admin
+                val loopback = s.remoteIpAddress == "127.0.0.1" || s.remoteIpAddress == "0:0:0:0:0:0:0:1"
+                val isHost = loopback && r.hostId.isNotEmpty() && j.clientId == r.hostId
+                if (!isHost && j.clientId.isNotEmpty() && j.clientId in r.banned) return err(Response.Status.FORBIDDEN, "أخرجك صاحب الغرفة منها")
+                if (!isHost && r.locked) return err(Response.Status.FORBIDDEN, "الغرفة مقفلة أمام المنضمين الجدد")
+                if (r.pass.isNotEmpty() && j.pass != r.pass && !isHost) return err(Response.Status.FORBIDDEN, "كلمة السر غير صحيحة")
                 val token = UUID.randomUUID().toString()
                 val name = j.name.trim().take(30).ifEmpty { "ضيف" }
-                r.members[token] = HostedRoom.Member(name, j.clientId, System.currentTimeMillis())
+                r.members[token] = HostedRoom.Member(name, j.clientId, System.currentTimeMillis(), admin = isHost)
                 r.post(Msg(kind = "sys", text = "انضم $name"))
                 return json(AppJson.encodeToString(JoinRes.serializer(), JoinRes(token, r.brief())))
             }
             val m = r.members[q(s, "t")] ?: return err(Response.Status.UNAUTHORIZED, "انتهت الجلسة، ادخل الغرفة مجدداً")
             m.lastSeen = System.currentTimeMillis()
             return when (action) {
-                "events" -> json(AppJson.encodeToString(Events.serializer(), r.since(q(s, "since").toLongOrNull() ?: 0, 25_000)))
+                "events" -> json(AppJson.encodeToString(Events.serializer(), r.since(q(s, "since").toLongOrNull() ?: 0, 25_000, m.admin)))
+                "admin" -> {
+                    if (!m.admin) return err(Response.Status.FORBIDDEN, "هذا الإجراء لصاحب الغرفة فقط")
+                    val a = body<AdminReq>(s)
+                    when (a.action) {
+                        "files" -> { r.allowFiles = a.value; r.post(Msg(kind = "sys", text = if (a.value) "سمح صاحب الغرفة بإرسال الملفات" else "أوقف صاحب الغرفة إرسال الملفات للأعضاء")) }
+                        "lock" -> { r.locked = a.value; r.post(Msg(kind = "sys", text = if (a.value) "قُفلت الغرفة أمام المنضمين الجدد" else "فُتحت الغرفة للمنضمين")) }
+                        "kick" -> {
+                            val victims = r.members.filterValues { it.clientId == a.target && !it.admin }
+                            if (victims.isNotEmpty()) {
+                                if (a.target.isNotEmpty()) r.banned.add(a.target)
+                                victims.keys.forEach { r.members.remove(it) }
+                                r.post(Msg(kind = "sys", text = "أُخرج ${victims.values.first().name} من الغرفة"))
+                            }
+                        }
+                    }
+                    json("{}")
+                }
                 "msg" -> { val t = body<TextReq>(s).text.trim().take(4000); if (t.isNotEmpty()) r.post(Msg(from = m.name, fromId = m.clientId, text = t)); json("{}") }
                 "leave" -> { r.members.remove(q(s, "t")); r.post(Msg(kind = "sys", text = "غادر ${m.name}")); json("{}") }
                 "upload" -> {
+                    if (!r.allowFiles && !m.admin) return err(Response.Status.FORBIDDEN, "صاحب الغرفة أوقف إرسال الملفات")
                     val size = s.headers["content-length"]?.toLongOrNull() ?: return err(Response.Status.BAD_REQUEST, "الحجم مطلوب")
                     val path = NetUtil.safePath(q(s, "path").ifEmpty { q(s, "name") })
                     val fid = UUID.randomUUID().toString().take(12)

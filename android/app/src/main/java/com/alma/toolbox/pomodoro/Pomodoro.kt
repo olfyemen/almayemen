@@ -27,7 +27,20 @@ data class PomoData(
     val task: String = "",
     /** date (yyyy-MM-dd) -> what was done that day */
     val log: Map<String, PomoDay> = emptyMap(),
+    /** optional goals in sessions (0 = off) */
+    val goalDay: Int = 0,
+    val goalWeek: Int = 0,
+    val goalMonth: Int = 0,
 )
+
+/** Sessions done this day / this week (Saturday-based) / this month. */
+fun PomoData.progress(today: java.time.LocalDate = java.time.LocalDate.now()): Triple<Int, Int, Int> {
+    val day = log[today.toString()]?.count ?: 0
+    val weekStart = today.minusDays(((today.dayOfWeek.value + 1) % 7).toLong()) // Saturday
+    val week = (0..6).sumOf { log[weekStart.plusDays(it.toLong()).toString()]?.count ?: 0 }
+    val month = log.filterKeys { it.startsWith(today.toString().substring(0, 7)) }.values.sumOf { it.count }
+    return Triple(day, week, month)
+}
 
 fun PomoData.duration(p: String = phase) = when (p) { "short" -> short; "long" -> long; else -> work } * 60_000L
 fun phaseName(p: String) = when (p) { "short" -> "استراحة قصيرة"; "long" -> "استراحة طويلة"; else -> "تركيز" }

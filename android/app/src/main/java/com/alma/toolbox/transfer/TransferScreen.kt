@@ -100,6 +100,14 @@ fun TransferScreen(nav: NavHostController, onBack: () -> Unit) {
     var editName by remember { mutableStateOf(false) }
     val storagePerm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     UiVisible()
+    DisposableEffect(Unit) {
+        onDispose {
+            // economy: nothing running and not asked to stay ready → stop the server, discovery and wifi locks
+            val idle = TransferHub.client.value == null && TransferHub.jobs.value.none { it.state == "run" } &&
+                TransferHub.hotspot.value == null && TransferHub.offers.value.isEmpty()
+            if (idle && !Stores.transfer.value.keepAlive) TransferHub.stop(ctx)
+        }
+    }
     LaunchedEffect(Unit) {
         TransferHub.start(ctx)
         if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(ctx, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
@@ -156,6 +164,7 @@ fun TransferScreen(nav: NavHostController, onBack: () -> Unit) {
                 Column {
                     OutlinedTextField(n, { n = it.take(30) }, singleLine = true)
                     SwitchRow("قبول الملفات تلقائياً دون سؤال", d.autoAccept) { v -> Stores.transfer.update { it.copy(autoAccept = v) } }
+                    SwitchRow("البقاء جاهزاً للاستقبال بعد الخروج", d.keepAlive, "يستهلك بطارية أكثر؛ بدونه تتوقف الخدمة عند الخروج إن لم يكن هناك نقل أو غرفة") { v -> Stores.transfer.update { it.copy(keepAlive = v) } }
                 }
             },
             confirmButton = { Button(onClick = { if (n.isNotBlank()) Stores.transfer.update { it.copy(myName = n.trim()) }; editName = false }) { Text("حفظ") } })

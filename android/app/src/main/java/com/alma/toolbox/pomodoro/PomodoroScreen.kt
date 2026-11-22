@@ -74,6 +74,18 @@ fun PomodoroScreen(onBack: () -> Unit) {
                 }
                 if (todayCount > 0) Text("🍅".repeat(todayCount.coerceAtMost(20)), fontSize = 22.sp)
             }
+            if (d.goalDay + d.goalWeek + d.goalMonth > 0) {
+                val (pd, pw, pm) = d.progress()
+                SectionCard(title = "🎯 أهدافي") {
+                    listOf(Triple("اليوم", pd, d.goalDay), Triple("هذا الأسبوع", pw, d.goalWeek), Triple("هذا الشهر", pm, d.goalMonth)).filter { it.third > 0 }.forEach { (l, v, g) ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(l, Modifier.width(96.dp))
+                            LinearProgressIndicator(progress = { (v.toFloat() / g).coerceAtMost(1f) }, modifier = Modifier.weight(1f).height(10.dp), color = if (v >= g) Good else MaterialTheme.colorScheme.primary)
+                            Text(" $v/$g" + if (v >= g) " ✓" else "", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
             PomoHistory(d)
         }
     }
@@ -100,6 +112,10 @@ private fun PomoSettings(initial: PomoData, onDismiss: () -> Unit) {
                 Stepper("استراحة قصيرة", d.short, 1..60, 1, "د", listOf(3, 5, 10)) { d = d.copy(short = it) }
                 Stepper("استراحة طويلة", d.long, 1..90, 5, "د", listOf(15, 20, 30)) { d = d.copy(long = it) }
                 Stepper("جلسات قبل الطويلة", d.cycles, 1..12, 1) { d = d.copy(cycles = it) }
+                Text("الأهداف (بعدد الجلسات، 0 = بدون)", fontWeight = FontWeight.Bold)
+                Stepper("يومياً", d.goalDay, 0..30, 1, "", listOf(0, 4, 6, 8)) { d = d.copy(goalDay = it) }
+                Stepper("أسبوعياً", d.goalWeek, 0..200, 5, "", listOf(0, 20, 30, 40)) { d = d.copy(goalWeek = it) }
+                Stepper("شهرياً", d.goalMonth, 0..800, 10, "", listOf(0, 80, 120, 160)) { d = d.copy(goalMonth = it) }
                 SwitchRow("بدء الاستراحة تلقائياً", d.autoBreak) { d = d.copy(autoBreak = it) }
                 SwitchRow("بدء التركيز تلقائياً بعد الاستراحة", d.autoWork) { d = d.copy(autoWork = it) }
                 SoundPicker(d.sound) { d = d.copy(sound = it) }
@@ -109,7 +125,8 @@ private fun PomoSettings(initial: PomoData, onDismiss: () -> Unit) {
         confirmButton = {
             Button(onClick = {
                 Stores.pomodoro.update { cur ->
-                    val x = cur.copy(work = d.work, short = d.short, long = d.long, cycles = d.cycles, autoBreak = d.autoBreak, autoWork = d.autoWork, sound = d.sound, vibrate = d.vibrate)
+                    val x = cur.copy(work = d.work, short = d.short, long = d.long, cycles = d.cycles, autoBreak = d.autoBreak, autoWork = d.autoWork, sound = d.sound, vibrate = d.vibrate,
+                        goalDay = d.goalDay, goalWeek = d.goalWeek, goalMonth = d.goalMonth)
                     if (!x.running) x.copy(remaining = x.duration()) else x
                 }
                 PomoWidget.refresh(ctx)
