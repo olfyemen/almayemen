@@ -2,7 +2,6 @@ package com.alma.toolbox
 
 import com.alma.toolbox.adhkar.AdhkarData
 import com.alma.toolbox.adhkar.HisnChapter
-import com.alma.toolbox.adhkar.SahifaDua
 import com.alma.toolbox.core.AppJson
 import com.alma.toolbox.core.JsonStore
 import com.alma.toolbox.core.Stores
@@ -45,13 +44,15 @@ class PrayerAdhkarTest {
     }
 
     @Test fun sahifaAssetIsComplete() {
-        val l = AppJson.decodeFromString(ListSerializer(SahifaDua.serializer()), File("src/main/assets/adhkar/sahifa.json").readText())
-        assertEquals((1..54).toList(), l.map { it.n })
-        assertTrue(AdhkarData.norm(l[0].text).startsWith(AdhkarData.norm("الْحَمْدُ لِلَّهِ الْأَوَّلِ بِلَا أَوَّلٍ كَانَ قَبْلَهُ")))
-        assertTrue(l.all { it.text.length > 500 })
+        val book = AppJson.decodeFromString(com.alma.toolbox.adhkar.SahifaBook.serializer(), File("src/main/assets/adhkar/sahifa.json").readText())
+        assertEquals((1..7).toSet(), book.week.map { it.dow }.toSet())           // one dua per weekday
+        assertTrue(book.week.all { it.text.length > 500 })
+        assertEquals(12, book.famous.size)
+        assertTrue(book.famous.any { it.n == 20 && it.title.contains("مكارم الأخلاق") })
+        val first = book.famous.first { it.n == 1 }
+        assertTrue(AdhkarData.norm(first.text).startsWith(AdhkarData.norm("الْحَمْدُ لِلَّهِ الْأَوَّلِ بِلَا أَوَّلٍ كَانَ قَبْلَهُ")))
         val bad = Regex("[{}|=<>]|تصنيف:|[a-z]{2}:")
-        assertTrue(l.none { bad.containsMatchIn(it.text) })
-        assertTrue(l.none { it.text.contains('ی') || it.title.contains('ی') })
+        assertTrue(book.famous.none { bad.containsMatchIn(it.text) || it.text.contains('ی') })
     }
 
     @Test fun arabicSearchNormalisation() {

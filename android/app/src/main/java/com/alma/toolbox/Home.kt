@@ -57,7 +57,8 @@ fun AppNav(act: MainActivity) {
         composable(Tool.REMINDER.id) { ReminderScreen(back) }
         composable(Tool.PRAYER.id) { com.alma.toolbox.prayer.PrayerScreen(back) }
         composable(Tool.ADHKAR.id) { com.alma.toolbox.adhkar.AdhkarScreen(nav, back) }
-        composable("adhkar/sahifaList") { com.alma.toolbox.ui.ToolScaffold("فهرس الصحيفة السجادية", { nav.popBackStack() }) { p -> Box(Modifier.padding(p)) { com.alma.toolbox.adhkar.SahifaIndex(nav) } } }
+        composable("adhkar/week/{d}") { com.alma.toolbox.adhkar.WeekDuaReader(nav, it.arguments?.getString("d")?.toIntOrNull() ?: 1) }
+        composable("adhkar/ibt/{i}") { com.alma.toolbox.adhkar.IbtihalReader(nav, it.arguments?.getString("i")?.toIntOrNull() ?: 1) }
         composable("adhkar/sahifa/{n}") { com.alma.toolbox.adhkar.SahifaReader(nav, it.arguments?.getString("n")?.toIntOrNull() ?: 1) }
         composable("adhkar/hisn/{id}") { com.alma.toolbox.adhkar.HisnReader(nav, it.arguments?.getString("id")?.toIntOrNull() ?: 27) }
         composable(Tool.MEMORIES.id) { com.alma.toolbox.memories.MemoriesScreen(nav, back) }
@@ -217,7 +218,7 @@ fun HomeScreen(nav: NavHostController) {
     }
 }
 
-object BuildConfigVersion { const val NAME = "1.8" }
+object BuildConfigVersion { const val NAME = "1.8.1" }
 
 @Composable
 fun CreditsCard() {
