@@ -86,24 +86,6 @@ fun LedgerHome(nav: NavHostController, onBack: () -> Unit) {
                 if (res.isEmpty()) item { Text("لا نتائج", Modifier.padding(8.dp)) }
                 items(res, key = { it.id }) { a -> AccountRow(d, a) { nav.navigate("ledger/account/${a.id}") } }
             } else {
-                item {
-                    // sum receivables and payables separately (not netted across people)
-                    val onThem = LinkedHashMap<String, Double>(); val forThem = LinkedHashMap<String, Double>()
-                    d.accounts.forEach { a -> d.balance(a.id).forEach { (c, v) -> val m = if (v > 0) onThem else forThem; m[c] = (m[c] ?: 0.0) + v } }
-                    val all = onThem + forThem
-                    SectionCard(title = "الإجمالي") {
-                        Text("${d.accounts.size} حساب · ${d.txs.size} عملية", style = MaterialTheme.typography.bodySmall)
-                        if (all.isEmpty()) Text("لا توجد أرصدة")
-                        onThem.forEach { (c, v) -> Text("لكم عند الآخرين: ${fmtNum(v)} $c", color = Bad, fontWeight = FontWeight.Bold) }
-                        forThem.forEach { (c, v) -> Text("عليكم للآخرين: ${fmtNum(-v)} $c", color = Good, fontWeight = FontWeight.Bold) }
-                        val bOn = d.toBase(onThem); val bFor = d.toBase(forThem)
-                        if (bOn != null && bFor != null && (onThem.size + forThem.size) > 1) {
-                            HorizontalDivider()
-                            Text("بـ${d.baseCurrency}: لكم ${fmtNum(Math.round(bOn).toDouble())} · عليكم ${fmtNum(Math.round(-bFor).toDouble())} · الصافي ${balanceText(Math.round(bOn + bFor).toDouble(), d.baseCurrency).replace("عليه", "لكم").replace("له", "عليكم")}",
-                                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
                 items(d.groups, key = { it.id }) { g ->
                     val accs = d.groupAccounts(g.id)
                     Card(
@@ -293,9 +275,8 @@ fun LedgerAccountScreen(nav: NavHostController, accountId: Long) {
         IconButton(onClick = { edit = true }) { Icon(Icons.Default.Edit, "تعديل") }
         IconButton(onClick = { del = true }) { Icon(Icons.Default.Delete, "حذف") }
     }, bottomBar = {
-        QuickEntry(d) { t ->
-            val tx = t.copy(accountId = accountId)
-            Ledger.addTx(tx)
+        QuickEntry(d, accountId) { t, counter ->
+            val tx = Ledger.addWithCounter(t, counter)
             scope.launch {
                 snack.currentSnackbarData?.dismiss()
                 val r = snack.showSnackbar("تمت إضافة ${if (tx.onHim) "عليه" else "له"} ${fmtNum(tx.amount)} ${tx.currency}", "تراجع", duration = SnackbarDuration.Short)
@@ -348,6 +329,10 @@ fun LedgerAccountScreen(nav: NavHostController, accountId: Long) {
                         Column(Modifier.weight(1f)) {
                             Text(t.note.ifBlank { if (t.onHim) "عليه" else "له" }, fontWeight = FontWeight.SemiBold, maxLines = 2)
                             Text("${fmtDate(t.date)} · الرصيد: ${balanceText(bal, t.currency)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                            Ledger.twinOf(d, t)?.let { tw -> d.accounts.firstOrNull { it.id == tw.accountId }?.let { ca ->
+                                Text("↔ مقابلها في «${ca.name}»", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clickable { nav.navigate("ledger/account/${ca.id}") })
+                            } }
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(fmtNum(t.amount), fontWeight = FontWeight.ExtraBold, color = if (t.onHim) Bad else Good, fontSize = 17.sp)
@@ -375,18 +360,20 @@ private fun CurrencyPicker(d: LedgerData, cur: String, onPick: (String) -> Unit)
 }
 
 @Composable
-private fun QuickEntry(d: LedgerData, onAdd: (LTx) -> Unit) {
+private fun QuickEntry(d: LedgerData, accountId: Long, onAdd: (LTx, LAccount?) -> Unit) {
     val ctx = LocalContext.current
     var amount by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var cur by remember(d.lastCurrency) { mutableStateOf(d.currencies.firstOrNull { it == d.lastCurrency } ?: d.currencies.firstOrNull() ?: "ريال") }
     var date by remember { mutableStateOf(LocalDate.now()) }
+    var counter by remember { mutableStateOf<LAccount?>(null) }
+    var pickCounter by remember { mutableStateOf(false) }
     val parsed = Ledger.parseAmount(amount)
     val focus = remember { FocusRequester() }
     fun submit(onHim: Boolean) {
         val v = parsed ?: return
-        onAdd(LTx(newId(), 0, v, onHim, cur, date.toString(), note.trim()))
-        amount = ""; note = ""
+        onAdd(LTx(newId(), accountId, v, onHim, cur, (if (d.simpleUi) LocalDate.now() else date).toString(), note.trim()), counter)
+        amount = ""; note = ""; counter = null
         runCatching { focus.requestFocus() }
     }
     Surface(tonalElevation = 3.dp, shadowElevation = 8.dp, color = MaterialTheme.colorScheme.surface) {
@@ -397,15 +384,20 @@ private fun QuickEntry(d: LedgerData, onAdd: (LTx) -> Unit) {
                     supportingText = if (parsed != null && amount.any { it in "+-*/×÷" }) ({ Text("= ${fmtNum(parsed)}") }) else null,
                     textStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.weight(1f).focusRequester(focus))
-                CurrencyPicker(d, cur) { cur = it }
+                if (!d.simpleUi || d.currencies.size > 1) CurrencyPicker(d, cur) { cur = it }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 OutlinedTextField(note, { note = it }, placeholder = { Text("البيان (اختياري)") }, singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { }),
                     modifier = Modifier.weight(1f))
-                AssistChip(onClick = { pickDate(ctx, date) { date = it } }, label = { Text(if (date == LocalDate.now()) "اليوم" else date.format(dateFmt)) },
+                if (!d.simpleUi) AssistChip(onClick = { pickDate(ctx, date) { date = it } }, label = { Text(if (date == LocalDate.now()) "اليوم" else date.format(dateFmt)) },
                     leadingIcon = { Icon(Icons.Default.DateRange, null, Modifier.size(18.dp)) })
             }
+            if (d.doubleEntry) Row(verticalAlignment = Alignment.CenterVertically) {
+                AssistChip(onClick = { pickCounter = true }, label = { Text(counter?.let { "↔ الحساب المقابل: ${it.name}" } ?: "↔ الحساب المقابل (اختياري)") })
+                if (counter != null) TextButton(onClick = { counter = null }) { Text("إلغاء") }
+            }
+            if (counter != null) Text("له هنا ← عليه في «${counter!!.name}» · عليه هنا ← له في «${counter!!.name}»", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { submit(true) }, enabled = parsed != null, modifier = Modifier.weight(1f).height(52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Bad)) { Text("عليه  ➖", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
@@ -413,6 +405,21 @@ private fun QuickEntry(d: LedgerData, onAdd: (LTx) -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = Good)) { Text("له  ➕", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
             }
         }
+    }
+    if (pickCounter) {
+        var q by remember { mutableStateOf("") }
+        val list = d.accounts.filter { it.id != accountId && (q.isBlank() || it.name.contains(q.trim(), true)) }.sortedBy { it.name }
+        AlertDialog(onDismissRequest = { pickCounter = false }, title = { Text("الحساب المقابل") },
+            text = {
+                Column {
+                    OutlinedTextField(q, { q = it }, placeholder = { Text("بحث") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 320.dp)) {
+                        items(list, key = { it.id }) { a ->
+                            Text(a.name, Modifier.fillMaxWidth().clickable { counter = a; pickCounter = false }.padding(vertical = 12.dp))
+                        }
+                    }
+                }
+            }, confirmButton = { TextButton(onClick = { pickCounter = false }) { Text("إغلاق") } })
     }
 }
 
@@ -441,6 +448,9 @@ private fun TxDialog(d: LedgerData, t: LTx, onDismiss: () -> Unit, onDone: () ->
                     CurrencyPicker(d, cur) { cur = it }
                     AssistChip(onClick = { pickDate(ctx, date) { date = it } }, label = { Text(date.format(dateFmt)) })
                 }
+                Ledger.twinOf(d, t)?.let { tw -> d.accounts.firstOrNull { it.id == tw.accountId }?.let { ca ->
+                    Text("↔ مرتبطة بعملية معاكسة في «${ca.name}»، وتتعدّل وتُحذف معها.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                } }
                 TextButton(onClick = { confirm = true }) { Text("حذف العملية", color = Bad) }
             }
         },
@@ -559,6 +569,13 @@ fun LedgerSettingsScreen(nav: NavHostController) {
 
     ToolScaffold("إعدادات سجل الحسابات", { nav.popBackStack() }) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionCard(title = "⚙️ طريقة الاستخدام") {
+                SwitchRow("الواجهة البسيطة", d.simpleUi, "المبلغ والبيان وله/عليه فقط، بتاريخ اليوم (التاريخ يُعدَّل من العملية نفسها)") { v -> Stores.ledger.update { it.copy(simpleUi = v) } }
+                SwitchRow("الحساب المقابل (دائن ومدين)", d.doubleEntry, "عند الإضافة تختار حساباً آخر فتُضاف فيه العملية المعاكسة تلقائياً") { v -> Stores.ledger.update { it.copy(doubleEntry = v) } }
+            }
+            var showAdvanced by remember { mutableStateOf(!d.simpleUi) }
+            if (d.simpleUi && !showAdvanced) TextButton(onClick = { showAdvanced = true }) { Text("إظهار بقية الإعدادات ▾") }
+            if (showAdvanced) {
             SectionCard(title = "بياناتك") {
                 OutlinedTextField(d.owner, { v -> Stores.ledger.update { it.copy(owner = v) } }, label = { Text("اسمك أو اسم المحل (يظهر في الكشف)") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(d.countryCode, { v -> Stores.ledger.update { it.copy(countryCode = v.filter(Char::isDigit)) } }, label = { Text("مفتاح الدولة الافتراضي") },
@@ -631,6 +648,7 @@ fun LedgerSettingsScreen(nav: NavHostController) {
                     Button(onClick = { exporter.launch("حسابات-الما-${LocalDate.now()}.json") }) { Text("حفظ نسخة") }
                     OutlinedButton(onClick = { importer.launch(arrayOf("application/json", "text/plain", "*/*")) }) { Text("استرجاع") }
                 }
+            }
             }
         }
     }

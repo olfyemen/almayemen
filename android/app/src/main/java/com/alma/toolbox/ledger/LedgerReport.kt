@@ -34,6 +34,24 @@ fun LedgerReportScreen(nav: NavHostController) {
                 Text("${MonthNames[ym.monthValue - 1]} ${ym.year}", Modifier.weight(1f), fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 TextButton(onClick = { ym = ym.plusMonths(1) }, enabled = ym < YearMonth.now()) { Text("التالي ◀") }
             }
+
+                    // sum receivables and payables separately (not netted across people)
+                    val onThem = LinkedHashMap<String, Double>(); val forThem = LinkedHashMap<String, Double>()
+                    d.accounts.forEach { a -> d.balance(a.id).forEach { (c, v) -> val m = if (v > 0) onThem else forThem; m[c] = (m[c] ?: 0.0) + v } }
+                    val all = onThem + forThem
+                    SectionCard(title = "الإجمالي") {
+                        Text("${d.accounts.size} حساب · ${d.txs.size} عملية", style = MaterialTheme.typography.bodySmall)
+                        if (all.isEmpty()) Text("لا توجد أرصدة")
+                        onThem.forEach { (c, v) -> Text("لكم عند الآخرين: ${fmtNum(v)} $c", color = Bad, fontWeight = FontWeight.Bold) }
+                        forThem.forEach { (c, v) -> Text("عليكم للآخرين: ${fmtNum(-v)} $c", color = Good, fontWeight = FontWeight.Bold) }
+                        val bOn = d.toBase(onThem); val bFor = d.toBase(forThem)
+                        if (bOn != null && bFor != null && (onThem.size + forThem.size) > 1) {
+                            HorizontalDivider()
+                            Text("بـ${d.baseCurrency}: لكم ${fmtNum(Math.round(bOn).toDouble())} · عليكم ${fmtNum(Math.round(-bFor).toDouble())} · الصافي ${balanceText(Math.round(bOn + bFor).toDouble(), d.baseCurrency).replace("عليه", "لكم").replace("له", "عليكم")}",
+                                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                
             SectionCard(title = "حركة الشهر (${month.size} عملية)") {
                 if (month.isEmpty()) Text("لا توجد عمليات في هذا الشهر")
                 month.groupBy { it.currency }.forEach { (cur, l) ->

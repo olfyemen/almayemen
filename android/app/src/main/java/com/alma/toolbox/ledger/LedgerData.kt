@@ -18,6 +18,8 @@ data class LTx(
     val id: Long, val accountId: Long, val amount: Double, val onHim: Boolean,
     val currency: String, val date: String = LocalDate.now().toString(), val note: String = "",
     val created: Long = System.currentTimeMillis(),
+    /** double entry: id of the mirrored transaction in the counter account (0 = none) */
+    val linkId: Long = 0,
 )
 
 @Serializable
@@ -41,6 +43,10 @@ data class LedgerData(
     /** optional weekly reminder about balances with no movement */
     val remindOverdue: Boolean = false,
     val overdueDays: Int = 30,
+    /** simple interface (default): amount, note, له/عليه — today's date */
+    val simpleUi: Boolean = true,
+    /** optional: pick the counter account and the opposite entry is added there automatically */
+    val doubleEntry: Boolean = false,
 )
 
 /** Sum of a multi-currency balance in the base currency; null when off or a rate is missing. */
@@ -85,8 +91,38 @@ object Ledger {
     fun saveAccount(a: LAccount) = Stores.ledger.update { d -> d.copy(accounts = d.accounts.filter { it.id != a.id } + a) }
     fun deleteAccount(id: Long) = Stores.ledger.update { d -> d.copy(accounts = d.accounts.filter { it.id != id }, txs = d.txs.filter { it.accountId != id }) }
     fun addTx(t: LTx) = Stores.ledger.update { d -> d.copy(txs = d.txs + t, lastCurrency = t.currency) }
-    fun saveTx(t: LTx) = Stores.ledger.update { d -> d.copy(txs = d.txs.map { if (it.id == t.id) t else it }) }
-    fun deleteTx(id: Long) = Stores.ledger.update { d -> d.copy(txs = d.txs.filter { it.id != id }) }
+
+    /**
+     * Adds [t]; with [counter] it also adds the opposite entry there (له here → عليه there, and the reverse),
+     * linked so that editing or deleting one changes both.
+     */
+    fun addWithCounter(t: LTx, counter: LAccount?): LTx {
+        if (counter == null || counter.id == t.accountId) { addTx(t); return t }
+        val d = Stores.ledger.value
+        val me = d.accounts.firstOrNull { it.id == t.accountId }?.name ?: ""
+        val twinId = newId()
+        val main = t.copy(linkId = twinId, note = t.note.ifBlank { (if (t.onHim) "لـ " else "من ") + counter.name })
+        val twin = LTx(twinId, counter.id, t.amount, !t.onHim, t.currency, t.date, t.note.ifBlank { (if (t.onHim) "من " else "لـ ") + me }, linkId = t.id)
+        Stores.ledger.update { x -> x.copy(txs = x.txs + main + twin, lastCurrency = t.currency) }
+        return main
+    }
+
+    fun twinOf(d: LedgerData, t: LTx): LTx? = if (t.linkId == 0L) null else d.txs.firstOrNull { it.id == t.linkId }
+
+    fun saveTx(t: LTx) = Stores.ledger.update { d ->
+        d.copy(txs = d.txs.map {
+            when {
+                it.id == t.id -> t
+                t.linkId != 0L && it.id == t.linkId -> it.copy(amount = t.amount, onHim = !t.onHim, currency = t.currency, date = t.date)
+                else -> it
+            }
+        })
+    }
+
+    fun deleteTx(id: Long) = Stores.ledger.update { d ->
+        val link = d.txs.firstOrNull { it.id == id }?.linkId ?: 0L
+        d.copy(txs = d.txs.filter { it.id != id && (link == 0L || it.id != link) })
+    }
 
     /** Accepts Arabic digits and simple sums like 500+250*2 */
     fun parseAmount(input: String): Double? {
