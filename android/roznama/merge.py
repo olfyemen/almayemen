@@ -125,7 +125,12 @@ new = must_replace(new, "if ((!state.lastFetch || (now.getDay() === 5 && state.l
 idx = new.rstrip().rfind("})();")
 new = new[:idx] + """window.rzApi = {
   refresh: function(){ refreshRemote(true); },
-  lastFetch: function(){ return state.lastFetch || ""; }
+  lastFetch: function(){ return state.lastFetch || ""; },
+  /** what the app shows above the page: last update, linked sheet, result of the last manual update */
+  status: function(){
+    var m = document.getElementById("remoteMsg");
+    return JSON.stringify({ last: state.lastFetch || "", linked: !!sheetId(remoteLink()), msg: m ? m.textContent : "" });
+  }
 };
 """ + new[idx:]
 

@@ -137,17 +137,6 @@ fun HomeScreen(nav: NavHostController) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            Surface(tonalElevation = 2.dp, shadowElevation = 6.dp) {
-                Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    listOf(Triple("💾", "نسخ احتياطي") { backup = true }, Triple("🗂️", "ترتيب") { arrange = true }, Triple("ℹ️", "حول") { nav.navigate("about") }).forEach { (e, l, a) ->
-                        Column(Modifier.clip(RoundedCornerShape(14.dp)).clickable(onClick = a).padding(horizontal = 18.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(e, fontSize = 20.sp); Text(l, style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-            }
-        }
     ) { pad ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(150.dp),
@@ -163,6 +152,15 @@ fun HomeScreen(nav: NavHostController) {
                     Column(Modifier.weight(1f)) {
                         Text("حقيبة الما", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
                         Text("«${Credits.SLOGAN}»", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    }
+                    Box {
+                        var menu by remember { mutableStateOf(false) }
+                        FilledTonalButton(onClick = { menu = true }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("حول ⋮") }
+                        DropdownMenu(menu, { menu = false }) {
+                            DropdownMenuItem(text = { Text("💾 النسخ الاحتياطي") }, onClick = { menu = false; backup = true })
+                            DropdownMenuItem(text = { Text("🗂️ ترتيب الشاشة") }, onClick = { menu = false; arrange = true })
+                            DropdownMenuItem(text = { Text("ℹ️ حول التطبيق والتحديث") }, onClick = { menu = false; nav.navigate("about") })
+                        }
                     }
                 }
             }
@@ -218,7 +216,7 @@ fun HomeScreen(nav: NavHostController) {
     }
 }
 
-object BuildConfigVersion { const val NAME = "1.8.1" }
+object BuildConfigVersion { const val NAME = "1.8.2" }
 
 @Composable
 fun CreditsCard() {

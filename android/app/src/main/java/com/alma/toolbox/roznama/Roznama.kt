@@ -7,7 +7,18 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.alma.toolbox.ui.Good
+import com.alma.toolbox.ui.Bad
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.boolean
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -82,24 +93,70 @@ private const val SYNC_JS = """
 fun RoznamaScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val holder = remember { arrayOfNulls<WebView>(1) }
-    DisposableEffect(Unit) { onDispose { holder[0]?.evaluateJavascript("document.dispatchEvent(new Event('visibilitychange'))", null) } }
-    ToolScaffold("الروزنامة اليومية 📅", onBack) { pad ->
-        AndroidView(modifier = Modifier.padding(pad).fillMaxSize(), factory = { c ->
-            WebView(c).apply {
-                holder[0] = this
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                addJavascriptInterface(RoznamaBridge(c.applicationContext), "AlmaBridge")
-                webViewClient = object : WebViewClient() {
-                    override fun onPageFinished(v: WebView, url: String?) { v.evaluateJavascript(SYNC_JS, null) }
-                    override fun shouldOverrideUrlLoading(v: WebView, r: WebResourceRequest): Boolean {
-                        val u = r.url
-                        if (u.scheme == "http" || u.scheme == "https") { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, u)) }; return true }
-                        return false
-                    }
-                }
-                loadUrl("file:///android_asset/roznama/index.html")
+    var last by remember { mutableStateOf(RoznamaPrefs.last(ctx)) }
+    var linked by remember { mutableStateOf(true) }
+    var msg by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    fun readStatus(then: (String, Boolean, String) -> Unit) {
+        holder[0]?.evaluateJavascript("window.rzApi ? window.rzApi.status() : ''") { raw ->
+            runCatching {
+                // evaluateJavascript returns a JSON-encoded string literal
+                val inner = com.alma.toolbox.core.AppJson.parseToJsonElement(raw).jsonPrimitive.content
+                val o = com.alma.toolbox.core.AppJson.parseToJsonElement(inner).jsonObject
+                then(o["last"]!!.jsonPrimitive.content, o["linked"]!!.jsonPrimitive.boolean, o["msg"]!!.jsonPrimitive.content)
             }
-        })
+        }
+    }
+    fun refreshNow() {
+        busy = true; msg = "… جاري التحديث"
+        holder[0]?.evaluateJavascript("window.rzApi && window.rzApi.refresh()", null)
+        scope.launch {
+            repeat(40) {
+                delay(500)
+                var done = false
+                readStatus { l, k, m -> last = l; linked = k; if (m.isNotBlank()) msg = m; done = m.startsWith("✓") || m.startsWith("✗") || m.startsWith("ما في") }
+                if (done) { busy = false; return@launch }
+            }
+            busy = false
+        }
+    }
+    DisposableEffect(Unit) { onDispose { holder[0]?.evaluateJavascript("document.dispatchEvent(new Event('visibilitychange'))", null) } }
+    // also follows an update started from «حول» (the page runs it as soon as it opens)
+    LaunchedEffect(Unit) { repeat(12) { delay(1500); readStatus { l, k, m -> last = l; linked = k; if (m.isNotBlank()) msg = m } } }
+
+    ToolScaffold("الروزنامة اليومية 📅", onBack, actions = {
+        TextButton(onClick = { refreshNow() }, enabled = !busy) { Text(if (busy) "…" else "🔄 تحديث") }
+    }) { pad ->
+        Column(Modifier.padding(pad).fillMaxSize()) {
+            Surface(color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
+                    Text(
+                        (if (linked) "🔗 مرتبطة بجدول Google" else "⚠ غير مرتبطة بجدول") + " · آخر تحديث: " + last.ifEmpty { "لم تتحدث بعد" },
+                        style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold
+                    )
+                    Text(msg.ifEmpty { "تتحدث تلقائياً كل جمعة، أو اضغط «🔄 تحديث»" }, style = MaterialTheme.typography.bodySmall,
+                        color = when { msg.startsWith("✓") -> Good; msg.startsWith("✗") -> Bad; else -> MaterialTheme.colorScheme.onPrimaryContainer })
+                }
+            }
+            AndroidView(modifier = Modifier.weight(1f).fillMaxWidth(), factory = { c ->
+                WebView(c).apply {
+                    holder[0] = this
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    addJavascriptInterface(RoznamaBridge(c.applicationContext), "AlmaBridge")
+                    webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(v: WebView, url: String?) { v.evaluateJavascript(SYNC_JS, null) }
+                        override fun shouldOverrideUrlLoading(v: WebView, r: WebResourceRequest): Boolean {
+                            val u = r.url
+                            if (u.scheme == "http" || u.scheme == "https") { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, u)) }; return true }
+                            return false
+                        }
+                    }
+                    loadUrl("file:///android_asset/roznama/index.html")
+                }
+            })
+        }
     }
 }

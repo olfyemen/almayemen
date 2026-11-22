@@ -47,7 +47,8 @@ class PrayerAdhkarTest {
         val book = AppJson.decodeFromString(com.alma.toolbox.adhkar.SahifaBook.serializer(), File("src/main/assets/adhkar/sahifa.json").readText())
         assertEquals((1..7).toSet(), book.week.map { it.dow }.toSet())           // one dua per weekday
         assertTrue(book.week.all { it.text.length > 500 })
-        assertEquals(12, book.famous.size)
+        assertEquals(28, book.famous.size)
+        assertTrue(book.famous.any { it.n == 7 && AdhkarData.norm(it.text).startsWith(AdhkarData.norm("يَا مَنْ تُحَلُّ بِهِ عُقَدُ الْمَكَارِهِ")) })
         assertTrue(book.famous.any { it.n == 20 && it.title.contains("مكارم الأخلاق") })
         val first = book.famous.first { it.n == 1 }
         assertTrue(AdhkarData.norm(first.text).startsWith(AdhkarData.norm("الْحَمْدُ لِلَّهِ الْأَوَّلِ بِلَا أَوَّلٍ كَانَ قَبْلَهُ")))
