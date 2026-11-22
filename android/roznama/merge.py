@@ -40,6 +40,13 @@ extra_css = """
 .rzx-row{padding:6px 0;border-bottom:1px dashed rgba(127,127,127,.3)}
 .rzx-row b{direction:ltr;unicode-bidi:isolate}
 .rzx-off{padding:40px 16px;text-align:center;font-size:1.2em;line-height:2}
+/* settings: a full-screen page instead of a bottom sheet */
+.sheet{background:var(--card)}
+.panel{inset:0;max-height:none;height:100%;border-radius:0;box-sizing:border-box;
+  padding:0 16px calc(24px + env(safe-area-inset-bottom))}
+.panel > .opt:first-child{position:sticky;top:0;z-index:2;background:var(--card);
+  margin:0 -16px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line)}
+.panel > .opt:first-child h3{margin:0;font-size:1.25em}
 </style>
 """
 first_script = new.find("<script")

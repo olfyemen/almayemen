@@ -216,7 +216,7 @@ fun HomeScreen(nav: NavHostController) {
     }
 }
 
-object BuildConfigVersion { const val NAME = "1.8.2" }
+object BuildConfigVersion { const val NAME = "1.8.3" }
 
 @Composable
 fun CreditsCard() {
