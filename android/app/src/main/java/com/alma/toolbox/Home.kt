@@ -69,6 +69,7 @@ fun AppNav(act: MainActivity) {
             navArgument("date") { type = NavType.StringType; nullable = true; defaultValue = null },
         )) { com.alma.toolbox.memories.MemoryEditScreen(nav, it.arguments!!.getLong("id"), it.arguments?.getString("prompt") == "1", it.arguments?.getString("date")) }
         composable("about") { com.alma.toolbox.about.AboutScreen(back) { nav.navigate(Tool.ROZNAMA.id) } }
+        composable(Tool.ALMAHER.id) { com.maher.almaher.AlMaherCalculatorTool(back) }
         composable(Tool.DATA.id) { com.alma.toolbox.data.DataScreen(back) }
         composable(Tool.ROZNAMA.id) { com.alma.toolbox.roznama.RoznamaScreen(back) }
         composable(Tool.NOTES.id) { com.alma.toolbox.daily.NotesScreen(back) }
@@ -217,7 +218,7 @@ fun HomeScreen(nav: NavHostController) {
     }
 }
 
-object BuildConfigVersion { const val NAME = "1.10" }
+object BuildConfigVersion { const val NAME = "1.11" }
 
 @Composable
 fun CreditsCard() {

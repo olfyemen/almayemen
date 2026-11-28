@@ -84,7 +84,7 @@ fun rememberBattery(): State<BatteryInfo> {
         onDispose { ctx.unregisterReceiver(r) }
     }
     // current changes faster than the broadcast
-    LaunchedEffect(Unit) { while (true) { delay(1000); st.value = readBattery(ctx, ctx.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))) } }
+    LaunchedEffect(Unit) { while (true) { delay(com.alma.toolbox.core.Power.every(ctx, 1000, 5000)); st.value = readBattery(ctx, ctx.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))) } }
     return st
 }
 
@@ -130,7 +130,7 @@ fun BatteryTab() {
 fun DeviceInfoTab() {
     val ctx = LocalContext.current
     var uptime by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
-    LaunchedEffect(Unit) { while (true) { delay(1000); uptime = SystemClock.elapsedRealtime() } }
+    LaunchedEffect(Unit) { while (true) { delay(com.alma.toolbox.core.Power.every(ctx, 1000, 5000)); uptime = SystemClock.elapsedRealtime() } }
     val mem = remember { ActivityManager.MemoryInfo().also { ctx.getSystemService(ActivityManager::class.java).getMemoryInfo(it) } }
     val st = remember { StatFs(Environment.getDataDirectory().path) }
     val dm: DisplayMetrics = ctx.resources.displayMetrics

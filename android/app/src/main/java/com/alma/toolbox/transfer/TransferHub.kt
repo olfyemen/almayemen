@@ -421,7 +421,7 @@ class TransferService : Service() {
         val buf = ByteArray(8192)
         while (running) {
             val now = System.currentTimeMillis()
-            if (now - lastSend > 2000) {
+            if (now - lastSend > com.alma.toolbox.core.Power.every(this, 2000, 10000)) {
                 lastSend = now
                 val d = Stores.transfer.value
                 val b = AppJson.encodeToString(Beacon.serializer(), Beacon(id = d.myId, n = d.myName, p = TransferHub.port, r = listOfNotNull(TransferHub.server?.room?.brief()))).toByteArray()

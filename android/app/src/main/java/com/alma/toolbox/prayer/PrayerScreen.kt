@@ -42,7 +42,7 @@ fun PrayerScreen(onBack: () -> Unit) {
     val d by Stores.adhan.state.collectAsStateWithLifecycle()
     val silent by Stores.silent.state.collectAsStateWithLifecycle()
     var now by remember { mutableStateOf(LocalDateTime.now()) }
-    LaunchedEffect(Unit) { while (true) { now = LocalDateTime.now(); delay(1000) } }
+    LaunchedEffect(Unit) { while (true) { now = LocalDateTime.now(); delay(com.alma.toolbox.core.Power.every(ctx, 1000, 5000)) } }
     var settings by remember { mutableStateOf(false) }
     var month by remember { mutableStateOf(false) }
     var muteGrid by remember { mutableStateOf(false) }

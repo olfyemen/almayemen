@@ -28,7 +28,7 @@ fun PomodoroScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val d by Stores.pomodoro.state.collectAsStateWithLifecycle()
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(d.running) { while (d.running) { now = System.currentTimeMillis(); delay(250) } }
+    LaunchedEffect(d.running) { while (d.running) { now = System.currentTimeMillis(); delay(com.alma.toolbox.core.Power.every(ctx, 250, 1000)) } }
     LaunchedEffect(Unit) { PomoEngine.restore(ctx) }
     var settings by remember { mutableStateOf(false) }
 

@@ -76,7 +76,8 @@ fun SensorsTab() {
     var mode by remember { mutableIntStateOf(1) }
     var expanded by remember { mutableStateOf<Int?>(null) }
     DisposableEffect(Unit) { hub.start(list); onDispose { hub.stop() } }
-    LaunchedEffect(Unit) { while (true) { delay(120); tick++ } }
+    val iv = com.alma.toolbox.core.Power.every(ctx, 120, 800)
+    LaunchedEffect(Unit) { while (true) { delay(iv); tick++ } }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {

@@ -22,7 +22,7 @@ data class BackupFile(
 
 /** One file with everything the app keeps: accounts, alerts, rooms, settings… */
 object Backup {
-    private val prefFiles = listOf("home", "hijri", "adhkar", "zakat", "roznama", "ibtihalat")
+    private val prefFiles = listOf("home", "hijri", "adhkar", "zakat", "roznama", "ibtihalat", "almaher_calc")
 
     private fun stores(): Map<String, JsonStore<*>> = mapOf(
         "periodic" to Stores.periodic, "silent" to Stores.silent, "reminders" to Stores.reminders,

@@ -128,6 +128,12 @@ new = must_replace(new, "  startTyper(wk);\n  startFriday();", """  var rch = $(
 new = must_replace(new, "if ((!state.lastFetch || (now.getDay() === 5 && state.lastFetch !== iso)) && navigator.onLine !== false){",
     "var age = state.lastFetch ? (toDate(iso) - toDate(state.lastFetch)) / 86400000 : 99;\n  if ((!state.lastFetch || (now.getDay() === 5 && state.lastFetch !== iso) || age >= 7) && navigator.onLine !== false){")
 
+# 7b) manual update says whether anything really changed
+new = must_replace(new, "    remote = {fetched:new Date().toISOString(), days:days, settings:st, weeks:wk};",
+    "    var same = !!remote && JSON.stringify([remote.days, remote.settings, remote.weeks]) === JSON.stringify([days, st, wk]);\n    remote = {fetched:new Date().toISOString(), days:days, settings:st, weeks:wk};")
+new = must_replace(new, '    if (manual) $("remoteMsg").textContent = "✓ تحدّث المحتوى";',
+    '    if (manual) $("remoteMsg").textContent = same ? "✓ لا تغييرات جديدة، المحتوى محدّث" : "✓ تحدّث المحتوى";')
+
 # 8) a small API for the Android app (manual update from «حول», last update date)
 idx = new.rstrip().rfind("})();")
 new = new[:idx] + """window.rzApi = {

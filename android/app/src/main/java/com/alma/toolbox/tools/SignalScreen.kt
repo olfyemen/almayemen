@@ -104,7 +104,7 @@ fun SignalScreen(onBack: () -> Unit) {
             wifi = readWifi(ctx); cell = readCell(ctx)
             wifi?.let { wh.add(it.rssi.toFloat()) }; cell?.dbm?.let { ch.add(it.toFloat()) }
             if (n++ % 5 == 0 && hasPerm(ctx, Manifest.permission.ACCESS_FINE_LOCATION)) nearby = runCatching { wm.scanResults.sortedByDescending { it.level }.take(15) }.getOrDefault(emptyList())
-            delay(1000)
+            delay(com.alma.toolbox.core.Power.every(ctx, 1000, 4000))
         }
     }
     val needPerm = !hasPerm(ctx, Manifest.permission.ACCESS_FINE_LOCATION) || !hasPerm(ctx, Manifest.permission.READ_PHONE_STATE)

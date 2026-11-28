@@ -7165,9 +7165,10 @@ function refreshRemote(manual){
     var st = {}; res[1].forEach(function(o){ if (o["الإعداد"]) st[o["الإعداد"]] = o["القيمة"]; });
     var wk = res[2].map(function(o){ return {from:normDate(o["من"]), to:normDate(o["إلى"]), name:o["اسم الشخصية"], bio:o["نبذة مختصرة"], quote:o["قول أو إنجاز مشهور"]}; }).filter(function(w){ return w.from && w.to; });
     if (!Object.keys(days).length) throw "empty";
+    var same = !!remote && JSON.stringify([remote.days, remote.settings, remote.weeks]) === JSON.stringify([days, st, wk]);
     remote = {fetched:new Date().toISOString(), days:days, settings:st, weeks:wk};
     save(RKEY, remote); state.lastFetch = isoOf(new Date()); persist(); render();
-    if (manual) $("remoteMsg").textContent = "✓ تحدّث المحتوى";
+    if (manual) $("remoteMsg").textContent = same ? "✓ لا تغييرات جديدة، المحتوى محدّث" : "✓ تحدّث المحتوى";
   }).catch(function(){ if (manual) $("remoteMsg").textContent = "✗ ما قدرت أتصل بالملف. تأكد من النت، وإن الملف مشارك «أي شخص لديه الرابط»"; });
 }
 $("remoteUrl").onchange = function(){ state.remoteUrl = this.value.trim(); persist(); };

@@ -218,6 +218,13 @@ fun AboutScreen(onBack: () -> Unit, openRoznama: () -> Unit = {}) {
                 if (sizes.second > 0) TextButton(onClick = { clearCache(ctx); sizes = appSizes(ctx); Toast.makeText(ctx, "تم التنظيف ✓", Toast.LENGTH_SHORT).show() }) { Text("🧹 تنظيف الملفات المؤقتة") }
             }
 
+            SectionCard(title = "⚡ الأداء والبطارية") {
+                var saver by remember { mutableStateOf(com.alma.toolbox.core.Power.saver(ctx)) }
+                SwitchRow("وضع توفير الطاقة", saver, "يبطئ تحديث الشاشات الحيّة (الحساسات والبطارية والإشارة والبومودورو ومواقيت الصلاة) ويقلل فحص الأجهزة في نقل الملفات. يطبَّق عند فتح الشاشة مرة أخرى.") { v ->
+                    saver = v; com.alma.toolbox.core.Power.setSaver(ctx, v)
+                }
+            }
+
             SectionCard(title = "✉️ رسالة للمبرمج") {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("اقتراح", "مشكلة", "شكر", "سؤال").forEach { t -> FilterChip(type == t, { type = t }, label = { Text(t) }) }
@@ -244,7 +251,10 @@ fun AboutScreen(onBack: () -> Unit, openRoznama: () -> Unit = {}) {
                 Text("رسوم الشعار: Twemoji (CC-BY 4.0).\nأذان الجامع الكبير بصنعاء: تسجيل من المصمم. أذان المسجد النبوي: ejaz215 (CC BY 3.0)، وأذان عام (CC0)، من ويكيميديا كومنز.\nحصن المسلم: الشيخ سعيد القحطاني، النص من hisnmuslim.com.\nنص الصحيفة السجادية: ويكي مصدر (CC BY-SA).",
                     style = MaterialTheme.typography.bodySmall)
             }
-            TextButton(onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/$REPO"))) } }, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("صفحة المشروع على GitHub") }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                TextButton(onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/$REPO/releases"))) } }) { Text("🔗 صفحة الإصدارات") }
+                TextButton(onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/$REPO"))) } }) { Text("صفحة المشروع") }
+            }
         }
     }
 }
