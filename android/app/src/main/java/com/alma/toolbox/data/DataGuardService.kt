@@ -42,7 +42,7 @@ class DataGuardService : VpnService() {
         close()
         val blocked = DataGuard.currentBlocked(this, screenOn)
         if (blocked.isEmpty()) { stopSelf(); return } // nothing to block: no tunnel, no battery cost
-        val b = Builder().setSession("حقيبة الما · توفير النت").addAddress("10.111.222.1", 32).addRoute("0.0.0.0", 0).setMtu(1500)
+        val b = Builder().setSession("حقيبة الما · عداد النت").addAddress("10.111.222.1", 32).addRoute("0.0.0.0", 0).setMtu(1500)
         blocked.forEach { pkg -> runCatching { b.addAllowedApplication(pkg) } }
         val fd = b.establish() ?: run { stopSelf(); return }
         tun = fd

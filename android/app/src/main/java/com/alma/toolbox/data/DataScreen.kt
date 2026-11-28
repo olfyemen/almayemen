@@ -34,6 +34,9 @@ fun DataScreen(onBack: () -> Unit) {
     val blocked = remember(version) { DataGuard.userBlocked(ctx) }
     val white = remember(version) { DataGuard.whitelist(ctx) }
     val access = remember(version) { DataGuard.hasUsageAccess(ctx) }
+    val waOff = remember(version) { DataGuard.waOff(ctx) }
+    val hasWa = remember { DataGuard.installedWhatsApp(ctx).isNotEmpty() }
+    var byMonth by remember { mutableStateOf(false) }
 
     val vpnLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
         if (r.resultCode == Activity.RESULT_OK) { DataGuard.setEnabled(ctx, true); DataGuard.reload(ctx) }
@@ -45,14 +48,19 @@ fun DataScreen(onBack: () -> Unit) {
         loading = false
     }
 
-    fun toggle() {
-        if (on) { DataGuard.stop(ctx); version++; return }
+    fun enable() {
         val consent = VpnService.prepare(ctx)
         if (consent != null) vpnLauncher.launch(consent) else { DataGuard.setEnabled(ctx, true); DataGuard.reload(ctx); version++ }
+    }
+    fun toggle() { if (on) { DataGuard.stop(ctx); version++ } else enable() }
+    fun toggleWa(v: Boolean) {
+        DataGuard.setWaOff(ctx, v)
+        if (v && !on) enable() else { if (on) DataGuard.reload(ctx); version++ }
     }
 
     val totalToday = apps.sumOf { it.today }
     val blockNow = remember(version, on, mode) { if (on) DataGuard.currentBlocked(ctx, true).size else 0 }
+    val shown = remember(apps, byMonth) { DataGuard.sorted(apps, byMonth) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (!access) item {
             Banner("لعرض استهلاك كل تطبيق امنح التطبيق «الوصول إلى بيانات الاستخدام» من الإعدادات.", "فتح الإعدادات", Warn) {
@@ -63,13 +71,26 @@ fun DataScreen(onBack: () -> Unit) {
             SectionCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(if (on) "🟢 توفير النت مفعّل" else "⚪ توفير النت متوقف", fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                        Text("اليوم: ${DataGuard.fmt(totalToday)}", style = MaterialTheme.typography.bodySmall)
+                        Text(if (on) "🟢 عداد النت: الحجب مفعّل" else "⚪ عداد النت: الحجب متوقف", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Text("اليوم: ${DataGuard.fmt(totalToday)} · الشهر: ${DataGuard.fmt(apps.sumOf { it.month })}", style = MaterialTheme.typography.bodySmall)
                         Text(if (on) "محجوب الآن: $blockNow تطبيق" else "لن يُحجب شيء قبل التفعيل", style = MaterialTheme.typography.bodySmall)
                     }
                     Button(onClick = { toggle() }) { Text(if (on) "إيقاف" else "تفعيل") }
                 }
                 Text("تفعيله يضع رمز VPN في الشريط العلوي، وجهاز واحد فقط يقدر يكون بـVPN في نفس الوقت.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            }
+        }
+        if (hasWa) item {
+            SectionCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(if (waOff && on) "🔕 الواتساب مقطوع عن النت" else "💬 الواتساب متصل دائماً", fontWeight = FontWeight.Bold)
+                        Text(if (waOff && on) "لن تصلك رسائل ولا مكالمات واتساب حتى تعيد تشغيله."
+                             else "مسموح افتراضياً في كل الأوضاع. فعّل المفتاح لإيقاف استقبال رسائله تماماً.",
+                             style = MaterialTheme.typography.bodySmall)
+                    }
+                    Switch(checked = waOff && on, onCheckedChange = { toggleWa(it) })
+                }
             }
         }
         item {
@@ -84,15 +105,22 @@ fun DataScreen(onBack: () -> Unit) {
                 Text(DataMode.describe(mode), style = MaterialTheme.typography.bodySmall)
             }
         }
-        item { Text("التطبيقات (الأكثر استهلاكاً اليوم)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("الأكثر استهلاكاً", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
+                FilterChip(!byMonth, { byMonth = false }, label = { Text("اليوم") })
+                FilterChip(byMonth, { byMonth = true }, label = { Text("هذا الشهر") })
+            }
+        }
         if (loading) item { Text("جارٍ الحساب…", style = MaterialTheme.typography.bodySmall) }
         if (!loading && apps.isEmpty()) item { EmptyState("📶", "لا توجد تطبيقات تستخدم الإنترنت") }
-        items(apps, key = { it.pkg }) { a ->
+        items(shown, key = { it.pkg }) { a ->
             SectionCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(a.name, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                        Text("اليوم ${DataGuard.fmt(a.today)} · الشهر ${DataGuard.fmt(a.month)}", style = MaterialTheme.typography.bodySmall)
+                        Text(if (byMonth) "الشهر ${DataGuard.fmt(a.month)} · اليوم ${DataGuard.fmt(a.today)}"
+                             else "اليوم ${DataGuard.fmt(a.today)} · الشهر ${DataGuard.fmt(a.month)}", style = MaterialTheme.typography.bodySmall)
                     }
                     IconButton(onClick = { DataGuard.setWhite(ctx, a.pkg, a.pkg !in white); if (on) DataGuard.reload(ctx); version++ }) {
                         Text(if (a.pkg in white) "⭐" else "☆", fontSize = 20.sp)

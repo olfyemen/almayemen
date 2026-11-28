@@ -43,7 +43,27 @@ object DataGuard {
     fun mode(ctx: Context) = prefs(ctx).getString("mode", DataMode.NORMAL) ?: DataMode.NORMAL
     fun setMode(ctx: Context, m: String) = prefs(ctx).edit().putString("mode", m).apply()
     fun userBlocked(ctx: Context): Set<String> = prefs(ctx).getStringSet("blocked", emptySet())?.toSet() ?: emptySet()
-    fun whitelist(ctx: Context): Set<String> = prefs(ctx).getStringSet("white", emptySet())?.toSet() ?: emptySet()
+    /** WhatsApp and WhatsApp Business: allowed by default so they stay connected in every mode. */
+    val WHATSAPP = setOf("com.whatsapp", "com.whatsapp.w4b")
+
+    fun whitelist(ctx: Context): Set<String> {
+        val p = prefs(ctx)
+        if (!p.getBoolean("wa_init", false)) {
+            val w = (p.getStringSet("white", emptySet()) ?: emptySet()) + WHATSAPP
+            p.edit().putStringSet("white", w).putBoolean("wa_init", true).apply()
+            return w
+        }
+        return p.getStringSet("white", emptySet())?.toSet() ?: emptySet()
+    }
+
+    /** «إيقاف الواتساب»: cuts WhatsApp off completely so no messages arrive, whatever the mode. */
+    fun waOff(ctx: Context) = prefs(ctx).getBoolean("wa_off", false)
+    fun setWaOff(ctx: Context, v: Boolean) = prefs(ctx).edit().putBoolean("wa_off", v).apply()
+
+    /** WhatsApp packages installed on this phone. */
+    fun installedWhatsApp(ctx: Context): Set<String> = WHATSAPP.filter {
+        runCatching { ctx.packageManager.getApplicationInfo(it, 0) }.isSuccess
+    }.toSet()
 
     fun setBlocked(ctx: Context, pkg: String, v: Boolean) = prefs(ctx).edit().putStringSet("blocked",
         userBlocked(ctx).toMutableSet().also { if (v) it.add(pkg) else it.remove(pkg) }).apply()
@@ -56,14 +76,15 @@ object DataGuard {
      * [internet] = apps that can use the network at all; [heavy] = apps over the daily threshold.
      */
     fun blockedSet(mode: String, screenOn: Boolean, userBlocked: Set<String>, whitelist: Set<String>,
-                   internet: Set<String>, heavy: Set<String>): Set<String> {
+                   internet: Set<String>, heavy: Set<String>,
+                   waOff: Boolean = false, whatsapp: Set<String> = WHATSAPP): Set<String> {
         val extra = when (mode) {
             DataMode.MEDIUM -> heavy
             DataMode.ULTRA -> internet
             DataMode.BG -> if (screenOn) emptySet() else internet
             else -> emptySet()
         }
-        return userBlocked + (extra - whitelist)
+        return userBlocked + (extra - whitelist) + (if (waOff) whatsapp else emptySet())
     }
 
     /** Apps the user installed that ask for internet access (never this app). */
@@ -107,7 +128,7 @@ object DataGuard {
     fun todayStart(): Long = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     fun monthStart(): Long = LocalDate.now().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-    /** Usage of every internet app, busiest today first. */
+    /** Usage of every internet app, busiest today first (the screen can re-sort by month). */
     fun usage(ctx: Context): List<AppUse> {
         val pm = ctx.packageManager
         return internetApps(ctx).map { (pkg, name) ->
@@ -123,7 +144,9 @@ object DataGuard {
         val mode = mode(ctx)
         val internet = if (mode == DataMode.ULTRA || mode == DataMode.BG) internetApps(ctx).map { it.first }.toSet() else emptySet()
         val heavy = if (mode == DataMode.MEDIUM && hasUsageAccess(ctx)) usage(ctx).filter { it.today >= HEAVY_BYTES }.map { it.pkg }.toSet() else emptySet()
-        return blockedSet(mode, screenOn, userBlocked(ctx), whitelist(ctx) + ctx.packageName, internet, heavy)
+        val wa = waOff(ctx)
+        return blockedSet(mode, screenOn, userBlocked(ctx), whitelist(ctx) + ctx.packageName, internet, heavy,
+            wa, if (wa) installedWhatsApp(ctx) else emptySet())
     }
 
     /** Starts or reloads the VPN service (only when enabled). */
@@ -133,9 +156,13 @@ object DataGuard {
     }
 
     fun stop(ctx: Context) {
-        setEnabled(ctx, false)
+        setEnabled(ctx, false); setWaOff(ctx, false)
         ctx.startService(Intent(ctx, DataGuardService::class.java).setAction("stop"))
     }
+
+    /** Sort keys for the app list. */
+    fun sorted(apps: List<AppUse>, byMonth: Boolean) =
+        if (byMonth) apps.sortedByDescending { it.month } else apps.sortedByDescending { it.today }
 
     fun fmt(b: Long): String = when {
         b >= 1L shl 30 -> String.format(java.util.Locale.US, "%.2f GB", b / 1073741824.0)
