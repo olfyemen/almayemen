@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alma.toolbox.core.Notify
+import com.alma.toolbox.core.Tones
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -252,7 +253,13 @@ fun SoundPicker(sound: String?, type: Int = RingtoneManager.TYPE_NOTIFICATION, o
             onChange(u?.toString() ?: "silent")
         }
     }
-    ValueRow("النغمة", Notify.soundTitle(ctx, sound)) {
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Tones.all.forEach { t ->
+            val u = Tones.uri(ctx, t.key)
+            FilterChip(sound == u, { onChange(u); Tones.play(ctx, u) }, label = { Text(t.title) })
+        }
+    }
+    ValueRow("نغمة من هاتفي", Notify.soundTitle(ctx, sound)) {
         val i = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
             putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALL)
             putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "اختر نغمة التنبيه")

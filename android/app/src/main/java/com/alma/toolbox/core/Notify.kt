@@ -26,6 +26,7 @@ object Notify {
 
     fun soundTitle(ctx: Context, sound: String?): String {
         if (sound == "silent") return "بدون صوت"
+        Tones.titleOf(sound)?.let { return it }
         if (sound.isNullOrEmpty()) return "النغمة الافتراضية"
         return try { RingtoneManager.getRingtone(ctx, Uri.parse(sound))?.getTitle(ctx) ?: "نغمة" } catch (e: Exception) { "نغمة" }
     }
