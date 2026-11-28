@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center"
+    android:layoutDirection="rtl"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📶 عداد النت"
+        android:textColor="#16A34A"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/today"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="اليوم —"
+        android:textColor="#1E2240"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/month"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="#7A809E"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/wa"
+        android:layout_width="wrap_content"
+        android:layout_height="34dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/widget_btn"
+        android:gravity="center"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:text="🔕 إيقاف الواتساب"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
+</LinearLayout>

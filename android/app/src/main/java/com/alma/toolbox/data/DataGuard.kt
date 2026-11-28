@@ -34,7 +34,8 @@ object DataMode {
 object DataGuard {
     const val HEAVY_BYTES = 100L * 1024 * 1024
 
-    data class AppUse(val pkg: String, val name: String, val uid: Int, val today: Long, val month: Long)
+    data class AppUse(val pkg: String, val name: String, val uid: Int, val today: Long, val month: Long,
+                      val monthMobile: Long = 0, val monthWifi: Long = 0)
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("dataguard", 0)
 
@@ -77,8 +78,8 @@ object DataGuard {
      */
     fun blockedSet(mode: String, screenOn: Boolean, userBlocked: Set<String>, whitelist: Set<String>,
                    internet: Set<String>, heavy: Set<String>,
-                   waOff: Boolean = false, whatsapp: Set<String> = WHATSAPP): Set<String> {
-        val extra = when (mode) {
+                   waOff: Boolean = false, whatsapp: Set<String> = WHATSAPP, capBlock: Boolean = false): Set<String> {
+        val extra = if (capBlock) internet else when (mode) {
             DataMode.MEDIUM -> heavy
             DataMode.ULTRA -> internet
             DataMode.BG -> if (screenOn) emptySet() else internet
@@ -111,10 +112,11 @@ object DataGuard {
     }.getOrNull()
 
     /** Bytes used by one app since [from] (mobile + wifi). Needs usage access. */
-    fun bytes(ctx: Context, uid: Int, from: Long, to: Long = System.currentTimeMillis()): Long {
+    fun bytes(ctx: Context, uid: Int, from: Long, to: Long = System.currentTimeMillis(),
+              types: List<Int> = listOf(ConnectivityManager.TYPE_MOBILE, ConnectivityManager.TYPE_WIFI)): Long {
         val nsm = ctx.getSystemService(NetworkStatsManager::class.java)
         var total = 0L
-        for (type in listOf(ConnectivityManager.TYPE_MOBILE, ConnectivityManager.TYPE_WIFI)) {
+        for (type in types) {
             runCatching {
                 nsm.queryDetailsForUid(type, if (type == ConnectivityManager.TYPE_MOBILE) subscriberId(ctx) else null, from, to, uid).use { st ->
                     val b = NetworkStats.Bucket()
@@ -133,20 +135,22 @@ object DataGuard {
         val pm = ctx.packageManager
         return internetApps(ctx).map { (pkg, name) ->
             val uid = runCatching { pm.getApplicationInfo(pkg, 0).uid }.getOrDefault(-1)
-            AppUse(pkg, name, uid,
-                today = if (uid >= 0 && hasUsageAccess(ctx)) bytes(ctx, uid, todayStart()) else 0L,
-                month = if (uid >= 0 && hasUsageAccess(ctx)) bytes(ctx, uid, monthStart()) else 0L)
+            val ok = uid >= 0 && hasUsageAccess(ctx)
+            val mm = if (ok) bytes(ctx, uid, monthStart(), types = listOf(ConnectivityManager.TYPE_MOBILE)) else 0L
+            val mw = if (ok) bytes(ctx, uid, monthStart(), types = listOf(ConnectivityManager.TYPE_WIFI)) else 0L
+            AppUse(pkg, name, uid, today = if (ok) bytes(ctx, uid, todayStart()) else 0L, month = mm + mw, monthMobile = mm, monthWifi = mw)
         }.sortedByDescending { it.today }
     }
 
     /** What the VPN should block right now, computed from the saved settings. */
-    fun currentBlocked(ctx: Context, screenOn: Boolean): Set<String> {
+    fun currentBlocked(ctx: Context, screenOn: Boolean, onMobile: Boolean = true): Set<String> {
         val mode = mode(ctx)
-        val internet = if (mode == DataMode.ULTRA || mode == DataMode.BG) internetApps(ctx).map { it.first }.toSet() else emptySet()
+        val cap = capBlocking(ctx) && onMobile
+        val internet = if (cap || mode == DataMode.ULTRA || mode == DataMode.BG) internetApps(ctx).map { it.first }.toSet() else emptySet()
         val heavy = if (mode == DataMode.MEDIUM && hasUsageAccess(ctx)) usage(ctx).filter { it.today >= HEAVY_BYTES }.map { it.pkg }.toSet() else emptySet()
         val wa = waOff(ctx)
         return blockedSet(mode, screenOn, userBlocked(ctx), whitelist(ctx) + ctx.packageName, internet, heavy,
-            wa, if (wa) installedWhatsApp(ctx) else emptySet())
+            wa, if (wa) installedWhatsApp(ctx) else emptySet(), cap)
     }
 
     /** Starts or reloads the VPN service (only when enabled). */
@@ -158,6 +162,75 @@ object DataGuard {
     fun stop(ctx: Context) {
         setEnabled(ctx, false); setWaOff(ctx, false)
         ctx.startService(Intent(ctx, DataGuardService::class.java).setAction("stop"))
+    }
+
+    // ---------- monthly mobile-data cap ----------
+    fun capMb(ctx: Context) = prefs(ctx).getInt("cap_mb", 0)
+    fun setCapMb(ctx: Context, v: Int) { prefs(ctx).edit().putInt("cap_mb", v).apply(); scheduleCap(ctx) }
+    fun capAuto(ctx: Context) = prefs(ctx).getBoolean("cap_auto", false)
+    fun setCapAuto(ctx: Context, v: Boolean) = prefs(ctx).edit().putBoolean("cap_auto", v).apply()
+    private fun monthKey() = LocalDate.now().toString().take(7)
+    /** true when the cap was reached this month, auto-block is on, and the user didn't lift it. */
+    fun capBlocking(ctx: Context) = capAuto(ctx) && prefs(ctx).getString("cap_hit", "") == monthKey() && prefs(ctx).getString("cap_lift", "") != monthKey()
+    fun liftCap(ctx: Context) { prefs(ctx).edit().putString("cap_lift", monthKey()).apply(); reload(ctx) }
+
+    /** Mobile data of the whole phone this month. */
+    fun mobileMonth(ctx: Context): Long = deviceBytes(ctx, ConnectivityManager.TYPE_MOBILE, monthStart())
+    fun deviceBytes(ctx: Context, type: Int, from: Long): Long = runCatching {
+        val b = ctx.getSystemService(NetworkStatsManager::class.java).querySummaryForDevice(type,
+            if (type == ConnectivityManager.TYPE_MOBILE) subscriberId(ctx) else null, from, System.currentTimeMillis())
+        b.rxBytes + b.txBytes
+    }.getOrDefault(0L)
+
+    /** Pure: which alert level is due (0 none, 80, 100) given use, cap and the level already sent. */
+    fun capLevel(used: Long, capBytes: Long, sent: Int): Int {
+        if (capBytes <= 0) return 0
+        val lvl = when { used >= capBytes -> 100; used * 10 >= capBytes * 8 -> 80; else -> 0 }
+        return if (lvl > sent) lvl else 0
+    }
+
+    fun scheduleCap(ctx: Context) {
+        if (capMb(ctx) <= 0) { com.alma.toolbox.core.Alarms.cancel(ctx, "alma://datacap/0"); return }
+        com.alma.toolbox.core.Alarms.set(ctx, "alma://datacap/0", System.currentTimeMillis() + 60 * 60_000L, alarmClock = false)
+    }
+
+    fun checkCap(ctx: Context) {
+        val cap = capMb(ctx) * 1024L * 1024L
+        if (cap > 0 && hasUsageAccess(ctx)) {
+            val p = prefs(ctx)
+            val sent = if (p.getString("cap_month", "") == monthKey()) p.getInt("cap_sent", 0) else 0
+            val used = mobileMonth(ctx)
+            val lvl = capLevel(used, cap, sent)
+            if (lvl > 0) {
+                p.edit().putString("cap_month", monthKey()).putInt("cap_sent", lvl).apply()
+                val auto = lvl == 100 && capAuto(ctx)
+                if (auto) {
+                    p.edit().putString("cap_hit", monthKey()).apply()
+                    if (android.net.VpnService.prepare(ctx) == null) { setEnabled(ctx, true); runCatching { reload(ctx) } }
+                }
+                if (com.alma.toolbox.core.Notify.canPost(ctx)) {
+                    val n = androidx.core.app.NotificationCompat.Builder(ctx, com.alma.toolbox.core.Notify.CH_INFO).setSmallIcon(com.alma.toolbox.R.drawable.ic_notify)
+                        .setContentTitle(if (lvl == 100) "📶 انتهت باقة الشهر" else "📶 استهلكت 80% من باقة الشهر")
+                        .setContentText("بيانات الهاتف: ${fmt(used)} من ${fmt(cap)}" + if (auto) " · حُجب النت عن التطبيقات ما عدا المسموح" else "")
+                        .setAutoCancel(true).setContentIntent(com.alma.toolbox.core.Notify.openApp(ctx, "data", 74)).build()
+                    com.alma.toolbox.core.Notify.nm(ctx).notify(7401, n)
+                }
+            }
+        }
+        scheduleCap(ctx)
+        DataWidget.refresh(ctx)
+    }
+
+    /** From the widget / notification: switch WhatsApp off/on without opening the app (if VPN consent exists). */
+    fun toggleWaQuick(ctx: Context) {
+        val v = !(waOff(ctx) && enabled(ctx))
+        setWaOff(ctx, v)
+        if (v) {
+            if (android.net.VpnService.prepare(ctx) != null) {
+                ctx.startActivity(Intent(ctx, com.alma.toolbox.MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtra(com.alma.toolbox.MainActivity.EXTRA_TOOL, "data"))
+            } else { setEnabled(ctx, true); runCatching { reload(ctx) } }
+        } else runCatching { reload(ctx) }
+        DataWidget.refresh(ctx)
     }
 
     /** Sort keys for the app list. */

@@ -71,6 +71,8 @@ fun AppNav(act: MainActivity) {
         composable("about") { com.alma.toolbox.about.AboutScreen(back) { nav.navigate(Tool.ROZNAMA.id) } }
         composable(Tool.ALMAHER.id) { com.maher.almaher.AlMaherCalculatorTool(back) }
         composable(Tool.DATA.id) { com.alma.toolbox.data.DataScreen(back) }
+        composable(Tool.SCREEN.id) { com.alma.toolbox.screentime.ScreenTimeScreen(back) }
+        composable("permissions") { com.alma.toolbox.about.PermissionsScreen(back) }
         composable(Tool.ROZNAMA.id) { com.alma.toolbox.roznama.RoznamaScreen(back) }
         composable(Tool.NOTES.id) { com.alma.toolbox.daily.NotesScreen(back) }
         composable(Tool.OCCASIONS.id) { com.alma.toolbox.daily.OccasionsScreen(back) }
@@ -160,6 +162,7 @@ fun HomeScreen(nav: NavHostController) {
                         FilledTonalButton(onClick = { menu = true }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("حول ⋮") }
                         DropdownMenu(menu, { menu = false }) {
                             DropdownMenuItem(text = { Text("💾 النسخ الاحتياطي") }, onClick = { menu = false; backup = true })
+                            DropdownMenuItem(text = { Text("🔐 الأذونات") }, onClick = { menu = false; nav.navigate("permissions") })
                             DropdownMenuItem(text = { Text("🗂️ ترتيب الشاشة") }, onClick = { menu = false; arrange = true })
                             DropdownMenuItem(text = { Text("ℹ️ حول التطبيق والتحديث") }, onClick = { menu = false; nav.navigate("about") })
                         }
@@ -218,7 +221,7 @@ fun HomeScreen(nav: NavHostController) {
     }
 }
 
-object BuildConfigVersion { const val NAME = "1.12" }
+object BuildConfigVersion { const val NAME = "1.13" }
 
 @Composable
 fun CreditsCard() {
@@ -298,6 +301,32 @@ fun ArrangeDialog(onDismiss: () -> Unit, onReset: () -> Unit, onSaved: () -> Uni
 }
 
 @Composable
+private fun DriveBackupRow() {
+    val ctx = LocalContext.current
+    var linked by remember { mutableStateOf(com.alma.toolbox.core.Backup.driveUri(ctx) != null) }
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { u ->
+        if (u != null) Thread {
+            val ok = com.alma.toolbox.core.Backup.linkDrive(ctx, u)
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                linked = true
+                Toast.makeText(ctx, if (ok) "تم الربط وحفظ أول نسخة ✓ — ستتحدث كل أسبوع" else "تم الربط لكن تعذر الحفظ الآن", Toast.LENGTH_LONG).show()
+            }
+        }.start()
+    }
+    if (!linked) {
+        OutlinedButton(onClick = { picker.launch("حقيبة-الما-نسخة.json") }, modifier = Modifier.fillMaxWidth()) { Text("☁️ ربط بـ Google Drive") }
+        Text("اختر «Drive» من القائمة الجانبية في نافذة الحفظ، فتُحدَّث النسخة هناك كل أسبوع تلقائياً.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+    } else {
+        Text("☁️ مربوط بـ Google Drive" + com.alma.toolbox.core.Backup.lastDrive(ctx).let { if (it.isNotEmpty()) " · آخر نسخة $it" else "" }, fontWeight = FontWeight.SemiBold)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            TextButton(onClick = { Thread { val ok = com.alma.toolbox.core.Backup.writeDrive(ctx)
+                android.os.Handler(android.os.Looper.getMainLooper()).post { Toast.makeText(ctx, if (ok) "تم التحديث على Drive ✓" else "تعذر — أعد الربط", Toast.LENGTH_SHORT).show() } }.start() }) { Text("تحديث الآن") }
+            TextButton(onClick = { com.alma.toolbox.core.Backup.unlinkDrive(ctx); linked = false }) { Text("إلغاء الربط") }
+        }
+    }
+}
+
+@Composable
 fun BackupDialog(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     var auto by remember { mutableStateOf(com.alma.toolbox.core.Backup.autoEnabled(ctx)) }
@@ -314,6 +343,7 @@ fun BackupDialog(onDismiss: () -> Unit) {
                 Text("ملف واحد فيه كل بياناتك: الحسابات، التنبيهات، الصامت، التذكيرات، بومودورو، الملاحظات، المناسبات، الأذان، غرف الدردشة والإعدادات.", style = MaterialTheme.typography.bodySmall)
                 Button(onClick = { saver.launch("حقيبة-الما-${java.time.LocalDate.now()}.json") }, modifier = Modifier.fillMaxWidth()) { Text("حفظ نسخة الآن") }
                 OutlinedButton(onClick = { opener.launch(arrayOf("application/json", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("استرجاع نسخة") }
+                DriveBackupRow()
                 com.alma.toolbox.ui.SwitchRow("نسخ تلقائي أسبوعي (اختياري)", auto, "يُحفظ في التنزيلات/حقيبة الما/نسخ احتياطية" +
                     com.alma.toolbox.core.Backup.lastAuto(ctx).let { if (it.isNotEmpty()) " · آخر نسخة $it" else "" }) { v -> auto = v; Thread { com.alma.toolbox.core.Backup.setAuto(ctx, v) }.start() }
                 Text("⚠ الملف غير مشفّر: احفظه في مكان آمن، فهو يحتوي حساباتك.", style = MaterialTheme.typography.bodySmall, color = com.alma.toolbox.ui.Warn)

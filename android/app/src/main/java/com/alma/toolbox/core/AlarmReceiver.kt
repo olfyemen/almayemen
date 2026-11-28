@@ -25,6 +25,8 @@ class AlarmReceiver : BroadcastReceiver() {
             "occasions" -> com.alma.toolbox.daily.Occasions.check(ctx)
             "backup" -> Thread { com.alma.toolbox.core.Backup.runAuto(ctx) }.start()
             "ledgerremind" -> com.alma.toolbox.ledger.LedgerRemind.fire(ctx)
+            "ledgerdue" -> com.alma.toolbox.ledger.LedgerDue.fire(ctx)
+            "datacap" -> Thread { com.alma.toolbox.data.DataGuard.checkCap(ctx) }.start()
             "iqama" -> com.alma.toolbox.prayer.AdhanScheduler.iqama(ctx)
             "adhanpre" -> com.alma.toolbox.prayer.AdhanScheduler.fire(ctx, pre = true)
             // notification actions
@@ -35,6 +37,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     "disable" -> ReminderScheduler.disable(ctx, id)
                     "pomostop" -> PomoEngine.reset(ctx)
                     "pomopause" -> PomoEngine.toggle(ctx)
+                    "watoggle" -> com.alma.toolbox.data.DataGuard.toggleWaQuick(ctx)
                 }
             }
         }

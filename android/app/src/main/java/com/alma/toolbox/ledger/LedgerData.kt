@@ -20,6 +20,8 @@ data class LTx(
     val created: Long = System.currentTimeMillis(),
     /** double entry: id of the mirrored transaction in the counter account (0 = none) */
     val linkId: Long = 0,
+    /** optional due date (yyyy-MM-dd): a reminder that day while the balance is still open */
+    val due: String = "",
 )
 
 @Serializable
@@ -72,6 +74,14 @@ fun LedgerData.balances(accountIds: Collection<Long>): Map<String, Double> {
 }
 
 fun LedgerData.balance(accountId: Long) = balances(listOf(accountId))
+
+/** Transactions whose due date came and whose account still has an open balance in the same direction. */
+fun LedgerData.dueNow(today: LocalDate = LocalDate.now()): List<LTx> = txs.filter { t ->
+    t.due.isNotEmpty() && t.due <= today.toString() && run {
+        val b = balance(t.accountId)[t.currency] ?: 0.0
+        if (t.onHim) b > 0.0001 else b < -0.0001
+    }
+}
 fun LedgerData.groupAccounts(gid: Long) = accounts.filter { it.groupId == gid }
 fun LedgerData.lastActivity(aid: Long) = txs.filter { it.accountId == aid }.maxOfOrNull { it.created } ?: accounts.firstOrNull { it.id == aid }?.created ?: 0
 

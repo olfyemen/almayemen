@@ -105,3 +105,30 @@ object LedgerRemind {
         schedule(ctx)
     }
 }
+
+/** Daily check at 9:00 for due debts (only while some transaction has a due date). */
+object LedgerDue {
+    private const val URI = "alma://ledgerdue/0"
+    fun schedule(ctx: android.content.Context) {
+        if (Stores.ledger.value.txs.none { it.due.isNotEmpty() }) { com.alma.toolbox.core.Alarms.cancel(ctx, URI); return }
+        var at = LocalDate.now().atTime(9, 0)
+        if (!at.isAfter(java.time.LocalDateTime.now())) at = at.plusDays(1)
+        com.alma.toolbox.core.Alarms.set(ctx, URI, at.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
+    }
+
+    fun fire(ctx: android.content.Context) {
+        val d = Stores.ledger.value
+        val l = d.dueNow()
+        if (l.isNotEmpty() && com.alma.toolbox.core.Notify.canPost(ctx)) {
+            val names = l.mapNotNull { t -> d.accounts.firstOrNull { it.id == t.accountId }?.let { a ->
+                (if (t.onHim) "على ${a.name}" else "لـ ${a.name}") + " " + com.alma.toolbox.ui.fmtNum(t.amount) + " " + t.currency } }
+            val n = androidx.core.app.NotificationCompat.Builder(ctx, com.alma.toolbox.core.Notify.CH_INFO).setSmallIcon(com.alma.toolbox.R.drawable.ic_notify)
+                .setContentTitle("⏰ ${l.size} مبلغ حان موعد استحقاقه")
+                .setContentText(names.take(3).joinToString("، "))
+                .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(names.take(10).joinToString("\n")))
+                .setAutoCancel(true).setContentIntent(com.alma.toolbox.core.Notify.openApp(ctx, "ledger", 52)).build()
+            com.alma.toolbox.core.Notify.nm(ctx).notify(5201, n)
+        }
+        schedule(ctx)
+    }
+}

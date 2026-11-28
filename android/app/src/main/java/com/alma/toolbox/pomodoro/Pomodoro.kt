@@ -69,6 +69,7 @@ object PomoEngine {
             it.copy(running = true, endAt = System.currentTimeMillis() + rem, remaining = rem) }
         Alarms.set(ctx, URI, d.endAt, alarmClock = false)
         ongoing(ctx, d); PomoWidget.refresh(ctx)
+        com.alma.toolbox.screentime.ScreenTime.sync(ctx)
     }
 
     fun pause(ctx: Context) {
@@ -81,6 +82,7 @@ object PomoEngine {
     fun reset(ctx: Context) {
         Stores.pomodoro.update { it.copy(running = false, phase = "work", remaining = it.duration("work"), cycle = 0) }
         Alarms.cancel(ctx, URI); Notify.nm(ctx).cancel(ONGOING); PomoWidget.refresh(ctx)
+        com.alma.toolbox.screentime.ScreenTime.sync(ctx)
     }
 
     private fun nextPhase(d: PomoData, countIt: Boolean): PomoData {

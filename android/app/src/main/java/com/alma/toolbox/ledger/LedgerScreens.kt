@@ -329,6 +329,8 @@ fun LedgerAccountScreen(nav: NavHostController, accountId: Long) {
                         Column(Modifier.weight(1f)) {
                             Text(t.note.ifBlank { if (t.onHim) "عليه" else "له" }, fontWeight = FontWeight.SemiBold, maxLines = 2)
                             Text("${fmtDate(t.date)} · الرصيد: ${balanceText(bal, t.currency)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                            if (t.due.isNotEmpty()) Text("⏰ يستحق ${fmtDate(t.due)}", style = MaterialTheme.typography.labelSmall,
+                                color = if (t.due <= LocalDate.now().toString()) Bad else Warn, fontWeight = FontWeight.SemiBold)
                             Ledger.twinOf(d, t)?.let { tw -> d.accounts.firstOrNull { it.id == tw.accountId }?.let { ca ->
                                 Text("↔ مقابلها في «${ca.name}»", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.clickable { nav.navigate("ledger/account/${ca.id}") })
@@ -431,6 +433,7 @@ private fun TxDialog(d: LedgerData, t: LTx, onDismiss: () -> Unit, onDone: () ->
     var onHim by remember { mutableStateOf(t.onHim) }
     var cur by remember { mutableStateOf(t.currency) }
     var date by remember { mutableStateOf(runCatching { LocalDate.parse(t.date) }.getOrDefault(LocalDate.now())) }
+    var due by remember { mutableStateOf(runCatching { LocalDate.parse(t.due) }.getOrNull()) }
     var confirm by remember { mutableStateOf(false) }
     val parsed = Ledger.parseAmount(amount)
     AlertDialog(
@@ -448,6 +451,11 @@ private fun TxDialog(d: LedgerData, t: LTx, onDismiss: () -> Unit, onDone: () ->
                     CurrencyPicker(d, cur) { cur = it }
                     AssistChip(onClick = { pickDate(ctx, date) { date = it } }, label = { Text(date.format(dateFmt)) })
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AssistChip(onClick = { pickDate(ctx, due ?: LocalDate.now().plusDays(7)) { due = it } },
+                        label = { Text(due?.let { "⏰ الاستحقاق: " + it.format(dateFmt) } ?: "⏰ تاريخ استحقاق (تذكير)") })
+                    if (due != null) TextButton(onClick = { due = null }) { Text("إزالة") }
+                }
                 Ledger.twinOf(d, t)?.let { tw -> d.accounts.firstOrNull { it.id == tw.accountId }?.let { ca ->
                     Text("↔ مرتبطة بعملية معاكسة في «${ca.name}»، وتتعدّل وتُحذف معها.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 } }
@@ -455,7 +463,7 @@ private fun TxDialog(d: LedgerData, t: LTx, onDismiss: () -> Unit, onDone: () ->
             }
         },
         confirmButton = {
-            Button(onClick = { Ledger.saveTx(t.copy(amount = parsed!!, note = note.trim(), onHim = onHim, currency = cur, date = date.toString())); onDone() }, enabled = parsed != null) { Text("حفظ") }
+            Button(onClick = { Ledger.saveTx(t.copy(amount = parsed!!, note = note.trim(), onHim = onHim, currency = cur, date = date.toString(), due = due?.toString() ?: "")); LedgerDue.schedule(ctx); onDone() }, enabled = parsed != null) { Text("حفظ") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } }
     )

@@ -56,5 +56,8 @@ object Alarms {
         com.alma.toolbox.daily.Occasions.schedule(ctx)
         com.alma.toolbox.ledger.LedgerRemind.schedule(ctx)
         Backup.schedule(ctx)
+        com.alma.toolbox.ledger.LedgerDue.schedule(ctx)
+        com.alma.toolbox.data.DataGuard.scheduleCap(ctx)
+        com.alma.toolbox.screentime.ScreenTime.sync(ctx)
     }
 }
